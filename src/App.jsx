@@ -4,6 +4,8 @@ import { HomePage } from './pages/Home'
 import { RegisterPage } from './pages/Register'
 import { LoginPage } from './pages/Login'
 import { OtpVerifyEmailPage } from './pages/OtpVerifyEmail'
+import { ContactPage } from './pages/Contact'
+import { AboutPage } from './pages/About'
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verifyemail" element={<OtpVerifyEmailPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/about" element={<AboutPage />} />
     </Routes>
   )
 }
