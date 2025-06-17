@@ -88,5 +88,5 @@ export function LoginPage() {
 
       </form>
     </div>
-  );
+  )
 }

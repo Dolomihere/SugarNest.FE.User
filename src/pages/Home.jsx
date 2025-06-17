@@ -10,9 +10,8 @@ export function HomePage() {
 
       <Header />
 
-      <div className="flex-1">
-
-        <section className="max-w-7xl mx-auto px-4 py-20 grid grid-cols-1 md:grid-cols-2 gap-10 items-center"> 
+      <div className="flex-1 max-w-7xl mx-auto">
+        <section className="px-4 py-20 grid grid-cols-1 md:grid-cols-2 gap-10 items-center"> 
             
           <div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
@@ -40,39 +39,39 @@ export function HomePage() {
 
         <AboutAndReviews />
 
-        <section className="bg-pink-100 text-gray-800 py-16 px-4">
-          <div className="max-w-4xl mx-auto text-center">
-
-            <h2 className="text-3xl font-bold mb-4">Đăng Ký Nhận Khuyến Mãi</h2>
-
-            <p className="mb-6 text-lg">
-              Nhận thông tin về các sản phẩm mới và chương trình khuyến mãi đặc biệt. Đăng ký ngay để nhận được voucher giảm giá 10% cho đơn hàng đầu tiên.
-            </p>
-
-            <form className="flex flex-col sm:flex-row items-center justify-center gap-4">
-
-              <input
-                type="email"
-                required
-                placeholder="Email của bạn"
-                className="px-4 py-2 w-full sm:w-2/3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
-              />
-
-              <button
-                type="submit"
-                className="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600 transition"
-              >
-                Đăng ký
-              </button>
-
-            </form>
-
-            <p className="mt-6 text-lg">Chúng tôi cam kết bảo mật thông tin của bạn và không chia sẻ với bên thứ ba.</p>
-
-          </div>
-
-        </section>
       </div>
+
+      <section className="bg-pink-100 text-gray-800 py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+
+          <h2 className="text-3xl font-bold mb-4">Đăng Ký Nhận Khuyến Mãi</h2>
+
+          <p className="mb-6 text-lg">
+            Nhận thông tin về các sản phẩm mới và chương trình khuyến mãi đặc biệt. Đăng ký ngay để nhận được voucher giảm giá 10% cho đơn hàng đầu tiên.
+          </p>
+
+          <form className="flex flex-col sm:flex-row items-center justify-center gap-4">
+
+            <input
+              type="email"
+              required
+              placeholder="Email của bạn"
+              className="px-4 py-2 w-full sm:w-2/3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+            />
+
+            <button
+              type="submit"
+              className="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600 transition"
+            >
+              Đăng ký
+            </button>
+
+          </form>
+
+          <p className="mt-6 text-lg">Chúng tôi cam kết bảo mật thông tin của bạn và không chia sẻ với bên thứ ba.</p>
+
+        </div>
+      </section>
 
       <Footer />
 

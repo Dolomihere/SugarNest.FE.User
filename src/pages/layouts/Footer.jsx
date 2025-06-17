@@ -79,5 +79,5 @@ export function Footer() {
         &copy; {new Date().getFullYear()} SweetCake Bakery. All rights reserved.
       </div>
     </footer>
-  );
+  )
 }

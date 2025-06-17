@@ -90,5 +90,5 @@ export function Header() {
       )}
 
     </header>
-  );
+  )
 }

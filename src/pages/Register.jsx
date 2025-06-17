@@ -91,5 +91,5 @@ export function RegisterPage() {
 
       </form>
     </div>
-  );
+  )
 }

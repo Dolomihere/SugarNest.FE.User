@@ -1,13 +1,13 @@
 
 export function AboutAndReviews() {
   const reviews = [
-    { name: "Anna T.", comment: "The strawberry shortcake is heaven! Light, fresh, and not too sweet.", rating: 5, },
-    { name: "Jason R.", comment: "Great atmosphere and beautiful presentation. Will visit again!", rating: 4, },
-    { name: "Maria K.", comment: "Everything tastes homemade. The croissants are buttery perfection.", rating: 5, },
+    { name: "Phùng Ngọc Yến Nhi", comment: "Bánh kem sinh nhật từ SweetCake là lựa chọn hoàn hảo cho bữa tiệc của tôi.", rating: 5, },
+    { name: "Phạm Thị Minh Nhàn", comment: "Những chiếc cupcake ở đây thật sự ngon không thể cưỡng lại.", rating: 4, },
+    { name: "Nguyễn Thị Mai", comment: "Dịch vụ đặt bánh theo yêu cầu rất tuyệt vời. Họ làm đúng những gì tôi mong muốn.", rating: 5, },
   ];
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-20 space-y-24">
+    <section className="px-4 py-20 space-y-24">
 
       <div className="grid md:grid-cols-2 gap-10 items-center">
         <img

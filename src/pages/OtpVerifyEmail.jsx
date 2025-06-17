@@ -72,5 +72,5 @@ export function OtpVerifyEmailPage() {
 
       </form>
     </div>
-  );
+  )
 }
