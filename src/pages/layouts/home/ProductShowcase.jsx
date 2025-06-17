@@ -80,6 +80,7 @@ export function ProductShowcase() {
 
           </div>
         )}
+        
       </div>
 
       <div className="flex justify-center">
