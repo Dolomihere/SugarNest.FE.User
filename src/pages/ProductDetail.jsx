@@ -6,9 +6,11 @@ import { Header } from './layouts/Header'
 import { Footer } from './layouts/Footer'
 
 import ProductService from '../services/ProductService'
+import ProductOptionService from '../services/ProductOption'
 
 export function ProductDetailPage() {
   const { id } = useParams();
+  const [selectedOptions, setSelectedOptions] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [copied, setCopied] = useState(false);
 
@@ -16,6 +18,57 @@ export function ProductDetailPage() {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleCheckboxChange = (e) => {
+    const { name, value, checked } = e.target;
+    setSelectedOptions(prev => {
+      const group = prev[name] || [];
+      return {
+        ...prev,
+        [name]: checked
+          ? [...group, value]
+          : group.filter(v => v !== value)
+      };
+    });
+  };
+
+  const handleRadioChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedOptions(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleAddToCart = () => {
+    const userLoggedIn = !!localStorage.getItem('accessToken');
+
+    const optionEntries = Object.entries(selectedOptions).flatMap(([groupId, values]) => {
+      if (Array.isArray(values)) {
+        return values.map(v => ({ optionGroupId: groupId, optionItemId: v }));
+      } else {
+        return [{ optionGroupId: groupId, optionItemId: values }];
+      }
+    });
+
+    const item = {
+      productId: id,
+      note: null,
+      quantity,
+      productItemOptionModels: optionEntries,
+    };
+
+    if (userLoggedIn) {
+      CartService.addItemToCart(item)
+        .then(() => alert("Đã thêm vào giỏ hàng!"))
+        .catch(() => alert("Có lỗi xảy ra"));
+    } else {
+      const cart = JSON.parse(localStorage.getItem('local_cart') || '[]');
+      cart.push(item);
+      localStorage.setItem('local_cart', JSON.stringify(cart));
+      alert("Đã thêm vào giỏ hàng (local)!");
+    }
   };
 
   const { data: product = {}, isLoading: loadingProduct } = useQuery({
@@ -26,6 +79,11 @@ export function ProductDetailPage() {
   const { data: products = [] } = useQuery({
     queryKey: ['suggested'],
     queryFn: () => ProductService.getAllProducts().then(res => res.data.data),
+  });
+
+  const { data: optionGroups = [] } = useQuery({
+    queryKey: ['options', id],
+    queryFn: () => ProductOptionService.getOptionOfProductById(id).then(res => res.data.data),
   });
 
   const suggestions = useMemo(() => {
@@ -64,6 +122,41 @@ export function ProductDetailPage() {
 
             <div className="text-sm text-gray-500">Category ID: {product.categoryId}</div>
 
+            {optionGroups.map(group => (
+              <div key={group.optionGroupId} className="mb-6">
+                <p className="font-semibold text-gray-800 mb-1">{group.name}</p>
+                <p className="text-sm text-gray-500 mb-3">{group.description}</p>
+
+                <div className="space-y-2">
+                  {group.isMultipleChoice ? (
+                    group.optionItems.map(item => (
+                      <label key={item.optionItemId} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          name={group.optionGroupId}
+                          value={item.optionItemId}
+                          onChange={handleCheckboxChange}
+                        />
+                        <span>{item.optionValue} (+${item.additionalPrice})</span>
+                      </label>
+                    ))
+                  ) : (
+                    group.optionItems.map(item => (
+                      <label key={item.optionItemId} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name={group.optionGroupId}
+                          value={item.optionItemId}
+                          onChange={handleRadioChange}
+                        />
+                        <span>{item.optionValue} (+${item.additionalPrice})</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+
             <div className="flex items-center gap-4 mt-4">
               <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1 border rounded cursor-pointer">-</button>
               <span>{quantity}</span>
@@ -72,7 +165,9 @@ export function ProductDetailPage() {
 
             <div className="flex items-center gap-4 mt-6">
 
-              <button className="bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700 cursor-pointer">
+              <button 
+                onClick={() => {handleAddToCart(); setQuantity(1)}}
+                className="bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700 cursor-pointer">
                 Thêm vào giỏ
               </button>
 
