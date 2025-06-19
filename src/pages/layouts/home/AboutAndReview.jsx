@@ -50,7 +50,7 @@ export function AboutAndReviews() {
                 <div className="flex text-yellow-500">
 
                   {[...Array(5)].map((_, idx) =>
-                    idx < r.rating ? "⭐" : "☆"
+                    idx < r.rating ? "★" : "☆"
                   )}
 
                 </div>

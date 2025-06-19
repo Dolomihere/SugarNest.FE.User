@@ -29,7 +29,7 @@ export function ProductShowcase() {
         </div>
 
         {loadingCategories ? (
-          <p>Đang tải danh mục...</p>
+          <p className="text-center">Đang tải danh mục...</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
 
@@ -57,7 +57,7 @@ export function ProductShowcase() {
         </div>
 
         {loadingProducts ? (
-          <p>Đang tải sản phẩm...</p>
+          <p className="text-center">Đang tải sản phẩm...</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
 

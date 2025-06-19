@@ -53,6 +53,7 @@ export function HomePage() {
           <form className="flex flex-col sm:flex-row items-center justify-center gap-4">
 
             <input
+              id="email"
               type="email"
               required
               placeholder="Email của bạn"
