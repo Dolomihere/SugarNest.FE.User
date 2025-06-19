@@ -12,7 +12,6 @@ export function RegisterPage() {
   const mutation = useMutation({
     mutationFn: AuthService.register,
     onSuccess: (res) => {
-      console.log('Registration success:', res.data);
       navigate('/login');
     },
     onError: (err) => {

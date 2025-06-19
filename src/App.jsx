@@ -6,7 +6,9 @@ import { ProductDetailPage } from './pages/ProductDetail'
 import { CartPage } from './pages/Cart'
 import { RegisterPage } from './pages/Register'
 import { LoginPage } from './pages/Login'
-import { OtpVerifyEmailPage } from './pages/OtpVerifyEmail'
+import { ResetPassword } from './pages/layouts/otp/ResetPassword'
+import { Enable2fa } from './pages/layouts/otp/Enable2fa'
+import { VerifyEmail } from './pages/layouts/otp/VerifyEmail'
 import { ContactPage } from './pages/Contact'
 import { AboutPage } from './pages/About'
 
@@ -19,7 +21,9 @@ function App() {
       <Route path="/cart" element={<CartPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/verifyemail" element={<OtpVerifyEmailPage />} />
+      <Route path="/otp/verifyMail" element={<VerifyEmail />} />
+      <Route path="/otp/2fa" element={<Enable2fa />} />
+      <Route path="/otp/resetpwd" element={<ResetPassword />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
     </Routes>

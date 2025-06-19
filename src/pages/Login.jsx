@@ -25,12 +25,13 @@ export function LoginPage() {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
 
-        navigate('/');
+        const redirectPath = localStorage.getItem('goBackRedirectPage') || '/';
+        localStorage.removeItem('goBackRedirectPage');
+        navigate(redirectPath);
       } else {
         setError(response.data?.message || 'Đăng nhập thất bại');
       }
     } catch (err) {
-      console.error('Login error:', err);
       setError('Lỗi khi đăng nhập. Vui lòng thử lại sau.');
     }
   };

@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
-import AuthService from '../services/AuthService'
+import AuthService from '../../../services/AuthService'
 
-export function OtpVerifyEmailPage() {
+export function VerifyEmail() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', otp: '' });
   const [error, setError] = useState('');
@@ -12,7 +12,6 @@ export function OtpVerifyEmailPage() {
   const mutation = useMutation({
     mutationFn: AuthService.verifyEmail,
     onSuccess: () => {
-      console.log('✅ Email verified successfully!');
       navigate('/login');
     },
     onError: (error) => {
@@ -29,15 +28,8 @@ export function OtpVerifyEmailPage() {
     mutation.mutate(form);
   };
 
-  return (
+  return(
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4">
-
-      {error && (
-        <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
-          {error}
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="w-full max-w-md bg-white p-6 rounded shadow">
 
         <h2 className="text-2xl font-bold text-pink-600 text-center mb-6">Xác Minh Email</h2>
