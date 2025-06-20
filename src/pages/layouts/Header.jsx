@@ -13,18 +13,18 @@ export function Header() {
   ];
 
   return (
-    <header className="w-full bg-white shadow-md relative z-10">
-      <nav className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+    <header className="relative z-10 w-full bg-white shadow-md">
+      <nav className="flex items-center justify-between px-4 py-4 mx-auto max-w-7xl">
 
-        <div className="text-2xl font-bold text-pink-600">SweetCake</div>
+        <div className="text-2xl font-bold text-yellow-600">SweetCake</div>
 
-        <ul className="hidden md:flex gap-6 text-gray-700 font-medium">
+        <ul className="hidden gap-6 font-medium text-gray-600 md:flex">
 
           {navLinks.map((link, i) => (
             <li key={i}>
               <Link
                 to={link.to}
-                className="hover:text-gray-500 hover:underline transition"
+                className="transition hover:text-gray-700 hover:underline"
               >
                 {link.label}
               </Link>
@@ -37,19 +37,19 @@ export function Header() {
 
           <button 
             onClick={() => navigate('/cart')}
-            className="text-gray-600 hover:text-pink-600 cursor-pointer text-2xl">
-            🛒
+            className="text-2xl text-gray-600 cursor-pointer hover:text-pink-600">
+            <i class="fa-solid fa-cart-shopping"></i>
           </button>
 
           <button
             onClick={() => navigate('/login')}
-            className="px-4 py-1 border border-pink-600 text-pink-600 rounded hover:bg-pink-600 hover:text-white transition hidden md:block"
+            className="hidden px-4 py-1 text-yellow-600 transition border border-yellow-600 rounded hover:bg-yellow-600 hover:text-white md:block"
           >
             Đăng nhập
           </button>
 
           <button
-            className="md:hidden text-gray-700 text-2xl"
+            className="text-2xl text-gray-700 md:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             ☰
@@ -58,14 +58,14 @@ export function Header() {
       </nav>
 
       {menuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-md">
-          <ul className="flex flex-col items-start px-4 py-2 space-y-2 text-gray-700 font-medium">
+        <div className="absolute left-0 w-full bg-white shadow-md md:hidden top-full">
+          <ul className="flex flex-col items-start px-4 py-2 space-y-2 font-medium text-gray-600">
 
             {navLinks.map((link, i) => (
               <li key={i}>
                 <Link
                   to={link.to}
-                  className="block w-full py-1 hover:text-gray-500 hover:underline"
+                  className="block w-full py-1 hover:text-gray-700 hover:underline"
                   onClick={() => setMenuOpen(false)}
                 >
                   {link.label}
@@ -79,7 +79,7 @@ export function Header() {
                   setMenuOpen(false);
                   navigate('/login');
                 }}
-                className="w-full text-left px-2 py-1 border border-pink-600 text-pink-600 rounded hover:bg-pink-600 hover:text-white transition"
+                className="w-full px-2 py-1 text-left text-yellow-600 transition border border-yellow-600 rounded hover:bg-yellow-600 hover:text-white"
               >
                 Đăng nhập
               </button>

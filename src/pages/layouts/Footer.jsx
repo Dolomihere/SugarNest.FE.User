@@ -10,8 +10,8 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-gray-900 text-gray-100">
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+    <footer className="text-gray-100 bg-gray-900">
+      <div className="grid grid-cols-1 gap-8 px-6 py-12 mx-auto max-w-7xl sm:grid-cols-2 md:grid-cols-4">
         
         <section>
           <h2 className="text-xl font-bold text-white">SugarNest</h2>
@@ -21,13 +21,13 @@ export function Footer() {
         </section>
 
         <nav>
-          <h3 className="font-semibold text-white mb-2">Liên kết nhanh</h3>
+          <h3 className="mb-2 font-semibold text-white">Liên kết nhanh</h3>
           <ul className="space-y-1 text-sm text-gray-400">
 
             {navLinks.map((link, i) => (
               <li key={i}>
 
-                <Link to={link.to} className="hover:text-white hover:underline transition">
+                <Link to={link.to} className="transition hover:text-white hover:underline">
                   {link.label}
                 </Link>
 
@@ -38,14 +38,14 @@ export function Footer() {
         </nav>
 
         <section>
-          <h3 className="font-semibold text-white mb-2">Thông tin liên hệ</h3>
+          <h3 className="mb-2 font-semibold text-white">Thông tin liên hệ</h3>
           <p className="text-sm text-gray-400">📍 123 Bakery Street, Sweetville</p>
           <p className="text-sm text-gray-400">📧 contact@sweetcake.com</p>
           <p className="text-sm text-gray-400">📞 (555) 123-4567</p>
         </section>
 
         <div>
-          <h3 className="font-semibold text-white mb-2">Giờ mở cửa</h3>
+          <h3 className="mb-2 font-semibold text-white">Giờ mở cửa</h3>
 
           <ul className="space-y-1 text-sm text-gray-400">
 
@@ -75,7 +75,7 @@ export function Footer() {
         
       </div>
 
-      <div className="border-t border-gray-800 text-center py-4 text-sm text-gray-500">
+      <div className="py-4 text-sm text-center text-gray-600 border-t border-gray-700">
         &copy; {new Date().getFullYear()} SweetCake Bakery. All rights reserved.
       </div>
     </footer>

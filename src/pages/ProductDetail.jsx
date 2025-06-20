@@ -9,230 +9,235 @@ import ProductService from '../services/ProductService'
 import ProductOptionService from '../services/ProductOption'
 
 export function ProductDetailPage() {
-  const { id } = useParams();
-  const [selectedOptions, setSelectedOptions] = useState({});
-  const [quantity, setQuantity] = useState(1);
-  const [copied, setCopied] = useState(false);
+  const { id } = useParams()
+  const [selectedOptions, setSelectedOptions] = useState({})
+  const [quantity, setQuantity] = useState(1)
+  const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
-  };
+    navigator.clipboard.writeText(window.location.href)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 3000)
+  }
 
   const handleCheckboxChange = (e) => {
-    const { name, value, checked } = e.target;
-    setSelectedOptions(prev => {
-      const group = prev[name] || [];
+    const { name, value, checked } = e.target
+    setSelectedOptions((prev) => {
+      const group = prev[name] || []
       return {
         ...prev,
-        [name]: checked
-          ? [...group, value]
-          : group.filter(v => v !== value)
-      };
-    });
-  };
+        [name]: checked ? [...group, value] : group.filter((v) => v !== value),
+      }
+    })
+  }
 
   const handleRadioChange = (e) => {
-    const { name, value } = e.target;
-    setSelectedOptions(prev => ({
+    const { name, value } = e.target
+    setSelectedOptions((prev) => ({
       ...prev,
-      [name]: value
-    }));
-  };
+      [name]: value,
+    }))
+  }
 
   const handleAddToCart = () => {
-    const userLoggedIn = !!localStorage.getItem('accessToken');
-
     const optionEntries = Object.entries(selectedOptions).flatMap(([groupId, values]) => {
       if (Array.isArray(values)) {
-        return values.map(v => ({ optionGroupId: groupId, optionItemId: v }));
+        return values.map((v) => ({ optionGroupId: groupId, optionItemId: v }))
       } else {
-        return [{ optionGroupId: groupId, optionItemId: values }];
+        return [{ optionGroupId: groupId, optionItemId: values }]
       }
-    });
+    })
 
     const item = {
       productId: id,
       note: null,
       quantity,
       productItemOptionModels: optionEntries,
-    };
-
-    if (userLoggedIn) {
-      CartService.addItemToCart(item)
-        .then(() => alert("Đã thêm vào giỏ hàng!"))
-        .catch(() => alert("Có lỗi xảy ra"));
-    } else {
-      const cart = JSON.parse(localStorage.getItem('local_cart') || '[]');
-      cart.push(item);
-      localStorage.setItem('local_cart', JSON.stringify(cart));
-      alert("Đã thêm vào giỏ hàng (local)!");
     }
-  };
 
-  const { data: product = {}, isLoading: loadingProduct } = useQuery({
+    const cart = JSON.parse(localStorage.getItem('local_cart') || '[]')
+    cart.push(item)
+    localStorage.setItem('local_cart', JSON.stringify(cart))
+    alert('Đã thêm vào giỏ hàng!')
+  }
+
+  const { data: product = {} } = useQuery({
     queryKey: ['product', id],
-    queryFn: () => ProductService.getProductById(id).then(res => res.data.data),
-  });
+    queryFn: () => ProductService.getProductById(id).then((res) => res.data.data),
+  })
 
   const { data: products = [] } = useQuery({
     queryKey: ['suggested'],
-    queryFn: () => ProductService.getAllProducts().then(res => res.data.data),
-  });
+    queryFn: () => ProductService.getAllProducts().then((res) => res.data.data),
+  })
 
   const { data: optionGroups = [] } = useQuery({
     queryKey: ['options', id],
-    queryFn: () => ProductOptionService.getOptionOfProductById(id).then(res => res.data.data),
-  });
+    queryFn: () => ProductOptionService.getOptionOfProductById(id).then((res) => res.data.data),
+  })
 
   const suggestions = useMemo(() => {
-    const otherProducts = products.filter(p => p.productId !== id);
-    const shuffled = [...otherProducts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4);
-  }, [products, id]);
+    const otherProducts = products.filter((p) => p.productId !== id)
+    const shuffled = [...otherProducts].sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, 4)
+  }, [products, id])
 
   useEffect(() => {
-    setQuantity(1);
-    setCopied(false);
-  }, [id]);
+    setQuantity(1)
+    setCopied(false)
+  }, [id])
 
-  return(
-    <div className="min-h-dvh flex flex-col">
-
+  return (
+    <div className="flex flex-col min-h-screen font-sans text-gray-600 bg-[#fffaf3]">
       <Header />
 
-      <div className="flex-1 max-w-7xl md:min-w-7xl mx-auto px-4 py-12 space-y-16">
-        <div className="flex flex-col md:flex-row gap-8">
-
+      <div className="flex-1 px-4 py-12 mx-auto space-y-16 max-w-7xl">
+        {/* Product Detail */}
+        <div className="flex flex-col gap-10 p-6 bg-white rounded-lg shadow-md md:flex-row md:gap-16">
+          {/* Image */}
           <div className="flex-1">
             <img
               src={product.imgs}
               alt={product.name}
-              className="w-full h-[400px] object-cover rounded shadow"
+              className="w-full h-[400px] object-cover rounded-lg shadow-sm"
             />
           </div>
 
-          <div className="flex-1 space-y-4">
+          {/* Info */}
+          <div className="flex-1 space-y-6">
+            <h2 className="text-4xl font-bold text-gray-600">{product.name}</h2>
+            <p className="leading-relaxed text-gray-600">{product.description}</p>
+            <p className="text-2xl font-semibold text-yellow-600">${product.unitPrice}</p>
+            <div className="text-sm text-gray-500">Mã danh mục: {product.categoryId}</div>
 
-            <h2 className="text-3xl font-bold text-gray-800">{product.name}</h2>
-            <p className="text-gray-600">{product.description}</p>
-
-            <p className="text-xl text-pink-600 font-semibold">${product.unitPrice}</p>
-
-            <div className="text-sm text-gray-500">Category ID: {product.categoryId}</div>
-
-            {optionGroups.map(group => (
-              <div key={group.optionGroupId} className="mb-6">
-                <p className="font-semibold text-gray-800 mb-1">{group.name}</p>
-                <p className="text-sm text-gray-500 mb-3">{group.description}</p>
+            {/* Options */}
+            {optionGroups.map((group) => (
+              <div key={group.optionGroupId}>
+                <p className="font-semibold text-gray-600">{group.name}</p>
+                <p className="mb-2 text-sm text-gray-500">{group.description}</p>
 
                 <div className="space-y-2">
-                  {group.isMultipleChoice ? (
-                    group.optionItems.map(item => (
-                      <label key={item.optionItemId} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          name={group.optionGroupId}
-                          value={item.optionItemId}
-                          onChange={handleCheckboxChange}
-                        />
-                        <span>{item.optionValue} (+${item.additionalPrice})</span>
-                      </label>
-                    ))
-                  ) : (
-                    group.optionItems.map(item => (
-                      <label key={item.optionItemId} className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={group.optionGroupId}
-                          value={item.optionItemId}
-                          onChange={handleRadioChange}
-                        />
-                        <span>{item.optionValue} (+${item.additionalPrice})</span>
-                      </label>
-                    ))
-                  )}
+                  {group.isMultipleChoice
+                    ? group.optionItems.map((item) => (
+                        <label key={item.optionItemId} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            name={group.optionGroupId}
+                            value={item.optionItemId}
+                            onChange={handleCheckboxChange}
+                            className="accent-yellow-600"
+                          />
+                          <span>
+                            {item.optionValue}{' '}
+                            <span className="text-gray-400">(+${item.additionalPrice})</span>
+                          </span>
+                        </label>
+                      ))
+                    : group.optionItems.map((item) => (
+                        <label key={item.optionItemId} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name={group.optionGroupId}
+                            value={item.optionItemId}
+                            onChange={handleRadioChange}
+                            className="accent-yellow-600"
+                          />
+                          <span>
+                            {item.optionValue}{' '}
+                            <span className="text-gray-400">(+${item.additionalPrice})</span>
+                          </span>
+                        </label>
+                      ))}
                 </div>
               </div>
             ))}
 
-            <div className="flex items-center gap-4 mt-4">
-              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-1 border rounded cursor-pointer">-</button>
-              <span>{quantity}</span>
-              <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-1 border rounded cursor-pointer">+</button>
+            {/* Quantity */}
+            <div className="flex items-center gap-3 mt-6">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-8 h-8 text-lg font-bold text-gray-700 border rounded hover:bg-gray-100"
+              >
+                -
+              </button>
+              <span className="text-lg font-medium">{quantity}</span>
+              <button
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-8 h-8 text-lg font-bold text-gray-700 border rounded hover:bg-gray-100"
+              >
+                +
+              </button>
             </div>
 
+            {/* Actions */}
             <div className="flex items-center gap-4 mt-6">
-
-              <button 
-                onClick={() => {handleAddToCart(); setQuantity(1)}}
-                className="bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700 cursor-pointer">
+              <button
+                onClick={() => {
+                  handleAddToCart()
+                  setQuantity(1)
+                }}
+                className="px-6 py-2 text-white transition bg-yellow-600 rounded hover:bg-yellow-700"
+              >
                 Thêm vào giỏ
               </button>
 
-              <div className="relative">
-                <button className="text-gray-600 text-xl hover:text-red-500 cursor-pointer">❤️</button>
-              </div>
+              <button className="text-xl text-yellow-500 transition hover:text-yellow-600">
+                <i className="fa-solid fa-heart"></i>
+              </button>
 
-              <div className="relative">
-                <button
-                  onClick={handleCopy}
-                  className="text-gray-600 hover:text-blue-500 cursor-pointer"
-                >
-                  🔗
-                </button>
+             <div className="relative">
+              <button
+                onClick={handleCopy}
+                className="text-gray-600 transition hover:text-blue-500"
+                title="Sao chép liên kết"
+              >
+                <i className="fa-solid fa-copy"></i>
+              </button>
 
-                {copied && (
-                  <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded shadow">
-                    Đã sao chép!
-                  </div>
-                )}
-
-              </div>
-              
+              {copied && (
+                <div className="absolute px-2 py-1 text-xs text-white transform -translate-x-1/2 bg-black rounded shadow -top-6 left-1/2">
+                  Đã sao chép!
+                </div>
+              )}
             </div>
 
+            </div>
           </div>
         </div>
 
+        {/* Suggested Products */}
         <div>
+          <h3 className="mb-6 text-2xl font-bold text-gray-600">Sản phẩm gợi ý</h3>
 
-          <h3 className="text-2xl font-bold mb-6">Sản phẩm gợi ý</h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-
-            {suggestions.map(p => (
-              <div key={p.productId} className="border rounded overflow-hidden hover:shadow">
-
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
+            {suggestions.map((p) => (
+              <div
+                key={p.productId}
+                className="overflow-hidden transition bg-white border rounded-lg shadow-sm hover:shadow-md"
+              >
                 <Link to={`/products/${p.productId}`}>
-                  <img src={p.imgs} alt={p.name} className="w-full h-40 object-cover" />
+                  <img src={p.imgs} alt={p.name} className="object-cover w-full h-40" />
                 </Link>
-
                 <div className="p-4 text-center">
-                  <h4 className="font-semibold text-gray-800">{p.name}</h4>
-                  <p className="text-pink-600 mt-1">${p.unitPrice}</p>
+                  <h4 className="text-lg font-semibold text-gray-800">{p.name}</h4>
+                  <p className="mt-1 text-yellow-600">${p.unitPrice}</p>
                 </div>
-
               </div>
             ))}
-
           </div>
-    
-          <div className="text-center mt-12">
+
+          <div className="mt-12 text-center">
             <Link
               to="/products"
-              className="inline-block bg-pink-600 text-white px-6 py-3 rounded hover:bg-pink-700 transition"
+              className="inline-block px-6 py-3 text-white transition bg-yellow-600 rounded hover:bg-yellow-700"
             >
               Xem thêm sản phẩm
             </Link>
           </div>
-
         </div>
       </div>
 
       <Footer />
-      
     </div>
   )
 }
