@@ -9,13 +9,15 @@ import { ProductCard } from '../components/ProductCard'
 import CategoryService from '../services/CategoryService'
 import ProductService from '../services/ProductService'
 
+import pagination from '../utils/Pagination'
+import { ProductFilter } from '../utils/ProductUtil'
+
 export function ProductPage() {
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategoryId, setSelectedCategory] = useState('');
+  const [currentPageIndex, setCurrentPageIndex] = useState(1);
   const [priceRange, setPriceRange] = useState([0, 100]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-
+  
   const { data: categories = [], isLoading: loadingCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => CategoryService.getAllCategories().then(res => res.data.data),
@@ -26,26 +28,14 @@ export function ProductPage() {
     queryFn: () => ProductService.getAllProducts().then(res => res.data.data),
   });
 
-  const filteredProducts = products.filter((p) => {
-    const matchSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.description.toLowerCase().includes(search.toLowerCase());
+  const filteredProducts = ProductFilter(products, search, selectedCategoryId, priceRange);
 
-    const matchCategory = selectedCategory ? p.categoryId === selectedCategory : true;
-    const matchPrice = p.unitPrice >= priceRange[0] && p.unitPrice <= priceRange[1];
-
-    return matchSearch && matchCategory && matchPrice;
-  });
-
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  let totalPerIndex = 8;
+  const totalPages = pagination.totalPage(filteredProducts, totalPerIndex)
+  const paginatedProducts = pagination.dataPerPage(filteredProducts, currentPageIndex, totalPerIndex);
 
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+    if (page >= 1 && page <= totalPages) setCurrentPageIndex(page);
   };
 
   return(
@@ -69,15 +59,15 @@ export function ProductPage() {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setCurrentPage(1);
+              setCurrentPageIndex(1);
             }}
           />
 
           <select
-            value={selectedCategory}
+            value={selectedCategoryId}
             onChange={(e) => {
               setSelectedCategory(e.target.value);
-              setCurrentPage(1);
+              setCurrentPageIndex(1);
             }}
             className="px-4 py-2 border border-gray-300 rounded-md"
           >
@@ -121,20 +111,20 @@ export function ProductPage() {
 
         <div className="flex justify-center items-center gap-4 my-10">
           <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPageIndex - 1)}
+            disabled={currentPageIndex === 1}
             className="px-4 py-2 border rounded disabled:opacity-50 cursor-pointer"
           >
             ← Trước
           </button>
 
           <span className="text-sm text-gray-700">
-            Trang {currentPage} / {totalPages}
+            Trang {currentPageIndex} / {totalPages}
           </span>
 
           <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            onClick={() => handlePageChange(currentPageIndex + 1)}
+            disabled={currentPageIndex === totalPages}
             className="px-4 py-2 border rounded disabled:opacity-50 cursor-pointer"
           >
             Tiếp →

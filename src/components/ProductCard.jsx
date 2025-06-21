@@ -28,11 +28,11 @@ export function ProductCard({ product }) {
         </div>
 
         <div className="flex justify-between items-end">
-          <p className="text-pink-600 font-bold">${unitPrice.toFixed(2)}</p>
+          <p className="text-amber-600 font-bold">${unitPrice.toFixed(2)}</p>
 
           <Link
             to={`/products/${productId}`}
-            className="mt-2 bg-pink-600 text-white text-center py-2 px-4 rounded hover:bg-pink-700 transition"
+            className="mt-2 bg-amber-500 text-white text-center py-2 px-4 rounded hover:bg-amber-600 transition"
           >
             Xem Chi Tiết
           </Link>

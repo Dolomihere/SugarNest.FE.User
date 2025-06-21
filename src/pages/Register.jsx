@@ -1,53 +1,41 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FcGoogle } from 'react-icons/fc';
-import { HiArrowLeft } from 'react-icons/hi';
-import AuthService from '../services/AuthService';
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useMutation } from '@tanstack/react-query'
+import { FcGoogle } from 'react-icons/fc'
+import { HiArrowLeft } from 'react-icons/hi'
+
+import AuthService from '../services/AuthService'
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    lastName: '',
-    firstName: '',
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState({ username: '', email: '', password: '', role: 'customer' });
   const [error, setError] = useState('');
   const [agree, setAgree] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const mutation = useMutation({
+    mutationFn: AuthService.register,
+    onSuccess: (res) => {
+      navigate('/login');
+    },
+    onError: (err) => {
+      setError(response.data?.message || 'Đăng nhập thất bại');
+    }
+  });
+
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setError('');
-
-    if (!agree) {
-      setError('Bạn cần đồng ý với Điều khoản và Chính sách bảo mật.');
-      return;
-    }
-
-    try {
-      const response = await AuthService.register({
-        fullName: `${form.lastName} ${form.firstName}`,
-        email: form.email,
-        password: form.password,
-      });
-      if (response.data?.isSuccess) {
-        navigate('/login');
-      } else {
-        setError(response.data?.message || 'Đăng ký thất bại');
-      }
-    } catch {
-      setError('Lỗi khi đăng ký. Vui lòng thử lại sau.');
-    }
+    mutation.mutate(form);
   };
 
   return (
     <div className="h-screen flex font-[Montserrat] bg-[#FFF9F4] overflow-hidden">
       {/* Left side */}
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-6 py-6">
+
         <div className="w-full max-w-md mb-3">
           <Link to="/" className="flex items-center text-[#5C4033] hover:underline text-sm">
             <HiArrowLeft className="mr-1 text-lg" />
@@ -66,20 +54,24 @@ export function RegisterPage() {
           )}
 
           <div className="flex space-x-4 mb-4">
+
             <button className="w-full py-2 px-3 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition text-[#5C4033] text-[15px] font-medium">
               <FcGoogle className="mr-2 text-xl" />
               Đăng ký với Google
             </button>
+
             <button className="w-full py-2 px-3 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition text-[#5C4033] text-[15px] font-medium">
               <span className="mr-2 text-lg font-bold">X</span>
               Đăng ký với X
             </button>
+
           </div>
 
           <div className="text-center text-[#A67C52] mb-4 text-sm">hoặc</div>
 
           <form onSubmit={handleRegister} className="space-y-4 text-[15px]">
             <div className="flex space-x-2">
+
               <div className="w-1/2">
                 <label className="block text-sm text-[#8B5E3C] mb-1">Họ *</label>
                 <input
@@ -92,6 +84,7 @@ export function RegisterPage() {
                   required
                 />
               </div>
+
               <div className="w-1/2">
                 <label className="block text-sm text-[#8B5E3C] mb-1">Tên *</label>
                 <input
@@ -104,6 +97,7 @@ export function RegisterPage() {
                   required
                 />
               </div>
+
             </div>
 
             <div>
@@ -133,6 +127,7 @@ export function RegisterPage() {
             </div>
 
             <div className="flex items-start space-x-2">
+
               <input
                 type="checkbox"
                 checked={agree}
@@ -140,11 +135,13 @@ export function RegisterPage() {
                 className="mt-1"
                 required
               />
+              
               <p className="text-sm text-[#5C4033]">
                 Bằng việc đăng ký, bạn đồng ý với{' '}
                 <a href="#" className="text-[#A0522D] underline hover:text-[#8B4513]">Điều khoản</a> và{' '}
                 <a href="#" className="text-[#A0522D] underline hover:text-[#8B4513]">Chính sách bảo mật</a> của chúng tôi.
               </p>
+
             </div>
 
             <button
@@ -162,6 +159,7 @@ export function RegisterPage() {
             </Link>
           </p>
         </div>
+        
       </div>
 
       {/* Right side */}
@@ -171,8 +169,8 @@ export function RegisterPage() {
           alt="Dessert Menu"
           className="w-full h-full object-cover"
         />
-       
+        
       </div>
     </div>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import CategoryService from '../../../services/CategoryService';
-import ProductService from '../../../services/ProductService';
+import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import CategoryService from '../../../services/CategoryService'
+import ProductService from '../../../services/ProductService'
 
 export function ProductShowcase() {
   const { data: categories = [], isLoading: loadingCategories } = useQuery({
@@ -154,5 +154,5 @@ export function ProductShowcase() {
       </div>
 
     </section>
-  );
+  )
 }

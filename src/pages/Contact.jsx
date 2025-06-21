@@ -23,16 +23,19 @@ export function ContactPage() {
 
             <form className="space-y-4">
               <input
+                id="name"
                 type="text"
                 placeholder="Tên của bạn"
                 className="w-full border border-gray-300 px-4 py-2 rounded"
               />
               <input
+                id="email"
                 type="email"
                 placeholder="Email của bạn"
                 className="w-full border border-gray-300 px-4 py-2 rounded"
               />
               <textarea
+                name="comment"
                 placeholder="Tin nhắn"
                 className="w-full border border-gray-300 px-4 py-2 rounded min-h-[100px]"
               />

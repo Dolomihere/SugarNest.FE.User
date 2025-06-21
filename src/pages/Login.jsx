@@ -1,29 +1,36 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FcGoogle } from 'react-icons/fc';
-import { FaXTwitter } from 'react-icons/fa6';
-import { HiArrowLeft } from 'react-icons/hi';
-import AuthService from '../services/AuthService';
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { FcGoogle } from 'react-icons/fc'
+import { FaXTwitter } from 'react-icons/fa6'
+import { HiArrowLeft } from 'react-icons/hi'
+
+import AuthService from '../services/AuthService'
 
 export function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ userNameOrEmail: '', password: '' });
   const [error, setError] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+
     try {
       const response = await AuthService.login(form);
+
       if (response.data?.isSuccess) {
         const { accessToken, refreshToken } = response.data.data;
+
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        navigate('/');
+
+        const redirectPath = localStorage.getItem('goBackRedirectPage') || '/';
+        localStorage.removeItem('goBackRedirectPage');
+        navigate(redirectPath);
       } else {
         setError(response.data?.message || 'Đăng nhập thất bại');
       }
@@ -33,10 +40,9 @@ export function LoginPage() {
   };
 
   return (
-<div className="h-screen flex font-[Montserrat] bg-[#FFF9F4] overflow-hidden">
-      {/* Left: Login + Quay về */}
+    <div className="h-screen flex font-[Montserrat] bg-[#FFF9F4] overflow-hidden">
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-6 py-6 relative">
-        {/* 🔙 Quay về trang chủ - NẰM NGOÀI FORM */}
+
         <div className="w-full max-w-md mb-3">
           <Link to="/" className="flex items-center text-[#5C4033] hover:underline text-sm">
             <HiArrowLeft className="mr-1 text-lg" />
@@ -46,6 +52,7 @@ export function LoginPage() {
 
         {/* 📋 Form đăng nhập */}
         <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-[#F1D9C0] p-8">
+
           <h2 className="text-3xl font-bold text-[#5C4033] text-center mb-1">Đăng nhập</h2>
           <p className="text-center text-[#8B5E3C] text-sm mb-5">Nhập email và mật khẩu để đăng nhập</p>
 
@@ -57,14 +64,17 @@ export function LoginPage() {
 
           {/* 🔗 Social buttons */}
           <div className="flex space-x-4 mb-4">
+
             <button className="w-full py-2 px-3 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition text-[#5C4033] text-[15px] font-medium">
               <FcGoogle className="mr-2 text-xl" />
               Sign in with Google
             </button>
+
             <button className="w-full py-2 px-3 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition text-[#5C4033] text-[15px] font-medium">
               <FaXTwitter className="mr-2 text-xl" />
               Sign in with X
             </button>
+
           </div>
 
           <div className="text-center text-[#A67C52] mb-4 text-sm">hoặc</div>
@@ -119,22 +129,27 @@ export function LoginPage() {
               Đăng ký ngay
             </Link>
           </p>
+
         </div>
       </div>
 
       {/* Right: Image */}
       <div className="hidden md:block w-1/2">
+
         <img
           src="/images/SignIn.png"
           alt="Bakery Promo"
           className="w-full h-full object-cover"
         />
-         <div className="absolute bottom-5 right-5">
+
+        <div className="absolute bottom-5 right-5">
           <button className="bg-white/80 text-[#5C4033] px-6 py-2 rounded-full font-semibold shadow-md hover:bg-white">
             ORDER NOW
           </button>
         </div>
+
       </div>
+
     </div>
-  );
+  )
 }

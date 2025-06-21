@@ -1,3 +1,4 @@
+
 export function AboutAndReviews() {
   const reviews = [
     { name: "Phùng Ngọc Yến Nhi", comment: "Bánh kem sinh nhật từ SugarNest là lựa chọn hoàn hảo cho bữa tiệc của tôi.", rating: 5 },
@@ -6,7 +7,7 @@ export function AboutAndReviews() {
   ];
 
   return (
-    <section className="px-6 py-24 space-y-24  ">
+    <section className="px-6 py-24 space-y-24">
 
       {/* Giới thiệu thương hiệu */}
       <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -32,31 +33,36 @@ export function AboutAndReviews() {
       {/* Đánh giá khách hàng */}
       <div className="text-center">
         <div className="max-w-6xl mx-auto mb-14 space-y-3">
-        <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Khách Hàng Nói Gì</h2>
+          <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Khách Hàng Nói Gì</h2>
           <p className="text-stone-600 text-lg">
             Những chia sẻ thật lòng từ khách hàng đã trải nghiệm bánh và dịch vụ của SugarNest
           </p>
         </div>
 
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 max-w-6xl mx-auto">
+
           {reviews.map((r, i) => (
             <div key={i} className="bg-[#fffcf8] border-amber-100 shadow rounded-2xl p-6 text-left space-y-4 transition hover:shadow-lg">
               <p className="text-stone-700 italic leading-relaxed">“{r.comment}”</p>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-amber-800">{r.name}</span>
 
-                <div className="flex text-amber-500 text-lg">
-                  {[...Array(5)].map((_, idx) => (
-                    <span key={idx}>{idx < r.rating ? "★" : "☆"}</span>
-                  ))}
+                <span className="text-sm font-semibold text-gray-800">{r.name}</span>
+                <div className="flex text-yellow-500">
+
+                  {[...Array(5)].map((_, idx) =>
+                    idx < r.rating ? "★" : "☆"
+                  )}
+
                 </div>
+
               </div>
             </div>
           ))}
+
         </div>
       </div>
 
     </section>
-  );
+  )
 }

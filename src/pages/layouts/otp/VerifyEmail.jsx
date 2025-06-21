@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
-import AuthService from '../services/AuthService'
+import AuthService from '../../../services/AuthService'
 
-export function OtpVerifyEmailPage() {
+export function VerifyEmail() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', otp: '' });
   const [error, setError] = useState('');
@@ -12,7 +12,6 @@ export function OtpVerifyEmailPage() {
   const mutation = useMutation({
     mutationFn: AuthService.verifyEmail,
     onSuccess: () => {
-      console.log('✅ Email verified successfully!');
       navigate('/login');
     },
     onError: (error) => {
@@ -29,19 +28,15 @@ export function OtpVerifyEmailPage() {
     mutation.mutate(form);
   };
 
-  return (
+  return(
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4">
+      <h2 className="text-2xl font-bold text-amber-600 text-center mb-6">Xác Minh Email</h2>
 
       {error && (
-        <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
-          {error}
-        </div>
+        <div className="mb-4 text-red-500 text-sm text-center">{error}</div>
       )}
 
-      <form onSubmit={handleSubmit} className="w-full max-w-md bg-white p-6 rounded shadow">
-
-        <h2 className="text-2xl font-bold text-pink-600 text-center mb-6">Xác Minh Email</h2>
-
+      <form onSubmit={handleSubmit}>
         <input
           type="email"
           name="email"
@@ -64,12 +59,11 @@ export function OtpVerifyEmailPage() {
 
         <button
           type="submit"
-          className="w-full bg-pink-600 text-white py-3 rounded hover:bg-pink-700 transition"
+          className="w-full bg-amber-500 text-white py-3 rounded hover:bg-amber-600 transition shadow-md"
           disabled={mutation.isPending}
         >
           {mutation.isPending ? 'Đang xác minh...' : 'Xác Minh'}
         </button>
-
       </form>
     </div>
   )
