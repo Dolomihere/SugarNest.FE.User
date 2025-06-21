@@ -83,7 +83,7 @@ export function HomePage() {
             />
             <button
               type="submit"
-              className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition font-medium shadow-md hover:shadow-lg"
+              className="bg-amber-500 text-white px-6 py-3 rounded-xl hover:bg-amber-600 transition font-medium shadow-md hover:shadow-lg cursor-pointer"
             >
               Đăng ký
             </button>
