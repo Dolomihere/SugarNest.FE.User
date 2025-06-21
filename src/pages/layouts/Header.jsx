@@ -16,7 +16,7 @@ export function Header() {
     <header className="w-full bg-white shadow-md relative z-10">
       <nav className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
 
-        <div className="text-2xl font-bold text-pink-600">SweetCake</div>
+        <div className="text-2xl font-bold text-yellow-600">SugarNest</div>
 
         <ul className="hidden md:flex gap-6 text-gray-700 font-medium">
 
@@ -37,13 +37,13 @@ export function Header() {
 
           <button 
             onClick={() => navigate('/cart')}
-            className="text-gray-600 hover:text-pink-600 cursor-pointer text-2xl">
+            className="text-gray-600 hover:text-yellow-600 cursor-pointer text-2xl">
             🛒
           </button>
 
           <button
             onClick={() => navigate('/login')}
-            className="px-4 py-1 border border-pink-600 text-pink-600 rounded hover:bg-pink-600 hover:text-white transition hidden md:block"
+            className="px-4 py-1 border border-yellow-600 text-yellow-600 rounded hover:bg-yellow-600 hover:text-white transition hidden md:block"
           >
             Đăng nhập
           </button>
@@ -79,7 +79,7 @@ export function Header() {
                   setMenuOpen(false);
                   navigate('/login');
                 }}
-                className="w-full text-left px-2 py-1 border border-pink-600 text-pink-600 rounded hover:bg-pink-600 hover:text-white transition"
+                className="w-full text-left px-2 py-1 border border-yellow-600 text-yellow-600 rounded hover:bg-yellow-600 hover:text-white transition"
               >
                 Đăng nhập
               </button>

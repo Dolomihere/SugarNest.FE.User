@@ -1,67 +1,60 @@
-
 export function AboutAndReviews() {
   const reviews = [
-    { name: "Phùng Ngọc Yến Nhi", comment: "Bánh kem sinh nhật từ SweetCake là lựa chọn hoàn hảo cho bữa tiệc của tôi.", rating: 5, },
-    { name: "Phạm Thị Minh Nhàn", comment: "Những chiếc cupcake ở đây thật sự ngon không thể cưỡng lại.", rating: 4, },
-    { name: "Nguyễn Thị Mai", comment: "Dịch vụ đặt bánh theo yêu cầu rất tuyệt vời. Họ làm đúng những gì tôi mong muốn.", rating: 5, },
+    { name: "Phùng Ngọc Yến Nhi", comment: "Bánh kem sinh nhật từ SugarNest là lựa chọn hoàn hảo cho bữa tiệc của tôi.", rating: 5 },
+    { name: "Phạm Thị Minh Nhàn", comment: "Những chiếc cupcake ở đây thật sự ngon không thể cưỡng lại.", rating: 4 },
+    { name: "Nguyễn Thị Mai", comment: "Dịch vụ đặt bánh theo yêu cầu rất tuyệt vời. Họ làm đúng những gì tôi mong muốn.", rating: 5 },
   ];
 
   return (
-    <section className="px-4 py-20 space-y-24">
+    <section className="px-6 py-24 space-y-24  ">
 
-      <div className="grid md:grid-cols-2 gap-10 items-center">
+      {/* Giới thiệu thương hiệu */}
+      <div className="grid md:grid-cols-2 gap-12 items-center">
         <img
-          src="/about-bakery.jpg"
-          alt="Our bakery"
-          className="w-full h-[320px] object-cover rounded-xl shadow"
+          src="https://i.pinimg.com/736x/3d/83/98/3d83988ed8c5c02a87c1c1e8cd367dba.jpg"
+          alt="Tiệm bánh SugarNest"
+          className="w-full h-[360px] object-cover rounded-3xl shadow-lg border border-amber-200"
         />
 
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Về SugarNest</h2>
+        <div className="space-y-5">
+          <h2 className= "text-4xl font-extrabold text-amber-600">Về SugarNest</h2>
 
-          <p className="text-gray-600 leading-relaxed">
-            SweetCake được thành lập vào năm 2025 với niềm đam mê tạo ra những chiếc bánh không chỉ ngon miệng mà còn đẹp mắt. Bắt đầu từ một tiệm bánh nhỏ, chúng tôi đã phát triển thành một thương hiệu đượcyêu thích.
+          <p className="text-stone-600 leading-relaxed text-lg">
+            SugarNest được thành lập vào năm 2025 với niềm đam mê tạo ra những chiếc bánh không chỉ ngon miệng mà còn đẹp mắt. Từ một tiệm bánh nhỏ, chúng tôi đã trở thành thương hiệu được yêu thích nhờ sự tận tâm và sáng tạo.
           </p>
 
-          <p className="mt-4 text-gray-600">
-            Triết lý của chúng tôi là sử dụng những nguyên liệu tốt nhất, kết hợp với công thức độc đáo và tình yêu với nghề làm bánh đểtạo ra những sản phẩm hoàn hảo. Mỗi chiếc bánh đều được làm thủ công,với sự tỉ mỉ và chăm chút đến từng chi tiết.
+          <p className="text-stone-600 leading-relaxed text-lg">
+            Chúng tôi chọn nguyên liệu chất lượng, kết hợp công thức độc quyền và đôi bàn tay thủ công để tạo nên từng chiếc bánh ngọt ngào, đậm chất nghệ thuật và cảm xúc.
           </p>
         </div>
-
       </div>
 
+      {/* Đánh giá khách hàng */}
       <div className="text-center">
-
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Khách Hàng Nói Gì Về Chúng Tôi</h2>
-          <p>Những đánh giá chân thực từ khách hàng đã trải nghiệm sản phẩm và dịch vụ của SugarNest</p>
+        <div className="max-w-6xl mx-auto mb-14 space-y-3">
+        <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Khách Hàng Nói Gì</h2>
+          <p className="text-stone-600 text-lg">
+            Những chia sẻ thật lòng từ khách hàng đã trải nghiệm bánh và dịch vụ của SugarNest
+          </p>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
-
+        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 max-w-6xl mx-auto">
           {reviews.map((r, i) => (
-            <div key={i} className="bg-white shadow-md rounded-lg p-6 text-left">
-
-              <p className="text-gray-700 mb-4">“{r.comment}”</p>
+            <div key={i} className="bg-[#fffcf8] border-amber-100 shadow rounded-2xl p-6 text-left space-y-4 transition hover:shadow-lg">
+              <p className="text-stone-700 italic leading-relaxed">“{r.comment}”</p>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-800">{r.name}</span>
+                <span className="text-sm font-semibold text-amber-800">{r.name}</span>
 
-                <div className="flex text-yellow-500">
-
-                  {[...Array(5)].map((_, idx) =>
-                    idx < r.rating ? "⭐" : "☆"
-                  )}
-
+                <div className="flex text-amber-500 text-lg">
+                  {[...Array(5)].map((_, idx) => (
+                    <span key={idx}>{idx < r.rating ? "★" : "☆"}</span>
+                  ))}
                 </div>
-                
               </div>
-
             </div>
           ))}
-
         </div>
-
       </div>
 
     </section>
