@@ -10,29 +10,29 @@ export function ProductCard({ product }) {
   } = product;
 
   return (
-    <div className="border flex flex-col rounded-lg overflow-hidden hover:shadow-md transition">
+    <div className="flex flex-col overflow-hidden transition border rounded-lg hover:shadow-md">
 
       <Link to={`/products/${productId}`}>
         <img
           src={imgs || '/placeholder.jpg'}
           alt={name}
-          className="w-full h-48 object-cover"
+          className="object-cover w-full h-48"
         />
       </Link>
 
-      <div className="flex flex-col flex-1 justify-between p-4 gap-2">
+      <div className="flex flex-col justify-between flex-1 gap-2 p-4">
 
         <div>
-          <h3 className="font-semibold text-gray-800">{name}</h3>
-          <p className="text-gray-500 text-sm line-clamp-2">{description}</p>
+          <h3 className="font-semibold text-gray-600">{name}</h3>
+          <p className="text-sm text-gray-500 line-clamp-2">{description}</p>
         </div>
-
-        <div className="flex justify-between items-end">
-          <p className="text-amber-600 font-bold">${unitPrice.toFixed(2)}</p>
+        
+        <div className="flex items-end justify-between">
+          <p className="font-bold text-yellow-600">${unitPrice.toFixed(2)}</p>
 
           <Link
             to={`/products/${productId}`}
-            className="mt-2 bg-amber-500 text-white text-center py-2 px-4 rounded hover:bg-amber-600 transition"
+            className="px-4 py-2 mt-2 text-center text-white transition bg-yellow-600 rounded hover:bg-yellow-700"
           >
             Xem Chi Tiết
           </Link>
