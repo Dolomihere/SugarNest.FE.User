@@ -39,18 +39,18 @@ export function ProductPage() {
   };
 
   return (
-    <div className="flex flex-col text-gray-700 min-h-dvh bg-[#fffaf3]">
+    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] text-gray-700 bg-[#fffaf3]">
 
       <Header />
 
-      <div className="flex-1 px-4 mx-auto max-w-7xl md:min-w-7xl">
+      <main className="px-4 my-12 mx-auto max-w-7xl md:min-w-7xl flex flex-col gap-5">
 
-        <div className="my-16 text-center">
+        <div className="text-center">
           <h2 className="mb-6 text-3xl font-bold text-gray-600">Sản Phẩm Của Chúng Tôi</h2>
           <p className="text-gray-600">Khám phá các loại bánh thơm ngon, được làm thủ công mỗi ngày</p>
         </div>
 
-        <div className="flex flex-col justify-between gap-4 mb-8 md:flex-row">
+        <div className="flex flex-col justify-between gap-4 md:flex-row">
 
           <input
             type="text"
@@ -99,13 +99,13 @@ export function ProductPage() {
 
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="flex-1 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {paginatedProducts.map((p) => (
             <ProductCard key={p.productId} product={p} />
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-4 my-10">
+        <div className="flex items-center justify-center gap-4">
           <button
             onClick={() => handlePageChange(currentPageIndex - 1)}
             disabled={currentPageIndex === 1}
@@ -128,7 +128,7 @@ export function ProductPage() {
           </button>
         </div>
 
-      </div>
+      </main>
 
       <Footer />
 

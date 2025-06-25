@@ -3,12 +3,12 @@ import { Footer } from './layouts/Footer'
 
 export function ContactPage() {
   return (
-    <div className="flex flex-col">
+    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto]">
       
       <Header />
 
-      <div className="flex-1 max-w-7xl mx-auto">
-        <section className="px-4 py-12 space-y-12">
+      <div className="max-w-7xl mx-auto">
+        <section className="px-4 my-12 space-y-12">
 
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">Liên Hệ Với Chúng Tôi</h1>
 
@@ -41,7 +41,7 @@ export function ContactPage() {
               />
               <button
                 type="submit"
-                className="bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700 transition"
+                className="bg-yellow-600 text-white px-6 py-2 rounded hover:bg-yellow-700 transition"
               >
                 Gửi tin nhắn
               </button>

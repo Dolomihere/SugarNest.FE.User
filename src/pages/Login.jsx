@@ -28,9 +28,9 @@ export function LoginPage() {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
 
-        const redirectPath = localStorage.getItem('goBackRedirectPage') || '/';
-        localStorage.removeItem('goBackRedirectPage');
-        navigate(redirectPath);
+        const lastVisited = localStorage.getItem('lastVisited') || '/';
+        navigate(lastVisited);
+        localStorage.removeItem('lastVisited');
       } else {
         setError(response.data?.message || 'Đăng nhập thất bại');
       }
