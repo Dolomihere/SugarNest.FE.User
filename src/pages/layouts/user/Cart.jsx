@@ -1,182 +1,127 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { FaTrashCan } from 'react-icons/fa6'
 
-import ProductService from '../../../services/ProductService'
 import CartService from '../../../services/CartService'
-
-import { authenticate, getUserIdFromToken } from '../../../utils/JwtVerify'
+import ProductService from '../../../services/ProductService'
 
 export function Cart() {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => authenticate());
-  const [cartItems, setCartItems] = useState([]);
+  const token = localStorage.getItem('accessToken');
 
-  const userId = useMemo(() => {
-    const token = localStorage.getItem('accessToken');
-    return getUserIdFromToken(token);
-  }, []);
-
-  const { data: userCart, refetch: refetchUserCart } = useQuery({
-    queryKey: ['user-cart'],
-    queryFn: async () => {
-      try {
-        const res = await CartService.getUserCart(userId);
-        return res.data.data;
-      } catch (err) {
-        if (err.response?.status === 404) {
-          return { cartItems: [] };
-        }
-        throw err;
-      }
-    },
-    enabled: isLoggedIn && !!userId,
-    retry: (failureCount, error) => {
-      return error.response?.status !== 404;
-    },
-    onSuccess: (data) => {
-      setCartItems(data.cartItems);
-    },
+  const { data: cartData, refetch: refetchCart } = useQuery({
+    queryKey: ['userCart', token],
+    queryFn: () => CartService.getUserCart(token),
+    enabled: !!token,
+    select: res => res.data.data,
   });
 
-  const { data: allProducts = [] } = useQuery({
-    queryKey: ['all-products'],
-    queryFn: () => ProductService.getAllProducts().then(res => res.data.data),
-    enabled: !isLoggedIn,
+  const { data: products } = useQuery({
+    queryKey: ['allProducts'],
+    queryFn: ProductService.getAllProducts,
+    select: res => res.data.data,
   });
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      const localCart = JSON.parse(localStorage.getItem('local_cart')) || [];
-      setCartItems(localCart);
-    }
-  }, [isLoggedIn]);
+  const updateQuantityMutation = useMutation({
+    mutationFn: ({ cartItemId, quantity }) =>
+      CartService.updateQuantity(cartItemId, quantity),
+    onSuccess: () => refetchCart(),
+    onError: () => setError('Không thể cập nhật số lượng.'),
+  });
 
-  const getGuestPrice = (productId) => {
-    const product = allProducts.find(p => p.productId === productId);
-    return product?.unitPrice || 0;
+  const deleteItemMutation = useMutation({
+    mutationFn: (cartItemId) => CartService.deleteItem(cartItemId),
+    onSuccess: () => refetchCart(),
+    onError: () => setError('Không thể xóa sản phẩm khỏi giỏ hàng.'),
+  });
+
+  const handleQuantityChange = (cartItemId, quantity) => {
+    if (quantity < 1) return;
+    updateQuantityMutation.mutate({ cartItemId, quantity });
   };
 
-  const handleQuantityChange = (index, change) => {
-    setCartItems(prev => {
-      const updated = [...prev];
-      const item = updated[index];
-      const newQuantity = item.quantity + change;
-
-      if (newQuantity < 1) {
-        const filtered = updated.filter((_, i) => i !== index);
-
-        if (isLoggedIn) {
-          CartService.deleteCartItem(item.cartItemId);
-        } else {
-          localStorage.setItem('local_cart', JSON.stringify(filtered));
-        }
-        return filtered;
-      } else {
-        updated[index] = { ...item, quantity: newQuantity };
-
-        if (isLoggedIn) {
-          CartService.updateCartQuantity(item.cartItemId, newQuantity);
-        } else {
-          localStorage.setItem('local_cart', JSON.stringify(updated));
-        }
-        return updated;
-      }
-    });
+  const handleDelete = (cartItemId) => {
+    deleteItemMutation.mutate(cartItemId);
   };
 
-  const handleDelete = (index) => {
-    const item = cartItems[index];
-
-    if (isLoggedIn) {
-      CartService.deleteCartItem(item.cartItemId).then(refetchUserCart);
-    } else {
-      const updated = [...cartItems];
-      updated.splice(index, 1);
-      setCartItems(updated);
-      localStorage.setItem('local_cart', JSON.stringify(updated));
-    }
+  const getProductImage = (productId) => {
+    const product = products?.find(p => p.productId === productId);
+    return product?.imgs?.[0] || '/images/placeholder.png';
   };
 
-  const cartTotal = useMemo(() => {
-    return cartItems.reduce((sum, item) => {
-      const unitPrice = isLoggedIn ? item.unitPrice + (item.itemAdditionalPrice || 0) : getGuestPrice(item.productId);
-      return sum + unitPrice * item.quantity;
-    }, 0);
-  }, [cartItems, allProducts, isLoggedIn]);
+  const total = cartData?.cartItems?.reduce((acc, item) => acc + item.total, 0) ?? 0;
 
   return (
-    <div className="flex-1">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="h-full flex flex-col font-[Montserrat] bg-[#FFFDF9]">
 
-        <div className="md:col-span-2 space-y-4">
+      {cartData?.cartItems?.length ? (
+        <>
+          <h2 className="text-2xl font-bold text-[#5C4033] px-4 pt-6 border-b border-[#E8D3BD]">Giỏ hàng của bạn</h2>
+          <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
 
-          {cartItems.length === 0 ? (
-            <p className="text-gray-500">Không có sản phẩm nào trong giỏ hàng.</p>
-          ) : (
-            cartItems.map((item, index) => {
-              const productId = item.productId;
-              const product = allProducts.find(p => p.productId === productId);
-              const unitPrice = isLoggedIn
-                ? item.unitPrice + (item.itemAdditionalPrice || 0)
-                : product?.unitPrice || 0;
-              const imageUrl = product?.imgs || 'https://via.placeholder.com/100';
+            {cartData.cartItems.map((item) => (
+              <div
+                key={item.cartItemId}
+                className="flex gap-4 bg-white p-4 rounded-lg shadow-sm border border-[#E8D3BD]"
+              >
+                <img
+                  src={getProductImage(item.productId)}
+                  alt={item.productName}
+                  className="w-24 h-24 object-cover rounded"
+                />
 
-              return (
-                <div
-                  key={index}
-                  className="border p-4 rounded flex items-center gap-4"
-                >
-                  <img src={imageUrl} alt="product" className="w-20 h-20 object-cover rounded" />
+                <div className="flex-1 flex flex-col justify-between">
 
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{item.productName || product?.name || 'Sản phẩm'} {(item.quantity === 1) ? '' : `x ${item.quantity}`}</h3>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#5C4033]">{item.productName}</h3>
+                    <p className="text-sm text-[#8B5E3C]">{item.note}</p>
 
-                    <div className="text-sm text-gray-500 mt-1">
+                    {item.cartItemOptions?.length > 0 && (
+                      <ul className="text-sm mt-1 list-disc list-inside text-[#8B5E3C]">
+                        {item.cartItemOptions.map((opt) => (
+                          <li key={opt.cartItemOptionId}>{opt.optionValue}</li>
+                        ))}
+                      </ul>
+                    )}
 
-                      {item.cartItemOptions?.map((opt, idx) => (
-                        <div key={idx}>
-                          {opt.optionGroupName}: <span className="italic">{opt.optionValue}</span>
-                        </div>
-                      ))}
-
-                    </div>
-
-                    <p className="text-sm text-gray-600">Giá: ${unitPrice.toFixed(2)}</p>
-                    <p className="text-sm text-gray-600">Tổng: ${(unitPrice * item.quantity).toFixed(2)}</p>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => handleQuantityChange(index, -1)} className="px-2 py-1 border rounded cursor-pointer">-</button>
-                    <span className="mx-1">{item.quantity}</span>
-                    <button onClick={() => handleQuantityChange(index, 1)} className="px-2 py-1 border rounded cursor-pointer">+</button>
+                  <div className="flex items-center gap-2 mt-3">
+                    <button onClick={() => handleQuantityChange(item.cartItemId, item.quantity - 1)} className="px-2 py-1 border rounded cursor-pointer">-</button>
+                    <span>{item.quantity}</span>
+                    <button onClick={() => handleQuantityChange(item.cartItemId, item.quantity + 1)} className="px-2 py-1 border rounded cursor-pointer">+</button>
                   </div>
 
-                  <button onClick={() => handleDelete(index)} className="text-red-500 hover:text-red-700 cursor-pointer">🗑</button>
                 </div>
-              );
-            })
-          )}
-        
-        </div>
 
-        <div className="bg-gray-100 p-6 rounded shadow-md">
+                <div className="flex flex-col justify-between items-end">
+                  <button onClick={() => handleDelete(item.cartItemId)} className="text-red-500 hover:text-red-700">
+                    <FaTrashCan />
+                  </button>
+                  <p className="text-lg font-bold text-[#5C4033]">{item.total.toLocaleString()}đ</p>
+                </div>
 
-          <h3 className="text-xl font-semibold mb-4">Tóm tắt đơn hàng</h3>
+              </div>
+            ))}
 
-          <div className="flex justify-between text-gray-700 mb-2">
-            <span>Tổng cộng:</span>
-            <span className="font-bold">${cartTotal.toFixed(2)}</span>
           </div>
 
-          <button
-            className="mt-4 w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700"
-            disabled={cartItems.length === 0}
-          >
-            Thanh toán
-          </button>
+          <div className="border-t border-[#E8D3BD] p-4 flex justify-between items-center">
 
-        </div>
+            <div>
+              <h3 className="text-base font-semibold text-[#5C4033]">Tổng cộng</h3>
+              <p className="text-xl font-bold text-[#D2691E]">{total.toLocaleString()}đ</p>
+            </div>
 
-      </div>
+            <button className="bg-[#D9A16C] hover:bg-[#C98B55] text-white font-semibold px-6 py-2 rounded-lg">
+              Thanh toán
+            </button>
+
+          </div>
+        </>
+      ) : (
+        <div className="text-3xl my-auto self-center">Giỏ hàng trống</div>
+      )}
+
     </div>
   )
 }

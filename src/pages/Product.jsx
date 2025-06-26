@@ -28,11 +28,11 @@ export function ProductPage() {
     queryFn: () => ProductService.getAllProducts().then(res => res.data.data),
   });
 
-  const filteredProducts = ProductFilter(products, search, selectedCategoryId, priceRange);
+  let filteredProducts = ProductFilter(products, search, selectedCategoryId, priceRange);
 
   let totalPerIndex = 8;
-  const totalPages = pagination.totalPage(filteredProducts, totalPerIndex)
-  const paginatedProducts = pagination.dataPerPage(filteredProducts, currentPageIndex, totalPerIndex);
+  let totalPages = pagination.totalPage(filteredProducts, totalPerIndex)
+  let paginatedProducts = pagination.dataPerPage(filteredProducts, currentPageIndex, totalPerIndex);
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPageIndex(page);

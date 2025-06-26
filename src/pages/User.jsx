@@ -1,53 +1,51 @@
 import { useState } from 'react'
-import { useAuthGuard } from '../utils/CheckAuth'
 
 import { Header } from './layouts/Header'
 import { Footer } from './layouts/Footer'
+
 import { Cart } from './layouts/user/Cart'
-import { Order } from './layouts/user/order'
-import { UserNav } from './layouts/user/UserNav'
 
 export function UserPage() {
   const [mode, setMode] = useState(0);
   const links = [
     { label: "Giỏ hàng" },
+    { label: "Hóa đơn" },
     { label: "Đơn hàng" },
     { label: "Tài khoản"},
   ];
 
-  const { isAuthenticated, isLoading } = useAuthGuard();
 
-  if (isLoading) return <div>Checking authentication...</div>;
 
-  if (!isAuthenticated) return null;
 
-  const switchMode = (num) => {
-    switch (num) {
-      case 0: return <Cart  />
-      case 1: return <Order />
-      default: 
-        break;
-    }
-  }
 
   return (
-    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto]">
+    <div className="h-screen grid grid-rows-[auto_1fr_auto]">
 
       <Header />
 
-      <div className="grid grid-cols-[10%_1fr] overflow-hidden">
-        <aside className="basis-[10%] flex-none flex flex-col">
-          <UserNav links={links} setMode={setMode} />
-          <p>{mode}</p>
-        </aside>
+      <main className="grid grid-cols-[15%_1fr] overflow-hidden">
+        <nav className="bg-white border-r">
 
-        <main className="flex-1 flex flex-col">
-          {switchMode(mode)}
-        </main>
-      </div>
+          <ul className="p-4 space-y-4 text-center">
+
+            {links.map((option, i) => (
+              <li 
+                key={i}
+                className="cursor-pointer hover:bg-amber-200 pt-2 rounded-md"
+              >{option.label}</li>
+            ))}
+
+          </ul>
+          
+        </nav>
+        
+        <div className="overflow-y-auto">
+          <Cart />
+        </div>
+      </main>
 
       <Footer />
       
     </div>
-  );
+  )
 }
