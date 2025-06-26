@@ -7,10 +7,10 @@ export function AboutAndReviews() {
   ];
 
   return (
-    <section className="px-6 py-24 space-y-24">
+    <section className="px-10 my-10 space-y-20">
 
       {/* Giới thiệu thương hiệu */}
-      <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
         <img
           src="https://i.pinimg.com/736x/3d/83/98/3d83988ed8c5c02a87c1c1e8cd367dba.jpg"
           alt="Tiệm bánh SugarNest"
@@ -30,7 +30,6 @@ export function AboutAndReviews() {
         </div>
       </div>
 
-      {/* Đánh giá khách hàng */}
       <div className="text-center">
         <div className="max-w-6xl mx-auto mb-14 space-y-3">
           <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Khách Hàng Nói Gì</h2>

@@ -38,19 +38,19 @@ export function AboutPage() {
   ]
 
   return (
-    <div className="flex flex-col min-h-dvh bg-[#fffaf3]">
+    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#fffaf3]">
+
       <Header />
 
-      <main className="flex-1 max-w-6xl px-4 py-12 mx-auto text-gray-800">
-        {/* Tiêu đề */}
-        <div className="mb-12 text-center">
+      <main className="max-w-7xl px-4 mx-auto my-12 flex flex-col gap-10 text-gray-800">
+
+        <div className="text-center">
           <p className="text-sm italic text-gray-500">Hành trình từ 2010</p>
           <h1 className="text-4xl font-bold text-[#5b3c11]">Về Chúng Tôi</h1>
           <p className="mt-2 text-gray-600 text-md">Hành trình mang hương vị ngọt ngào đến với mọi người từ năm 2010</p>
         </div>
 
-        {/* Câu chuyện thương hiệu */}
-        <section className="mb-16">
+        <section>
           <h2 className="text-2xl font-semibold text-[#5b3c11] mb-6">Câu Chuyện Của SweetCake</h2>
           <div className="grid items-center grid-cols-1 gap-6 md:grid-cols-2">
             <div>
@@ -70,28 +70,27 @@ export function AboutPage() {
           </div>
         </section>
 
-        {/* Timeline chính giữa */}
-        <section className="mb-16">
+        <section>
           <h2 className="text-2xl font-semibold text-[#5b3c11] mb-12 text-center">Hành Trình Phát Triển</h2>
 
           <div className="relative">
-            {/* Trục timeline */}
             <div className="absolute left-1/2 top-0 h-full w-[3px] bg-yellow-500 transform -translate-x-1/2 z-0" />
 
             <div className="relative z-10 space-y-20">
+
               {timeline.map((item, index) => (
+
                 <div
                   key={index}
                   className={`relative flex flex-col md:flex-row items-center ${
                     index % 2 === 0 ? 'md:flex-row-reverse' : ''
                   }`}
                 >
-                  {/* Icon giữa trục */}
+
                   <div className="z-20 w-10 h-10 rounded-full bg-white border-[3px] border-yellow-500 flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2 shadow-md">
                     {item.icon}
                   </div>
 
-                  {/* Ảnh */}
                   <div className="w-full px-4 md:w-1/2">
                     <img
                       src={item.image}
@@ -100,21 +99,22 @@ export function AboutPage() {
                     />
                   </div>
 
-                  {/* Nội dung */}
                   <div className="flex justify-center w-full px-4 md:w-1/2">
                     <div className="bg-[#f7f7f1] rounded-lg shadow-sm p-4 border border-[#ddd] w-full max-w-md">
                       <h3 className="text-lg font-semibold text-[#5b3c11] mb-1">{item.year}</h3>
                       <p className="text-gray-700">{item.event}</p>
                     </div>
                   </div>
+
                 </div>
               ))}
+
             </div>
           </div>
+          
         </section>
 
-        {/* CTA */}
-        <div className="mt-12 text-center">
+        <div className="text-center">
           <Link
             to="/products"
             className="inline-block px-6 py-3 text-white transition bg-yellow-600 rounded hover:bg-yellow-700"
