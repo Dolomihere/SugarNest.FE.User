@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import CategoryService from '../../../services/CategoryService'
 import ProductService from '../../../services/ProductService'
+import CustomCard from '../../../components/CustomCard';
 
 export function ProductShowcase() {
   const { data: categories = [], isLoading: loadingCategories } = useQuery({
@@ -53,8 +54,8 @@ export function ProductShowcase() {
 
       {/* Danh Mục Sản Phẩm */}
       <div>
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Danh Mục Sản Phẩm</h2>
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-4xl font-extrabold text-amber-600">Danh Mục Sản Phẩm</h2>
           <p className="text-[#7D5A3A]">
             Khám phá các loại bánh đa dạng, được làm thủ công mỗi ngày từ nguyên liệu tươi ngon nhất.
           </p>
@@ -63,7 +64,7 @@ export function ProductShowcase() {
         {loadingCategories ? (
           <p className="text-center text-[#A78D72]">Đang tải danh mục...</p>
         ) : (
-          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide px-1">
+          <div className="flex px-1 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
             {enrichedCategories.map((cat, index) => (
               <div
                 key={cat.categoryId}
@@ -72,9 +73,9 @@ export function ProductShowcase() {
                 <img
                   src={cat.img || '/placeholder.jpg'}
                   alt={cat.name}
-                  className="w-full h-40 object-cover"
+                  className="object-cover w-full h-40"
                 />
-                <div className="p-4 text-center font-semibold">{cat.name}</div>
+                <div className="p-4 font-semibold text-center">{cat.name}</div>
               </div>
             ))}
           </div>
@@ -83,30 +84,31 @@ export function ProductShowcase() {
 
       {/* Sản Phẩm Bán Chạy */}
       <div>
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Sản Phẩm Bán Chạy</h2>
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-4xl font-extrabold text-amber-600">Sản Phẩm Bán Chạy</h2>
           <p className="text-[#7D5A3A]">Những chiếc bánh được yêu thích và đặt nhiều nhất gần đây.</p>
         </div>
 
         {loadingProducts ? (
           <p className="text-center text-[#A78D72]">Đang tải sản phẩm...</p>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {enrichedHotProducts.map(product => (
-              <div
-                key={product.productId}
-                className="rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
-              >
-                <img
-                  src={product.imgs || '/placeholder.jpg'}
-                  alt={product.name}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-4 text-center font-semibold">
-                  <h3>{product.name}</h3>
-                  <p className="text-[#C06014] font-medium mt-1">${product.unitPrice}</p>
-                </div>
-              </div>
+              // <div
+              //   key={product.productId}
+              //   className="overflow-hidden transition duration-300 transform border border-orange-100 shadow-md rounded-xl hover:shadow-lg hover:-translate-y-1 bg-white/70"
+              // >
+              //   <img
+              //     src={product.imgs || '/placeholder.jpg'}
+              //     alt={product.name}
+              //     className="object-cover w-full h-40"
+              //   />
+              //   <div className="p-4 font-semibold text-center">
+              //     <h3>{product.name}</h3>
+              //     <p className="text-[#C06014] font-medium mt-1">${product.unitPrice}</p>
+              //   </div>
+              // </div>
+              <CustomCard></CustomCard>
             ))}
           </div>
         )}
@@ -124,15 +126,15 @@ export function ProductShowcase() {
 
       {/* Sản phẩm yêu thích */}
       <div>
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Sản Phẩm Yêu Thích</h2>
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-4xl font-extrabold text-amber-600">Sản Phẩm Yêu Thích</h2>
           <p className="text-[#7D5A3A]">Những chiếc bánh được khách hàng đánh giá cao và yêu thích nhất.</p>
         </div>
 
         {loadingProducts ? (
           <p className="text-center text-[#A78D72]">Đang tải sản phẩm yêu thích...</p>
         ) : (
-          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide px-1">
+          <div className="flex px-1 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
             {enrichedFavProducts.map(product => (
               <div
                 key={product.productId}
@@ -141,9 +143,9 @@ export function ProductShowcase() {
                 <img
                   src={product.imgs || '/placeholder.jpg'}
                   alt={product.name}
-                  className="w-full h-40 object-cover"
+                  className="object-cover w-full h-40"
                 />
-                <div className="p-4 text-center font-semibold">
+                <div className="p-4 font-semibold text-center">
                   <h3>{product.name}</h3>
                   <p className="text-[#C06014] font-medium mt-1">${product.unitPrice}</p>
                 </div>

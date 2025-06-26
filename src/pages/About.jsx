@@ -59,7 +59,7 @@ export function AboutPage() {
               </p>
               <p className="mt-4 italic bg-[#5b3c11] text-white p-3 rounded">
                 “Mỗi chiếc bánh không chỉ là món ăn, mà còn là niềm vui và tình yêu mà tôi muốn lan toả đến khách hàng.”<br />
-                – Minh Ngọc, Sáng lập
+                - Minh Ngọc, Sáng lập
               </p>
             </div>
             <img

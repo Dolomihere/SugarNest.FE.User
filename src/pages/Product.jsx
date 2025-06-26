@@ -107,7 +107,9 @@ export function ProductPage() {
 
         <div className="flex items-center justify-center gap-4 my-10">
           <button
-            onClick={() => handlePageChange(currentPage - 1)}
+
+            onClick={() => handlePageChange(currentPageIndex - 1)}
+ 
             disabled={currentPageIndex === 1}
             className="px-4 py-2 text-yellow-600 border rounded cursor-pointer disabled:opacity-50"
           >
@@ -118,7 +120,6 @@ export function ProductPage() {
           <span className="text-sm text-yellow-600">
             Trang {currentPageIndex} / {totalPages}
           </span>
-
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPageIndex === totalPages}
