@@ -15,7 +15,7 @@ export function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const [copied, setCopied] = useState(false)
 
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
   const isLoggedIn = !!token;
 
   const handleCopy = () => {

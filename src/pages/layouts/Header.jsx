@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 export function Header() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const navLinks = [
     { to: "/", label: "Trang chủ", end: true },
@@ -11,6 +12,18 @@ export function Header() {
     { to: "/about", label: "Về chúng tôi" },
     { to: "/intro", label: "Giới thiệu" },
   ];
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    sessionStorage.removeItem("accessToken");
+    setIsLoggedIn(false);
+    navigate("/");
+  };
 
   return (
     <header className="relative z-10 bg-white shadow-md">
@@ -41,12 +54,21 @@ export function Header() {
             <i className="fa-solid fa-cart-shopping"></i>
           </button>
 
-          <button
-            onClick={() => navigate('/login')}
-            className="hidden px-4 py-1 text-yellow-600 transition border border-yellow-600 rounded hover:bg-yellow-600 hover:text-white md:block"
-          >
-            Đăng nhập
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="hidden px-4 py-1 text-red-600 transition border border-red-600 rounded hover:bg-red-600 hover:text-white md:block"
+            >
+              Đăng xuất
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="hidden px-4 py-1 text-yellow-600 transition border border-yellow-600 rounded hover:bg-yellow-600 hover:text-white md:block"
+            >
+              Đăng nhập
+            </button>
+          )}
 
           <button
             className="text-2xl text-gray-700 md:hidden"
@@ -74,15 +96,29 @@ export function Header() {
             ))}
 
             <li>
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate('/login');
-                }}
-                className="px-2 py-1 text-left text-yellow-600 transition border border-yellow-600 rounded hover:bg-yellow-600 hover:text-white"
-              >
-                Đăng nhập
-              </button>
+
+              {isLoggedIn ? (
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="px-2 py-1 text-left text-red-600 transition border border-red-600 rounded hover:bg-red-600 hover:text-white"
+                >
+                  Đăng xuất
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate('/login');
+                  }}
+                  className="px-2 py-1 text-left text-yellow-600 transition border border-yellow-600 rounded hover:bg-yellow-600 hover:text-white"
+                >
+                  Đăng nhập
+                </button>
+              )}
+              
             </li>
 
           </ul>

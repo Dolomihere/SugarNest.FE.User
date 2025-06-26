@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { FaTrashCan } from 'react-icons/fa6'
+import { useNavigate } from 'react-router-dom'
 
 import CartService from '../../../services/CartService'
 import ProductService from '../../../services/ProductService'
 
 export function Cart() {
+  const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
 
   const { data: cartData, refetch: refetchCart } = useQuery({
@@ -46,6 +47,13 @@ export function Cart() {
   const getProductImage = (productId) => {
     const product = products?.find(p => p.productId === productId);
     return product?.imgs?.[0] || '/images/placeholder.png';
+  };
+
+  const handleCheckout = () => {
+    if (!cartData?.cartItems?.length) {
+      return alert("Your cart is empty.");
+    }
+    navigate('/checkout');
   };
 
   const total = cartData?.cartItems?.reduce((acc, item) => acc + item.total, 0) ?? 0;
@@ -112,7 +120,9 @@ export function Cart() {
               <p className="text-xl font-bold text-[#D2691E]">{total.toLocaleString()}đ</p>
             </div>
 
-            <button className="bg-[#D9A16C] hover:bg-[#C98B55] text-white font-semibold px-6 py-2 rounded-lg">
+            <button 
+              onClick={handleCheckout}
+              className="bg-[#D9A16C] hover:bg-[#C98B55] text-white font-semibold px-6 py-2 rounded-lg cursor-pointer">
               Thanh toán
             </button>
 

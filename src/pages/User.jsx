@@ -6,17 +6,12 @@ import { Footer } from './layouts/Footer'
 import { Cart } from './layouts/user/Cart'
 
 export function UserPage() {
-  const [mode, setMode] = useState(0);
   const links = [
     { label: "Giỏ hàng" },
     { label: "Hóa đơn" },
     { label: "Đơn hàng" },
     { label: "Tài khoản"},
   ];
-
-
-
-
 
   return (
     <div className="h-screen grid grid-rows-[auto_1fr_auto]">
