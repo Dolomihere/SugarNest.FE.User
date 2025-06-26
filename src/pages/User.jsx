@@ -4,8 +4,10 @@ import { Header } from './layouts/Header'
 import { Footer } from './layouts/Footer'
 
 import { Cart } from './layouts/user/Cart'
+import { Order } from './layouts/user/Order'
 
 export function UserPage() {
+  const [mode, setMode] = useState(1);
   const links = [
     { label: "Giỏ hàng" },
     { label: "Hóa đơn" },
@@ -26,6 +28,7 @@ export function UserPage() {
             {links.map((option, i) => (
               <li 
                 key={i}
+                onClick={() => setMode(i)}
                 className="cursor-pointer hover:bg-amber-200 pt-2 rounded-md"
               >{option.label}</li>
             ))}
@@ -35,7 +38,10 @@ export function UserPage() {
         </nav>
         
         <div className="overflow-y-auto">
-          <Cart />
+          {mode === 0 
+          ? <Cart />
+          : <Order />
+          }
         </div>
       </main>
 
