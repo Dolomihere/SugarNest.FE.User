@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCartShopping } from '@fortawesome/free-solid-svg-icons';
 
 export function Header() {
   const navigate = useNavigate();
@@ -37,9 +39,11 @@ export function Header() {
 
           <button 
             onClick={() => navigate('/user')}
-            className="text-2xl text-gray-600 cursor-pointer hover:text-pink-600">
-            <i className="fa-solid fa-cart-shopping"></i>
+            className="text-2xl text-yellow-600 cursor-pointer hover:text-yellow-900"
+          >
+            <FontAwesomeIcon icon={faCartShopping} />
           </button>
+
 
           <button
             onClick={() => navigate('/login')}

@@ -879,3 +879,10 @@ span.flatpickr-weekday,
   z-index: 1 !important;
 }
 
+@layer utilities {
+  .scroll-smooth-custom {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
