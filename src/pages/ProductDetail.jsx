@@ -10,10 +10,10 @@ import ProductOptionService from '../services/ProductOption'
 import CartService from '../services/CartService'
 
 export function ProductDetailPage() {
-  const { id } = useParams()
-  const [selectedOptions, setSelectedOptions] = useState({})
-  const [quantity, setQuantity] = useState(1)
-  const [copied, setCopied] = useState(false)
+  const { id } = useParams();
+  const [selectedOptions, setSelectedOptions] = useState({});
+  const [quantity, setQuantity] = useState(1);
+  const [copied, setCopied] = useState(false);
 
   const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
   const isLoggedIn = !!token;

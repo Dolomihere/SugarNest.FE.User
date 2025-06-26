@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+
 import CategoryService from '../../../services/CategoryService'
 import ProductService from '../../../services/ProductService'
+
+import { CustomCard } from '../../../components/CustomCard'
 
 export function ProductShowcase() {
   const { data: categories = [], isLoading: loadingCategories } = useQuery({
@@ -65,63 +68,48 @@ export function ProductShowcase() {
           {loadingCategories ? (
             <p className="text-center text-[#A78D72]">Đang tải danh mục...</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 place-items-center">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:grid-cols-4 place-items-center">
 
               {enrichedCategories.map((cat, index) => (
                 <div
                   key={cat.categoryId}
-                  className="w-[187px] rounded-xl shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
+                  className="w-[187px] flex-shrink-0 snap-start mr-4 last:mr-0 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
                 >
                   <img
                     src={cat.img || '/placeholder.jpg'}
                     alt={cat.name}
                     className="w-full h-40 object-cover"
                   />
-                  <div className="p-4 text-center font-semibold">{cat.name}</div>
+                  <div className="p-4 font-semibold text-center">{cat.name}</div>
                 </div>
               ))}
-
             </div>
           )}
-
         </div>
-
       </div>
 
       <div className="space-y-10">
 
         <div className="text-center">
-          <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Sản Phẩm Bán Chạy</h2>
+          <h2 className="mb-4 text-4xl font-extrabold text-amber-600">Sản Phẩm Bán Chạy</h2>
           <p className="text-[#7D5A3A]">Những chiếc bánh được yêu thích và đặt nhiều nhất gần đây.</p>
         </div>
 
-        <div div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto">
 
           {loadingProducts ? (
             <p className="text-center text-[#A78D72]">Đang tải sản phẩm...</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
+
               {enrichedHotProducts.map(product => (
-                <div
-                  key={product.productId}
-                  className="rounded-xl shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
-                >
-                  <img
-                    src={product.imgs || '/placeholder.jpg'}
-                    alt={product.name}
-                    className="w-full h-40 object-cover"
-                  />
-                  <div className="p-4 text-center font-semibold">
-                    <h3>{product.name}</h3>
-                    <p className="text-[#C06014] font-medium mt-1">${product.unitPrice}</p>
-                  </div>
-                </div>
+                <CustomCard key={product.productId} product={product} />
               ))}
+
             </div>
           )}
 
         </div>
-        
       </div>
 
       <div className="flex justify-center">
@@ -145,7 +133,7 @@ export function ProductShowcase() {
           {loadingProducts ? (
             <p className="text-center text-[#A78D72]">Đang tải sản phẩm yêu thích...</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 place-items-center p-5">
+            <div className="grid grid-cols-1 gap-5 p-5 md:grid-cols-3 lg:grid-cols-4 place-items-center">
               {enrichedFavProducts.map(product => (
                 <div
                   key={product.productId}
@@ -168,7 +156,6 @@ export function ProductShowcase() {
         </div>
 
       </div>
-
     </section>
   )
 }

@@ -43,14 +43,14 @@ export function ProductPage() {
 
       <Header />
 
-      <main className="px-4 my-12 mx-auto max-w-7xl md:min-w-7xl flex flex-col gap-5">
+      <main className="flex flex-col gap-5 px-4 mx-auto my-12 max-w-7xl md:min-w-7xl">
 
         <div className="text-center">
-          <h2 className="mb-6 text-3xl font-bold text-gray-600">Sản Phẩm Của Chúng Tôi</h2>
+          <h2 className="mb-6 text-3xl font-bold text-amber-600">Sản Phẩm Của Chúng Tôi</h2>
           <p className="text-gray-600">Khám phá các loại bánh thơm ngon, được làm thủ công mỗi ngày</p>
         </div>
 
-        <div className="flex flex-col justify-between gap-4 md:flex-row">
+        <div className="flex flex-col justify-between gap-4 md:flex-row mt-[30px]">
 
           <input
             type="text"
@@ -107,7 +107,9 @@ export function ProductPage() {
 
         <div className="flex items-center justify-center gap-4">
           <button
+
             onClick={() => handlePageChange(currentPageIndex - 1)}
+ 
             disabled={currentPageIndex === 1}
             className="px-4 py-2 text-yellow-600 border rounded cursor-pointer disabled:opacity-50"
           >
@@ -118,9 +120,8 @@ export function ProductPage() {
           <span className="text-sm text-yellow-600">
             Trang {currentPageIndex} / {totalPages}
           </span>
-
           <button
-            onClick={() => handlePageChange(currentPageIndex + 1)}
+            onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPageIndex === totalPages}
             className="px-4 py-2 text-yellow-600 border rounded cursor-pointer disabled:opacity-50"
           >
@@ -133,5 +134,5 @@ export function ProductPage() {
       <Footer />
 
     </div>
-  );
+  )
 }
