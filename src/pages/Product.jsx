@@ -28,29 +28,29 @@ export function ProductPage() {
     queryFn: () => ProductService.getAllProducts().then(res => res.data.data),
   });
 
-  const filteredProducts = ProductFilter(products, search, selectedCategoryId, priceRange);
+  let filteredProducts = ProductFilter(products, search, selectedCategoryId, priceRange);
 
   let totalPerIndex = 8;
-  const totalPages = pagination.totalPage(filteredProducts, totalPerIndex)
-  const paginatedProducts = pagination.dataPerPage(filteredProducts, currentPageIndex, totalPerIndex);
+  let totalPages = pagination.totalPage(filteredProducts, totalPerIndex)
+  let paginatedProducts = pagination.dataPerPage(filteredProducts, currentPageIndex, totalPerIndex);
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPageIndex(page);
   };
 
   return (
-    <div className="flex flex-col text-gray-700 min-h-dvh bg-[#fffaf3]">
+    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] text-gray-700 bg-[#fffaf3]">
 
       <Header />
 
-      <div className="flex-1 px-4 mx-auto max-w-7xl md:min-w-7xl">
+      <main className="flex flex-col gap-5 px-4 mx-auto my-12 max-w-7xl md:min-w-7xl">
 
-        <div className="my-16 text-center">
-          <h2 className="mb-6 text-3xl font-bold text-gray-600">Sản Phẩm Của Chúng Tôi</h2>
+        <div className="text-center">
+          <h2 className="mb-6 text-3xl font-bold text-amber-600">Sản Phẩm Của Chúng Tôi</h2>
           <p className="text-gray-600">Khám phá các loại bánh thơm ngon, được làm thủ công mỗi ngày</p>
         </div>
 
-        <div className="flex flex-col justify-between gap-4 mb-8 md:flex-row">
+        <div className="flex flex-col justify-between gap-4 md:flex-row mt-[30px]">
 
           <input
             type="text"
@@ -99,13 +99,13 @@ export function ProductPage() {
 
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid flex-1 grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-[30px] ">
           {paginatedProducts.map((p) => (
             <ProductCard key={p.productId} product={p} />
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-4 my-10">
+        <div className="flex items-center justify-center gap-4">
           <button
 
             onClick={() => handlePageChange(currentPageIndex - 1)}
@@ -129,7 +129,7 @@ export function ProductPage() {
           </button>
         </div>
 
-      </div>
+      </main>
 
       <Footer />
 

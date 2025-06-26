@@ -7,12 +7,16 @@ import { Footer } from './layouts/Footer'
 
 import ProductService from '../services/ProductService'
 import ProductOptionService from '../services/ProductOption'
+import CartService from '../services/CartService'
 
 export function ProductDetailPage() {
   const { id } = useParams()
   const [selectedOptions, setSelectedOptions] = useState({})
   const [quantity, setQuantity] = useState(1)
   const [copied, setCopied] = useState(false)
+
+  const token = localStorage.getItem('accessToken');
+  const isLoggedIn = !!token;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -39,7 +43,7 @@ export function ProductDetailPage() {
     }))
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     const optionEntries = Object.entries(selectedOptions).flatMap(([groupId, values]) => {
       if (Array.isArray(values)) {
         return values.map((v) => ({ optionGroupId: groupId, optionItemId: v }))
@@ -55,10 +59,23 @@ export function ProductDetailPage() {
       productItemOptionModels: optionEntries,
     }
 
-    const cart = JSON.parse(localStorage.getItem('local_cart') || '[]')
-    cart.push(item)
-    localStorage.setItem('local_cart', JSON.stringify(cart))
-    alert('Đã thêm vào giỏ hàng!')
+    const token = localStorage.getItem('accessToken')
+    const isLoggedIn = !!token
+
+    try {
+      if (isLoggedIn) {
+        await CartService.addItemToCart(item, token);
+        alert('Đã thêm vào giỏ hàng (đăng nhập)!')
+      } else {
+        const cart = JSON.parse(localStorage.getItem('local_cart') || '[]')
+        cart.push(item)
+        localStorage.setItem('local_cart', JSON.stringify(cart))
+        alert('Đã thêm vào giỏ hàng (khách)!')
+      }
+    } catch (error) {
+      console.error('Add to cart failed:', error)
+      alert('Lỗi khi thêm vào giỏ hàng.')
+    }
   }
 
   const { data: product = {} } = useQuery({
@@ -88,13 +105,13 @@ export function ProductDetailPage() {
   }, [id])
 
   return (
-    <div className="flex flex-col min-h-screen font-sans text-gray-600 bg-[#fffaf3]">
+    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans text-gray-600 bg-[#fffaf3]">
+
       <Header />
 
-      <div className="flex-1 px-4 py-12 mx-auto space-y-16 max-w-7xl">
-        {/* Product Detail */}
+      <div className="px-4 my-12 mx-auto space-y-16 max-w-7xl">
         <div className="flex flex-col gap-10 p-6 bg-white rounded-lg shadow-md md:flex-row md:gap-16">
-          {/* Image */}
+
           <div className="flex-1">
             <img
               src={product.imgs}
@@ -103,20 +120,19 @@ export function ProductDetailPage() {
             />
           </div>
 
-          {/* Info */}
           <div className="flex-1 space-y-6">
             <h2 className="text-4xl font-bold text-gray-600">{product.name}</h2>
             <p className="leading-relaxed text-gray-600">{product.description}</p>
             <p className="text-2xl font-semibold text-yellow-600">${product.unitPrice}</p>
             <div className="text-sm text-gray-500">Mã danh mục: {product.categoryId}</div>
 
-            {/* Options */}
             {optionGroups.map((group) => (
               <div key={group.optionGroupId}>
                 <p className="font-semibold text-gray-600">{group.name}</p>
                 <p className="mb-2 text-sm text-gray-500">{group.description}</p>
 
                 <div className="space-y-2">
+
                   {group.isMultipleChoice
                     ? group.optionItems.map((item) => (
                         <label key={item.optionItemId} className="flex items-center gap-2 text-sm">
@@ -148,11 +164,11 @@ export function ProductDetailPage() {
                           </span>
                         </label>
                       ))}
+
                 </div>
               </div>
             ))}
 
-            {/* Quantity */}
             <div className="flex items-center gap-3 mt-6">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -169,7 +185,6 @@ export function ProductDetailPage() {
               </button>
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-4 mt-6">
               <button
                 onClick={() => {
@@ -185,29 +200,28 @@ export function ProductDetailPage() {
                 <i className="fa-solid fa-heart"></i>
               </button>
 
-             <div className="relative">
-              <button
-                onClick={handleCopy}
-                className="text-gray-600 transition hover:text-blue-500"
-                title="Sao chép liên kết"
-              >
-                <i className="fa-solid fa-copy"></i>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleCopy}
+                  className="text-gray-600 transition hover:text-blue-500"
+                  title="Sao chép liên kết"
+                >
+                  <i className="fa-solid fa-copy"></i>
+                </button>
 
-              {copied && (
-                <div className="absolute px-2 py-1 text-xs text-white transform -translate-x-1/2 bg-black rounded shadow -top-6 left-1/2">
-                  Đã sao chép!
-                </div>
-              )}
-            </div>
+                {copied && (
+                  <div className="absolute px-2 py-1 text-xs text-white transform -translate-x-1/2 bg-black rounded shadow -top-6 left-1/2">
+                    Đã sao chép!
+                  </div>
+                )}
+              </div>
 
             </div>
           </div>
         </div>
 
-        {/* Suggested Products */}
-        <div>
-          <h3 className="mb-6 text-2xl font-bold text-gray-600">Sản phẩm gợi ý</h3>
+        <div className="flex flex-col gap-10">
+          <h3 className="text-2xl font-bold text-gray-600">Sản phẩm gợi ý</h3>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
             {suggestions.map((p) => (
@@ -226,7 +240,7 @@ export function ProductDetailPage() {
             ))}
           </div>
 
-          <div className="mt-12 text-center">
+          <div className="text-center">
             <Link
               to="/products"
               className="inline-block px-6 py-3 text-white transition bg-yellow-600 rounded hover:bg-yellow-700"
@@ -234,6 +248,7 @@ export function ProductDetailPage() {
               Xem thêm sản phẩm
             </Link>
           </div>
+
         </div>
       </div>
 

@@ -50,72 +50,56 @@ export function ProductShowcase() {
       : [...favoriteProducts, ...demoFavProducts.slice(0, 6 - favoriteProducts.length)];
 
   return (
-    <section className="px-4 py-16 space-y-20 bg-orange-50/20 text-[#5C3A21] text-lg">
-
-      {/* Danh Mục Sản Phẩm */}
-      <div>
-        <div className="mb-12 text-center">
+    <section className="flex flex-col gap-20 px-10 my-10 bg-orange-50/20 text-[#5C3A21] text-lg">
+      <div className="space-y-10">
+        <div className="text-center">
           <h2 className="mb-4 text-4xl font-extrabold text-amber-600">Danh Mục Sản Phẩm</h2>
           <p className="text-[#7D5A3A]">
             Khám phá các loại bánh đa dạng, được làm thủ công mỗi ngày từ nguyên liệu tươi ngon nhất.
           </p>
         </div>
-
-        {loadingCategories ? (
-          <p className="text-center text-[#A78D72]">Đang tải danh mục...</p>
-        ) : (
-          <div className="flex px-1 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
-            {enrichedCategories.map((cat, index) => (
-              <div
-                key={cat.categoryId}
-                className="w-[187px] flex-shrink-0 snap-start mr-4 last:mr-0 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
-              >
-                <img
-                  src={cat.img || '/placeholder.jpg'}
-                  alt={cat.name}
-                  className="object-cover w-full h-40"
-                />
-                <div className="p-4 font-semibold text-center">{cat.name}</div>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="max-w-6xl mx-auto">
+          {loadingCategories ? (
+            <p className="text-center text-[#A78D72]">Đang tải danh mục...</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:grid-cols-4 place-items-center">
+              {enrichedCategories.map((cat, index) => (
+                <div
+                  key={cat.categoryId}
+                  className="w-[187px] flex-shrink-0 snap-start mr-4 last:mr-0 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
+                >
+                  <img
+                    src={cat.img || '/placeholder.jpg'}
+                    alt={cat.name}
+                    className="object-cover w-full h-40"
+                  />
+                  <div className="p-4 font-semibold text-center">{cat.name}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Sản Phẩm Bán Chạy */}
-      <div>
-        <div className="mb-12 text-center">
+      <div className="space-y-10">
+        <div className="text-center">
           <h2 className="mb-4 text-4xl font-extrabold text-amber-600">Sản Phẩm Bán Chạy</h2>
           <p className="text-[#7D5A3A]">Những chiếc bánh được yêu thích và đặt nhiều nhất gần đây.</p>
         </div>
-
-        {loadingProducts ? (
-          <p className="text-center text-[#A78D72]">Đang tải sản phẩm...</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {enrichedHotProducts.map(product => (
-              // <div
-              //   key={product.productId}
-              //   className="overflow-hidden transition duration-300 transform border border-orange-100 shadow-md rounded-xl hover:shadow-lg hover:-translate-y-1 bg-white/70"
-              // >
-              //   <img
-              //     src={product.imgs || '/placeholder.jpg'}
-              //     alt={product.name}
-              //     className="object-cover w-full h-40"
-              //   />
-              //   <div className="p-4 font-semibold text-center">
-              //     <h3>{product.name}</h3>
-              //     <p className="text-[#C06014] font-medium mt-1">${product.unitPrice}</p>
-              //   </div>
-              // </div>
-              <CustomCard></CustomCard>
-            ))}
-          </div>
-        )}
+        <div className="max-w-6xl mx-auto">
+          {loadingProducts ? (
+            <p className="text-center text-[#A78D72]">Đang tải sản phẩm...</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
+              {enrichedHotProducts.map(product => (
+                <CustomCard key={product.productId} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Xem tất cả */}
-      <div className="flex justify-center mt-10">
+      <div className="flex justify-center">
         <Link
           to="/products"
           className="bg-[#C06014] text-white px-8 py-3 text-lg rounded-lg hover:bg-[#a35010] transition"
@@ -124,37 +108,36 @@ export function ProductShowcase() {
         </Link>
       </div>
 
-      {/* Sản phẩm yêu thích */}
-      <div>
-        <div className="mb-12 text-center">
+      <div className="space-y-10">
+        <div className="text-center">
           <h2 className="mb-4 text-4xl font-extrabold text-amber-600">Sản Phẩm Yêu Thích</h2>
           <p className="text-[#7D5A3A]">Những chiếc bánh được khách hàng đánh giá cao và yêu thích nhất.</p>
         </div>
-
-        {loadingProducts ? (
-          <p className="text-center text-[#A78D72]">Đang tải sản phẩm yêu thích...</p>
-        ) : (
-          <div className="flex px-1 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
-            {enrichedFavProducts.map(product => (
-              <div
-                key={product.productId}
-                className="w-[187px] flex-shrink-0 snap-start mr-4 last:mr-0 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
-              >
-                <img
-                  src={product.imgs || '/placeholder.jpg'}
-                  alt={product.name}
-                  className="object-cover w-full h-40"
-                />
-                <div className="p-4 font-semibold text-center">
-                  <h3>{product.name}</h3>
-                  <p className="text-[#C06014] font-medium mt-1">${product.unitPrice}</p>
+        <div className="max-w-6xl mx-auto">
+          {loadingProducts ? (
+            <p className="text-center text-[#A78D72]">Đang tải sản phẩm yêu thích...</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 p-5 md:grid-cols-3 lg:grid-cols-4 place-items-center">
+              {enrichedFavProducts.map(product => (
+                <div
+                  key={product.productId}
+                  className="w-[187px] rounded-xl shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
+                >
+                  <img
+                    src={product.imgs || '/placeholder.jpg'}
+                    alt={product.name}
+                    className="object-cover w-full h-40"
+                  />
+                  <div className="p-4 font-semibold text-center">
+                    <h3>{product.name}</h3>
+                    <p className="text-[#C06014] font-medium mt-1">${product.unitPrice}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-
     </section>
   )
 }
