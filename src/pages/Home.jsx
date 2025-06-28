@@ -7,59 +7,66 @@ import { Mailing } from './layouts/home/Mailing'
 
 export function HomePage() {
   return (
-    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-orange-50/70 text-stone-800">
-      
+    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-section text-main">
+
       <Header />
 
-      <section className="flex flex-row gap-5 px-10 my-12 max-w-7xl mx-auto">
-
-        <div className="flex flex-col gap-5">
-          
-          <h1 className="text-4xl md:text-5xl font-extrabold text-[#5C3A21] leading-tight">
+      {/* Hero Section */}
+      <section className="flex flex-col md:flex-row flex-wrap gap-5 p-5 max-w-7xl mx-auto">
+        <div className="flex flex-col gap-5 p-5 flex-1">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-main leading-tight">
             Bánh Ngọt <span className="text-amber-600">Tuyệt Hảo</span><br />
             Cho Mọi Dịp
           </h1>
 
-          <p className="text-lg text-stone-600 max-w-prose">
+          <p className="text-lg text-sub max-w-prose">
             Hãy để mỗi khoảnh khắc trong cuộc sống thêm phần ngọt ngào với những chiếc bánh thủ công tinh tế từ chúng tôi được chế biến từ nguyên liệu tự nhiên, kết hợp giữa hương vị truyền thống và sự sáng tạo hiện đại trong từng lớp bánh.
           </p>
 
-            <p className="text-lg text-stone-600 max-w-prose">
-          Từ những chiếc bánh sinh nhật rực rỡ, bánh cưới sang trọng cho đến các món tráng miệng thường ngày, mỗi sản phẩm đều là một tác phẩm nghệ thuật được làm bằng cả trái tim. Chúng tôi không chỉ mang đến hương vị tuyệt vời, mà còn trao gửi yêu thương và sự chăm chút trong từng chi tiết nhỏ nhất.           
-            </p>
+          <p className="text-lg text-sub max-w-prose">
+            Từ những chiếc bánh sinh nhật rực rỡ, bánh cưới sang trọng cho đến các món tráng miệng thường ngày, mỗi sản phẩm đều là một tác phẩm nghệ thuật được làm bằng cả trái tim. Chúng tôi không chỉ mang đến hương vị tuyệt vời, mà còn trao gửi yêu thương và sự chăm chút trong từng chi tiết nhỏ nhất.           
+          </p>
 
-            <p className="text-lg text-stone-600 max-w-prose">Hãy cùng chúng tôi lan tỏa niềm vui, chia sẻ những khoảnh khắc ý nghĩa, và tạo nên những kỷ niệm ngọt ngào không thể nào quên.</p>
+          <p className="text-lg text-sub max-w-prose">
+            Hãy cùng chúng tôi lan tỏa niềm vui, chia sẻ những khoảnh khắc ý nghĩa, và tạo nên những kỷ niệm ngọt ngào không thể nào quên.
+          </p>
 
-          <div>
-            <button className="bg-amber-500 hover:bg-amber-600 transition text-white px-6 py-3 rounded-xl text-lg shadow-md hover:shadow-lg cursor-pointer my-3 sm:mx-5">
+          <div className="flex flex-wrap gap-4 mt-4">
+            <button className="btn-primary shadow-md hover:shadow-lg cursor-pointer">
               Đặt bánh ngay
             </button>
 
-            <button className="text-amber-600 border border-amber-300 px-6 py-3 rounded-xl text-lg hover:bg-amber-100 transition cursor-pointer">
+            <button className="text-amber-600 border border-amber-300 px-5 py-3 rounded-xl text-lg hover:bg-amber-100 transition cursor-pointer">
               Liên hệ với chúng tôi
             </button>
           </div>
-
         </div>
 
-        <div className="hidden md:flex justify-center items-center">
+        <div className="hidden md:flex justify-center items-center flex-1 p-5">
           <img
             src="https://i.pinimg.com/736x/f3/40/aa/f340aa237513bc33d67074f674b2305a.jpg"
             alt="Delicious cake"
-            className="h-auto w-[600px] rounded-2xl shadow-xl object-cover"
-            />
+            className="h-auto w-full max-w-[600px] rounded-2xl shadow-xl object-cover"
+          />
         </div>
-
       </section>
 
-      <ProductShowcase />
+      {/* Showcase Section */}
+      <div className="p-5">
+        <ProductShowcase />
+      </div>
 
-      <AboutAndReviews />
+      {/* About and Review Section */}
+      <div className="p-5">
+        <AboutAndReviews />
+      </div>
 
-      <Mailing />
+      {/* Mailing Section */}
+      <div className="p-5">
+        <Mailing />
+      </div>
 
       <Footer />
-
     </div>
   )
 }

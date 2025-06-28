@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import CheckoutPage from './pages/Checkout.jsx';
 
 import { HomePage } from './pages/Home'
 import { ProductPage } from './pages/Product'
@@ -10,8 +11,8 @@ import { LoginPage } from './pages/Login'
 // import { VerifyEmail } from './pages/layouts/otp/VerifyEmail'
 import { ContactPage } from './pages/Contact'
 import { AboutPage } from './pages/About'
-import { UserPage } from './pages/User'
-import { CheckoutPage } from './pages/Checkout'
+import UserPage from './pages/User.jsx'
+
 import { PaymentPage } from './pages/Payment'
 
 function App() {
@@ -29,7 +30,8 @@ function App() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/user" element={<UserPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
-      <Route path="/payment" element={<PaymentPage />} />
+      <Route path="/payment" element={<PaymentPage></PaymentPage>} />
+
     </Routes>
   )
 }

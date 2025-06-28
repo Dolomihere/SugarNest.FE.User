@@ -879,3 +879,53 @@ span.flatpickr-weekday,
   z-index: 1 !important;
 }
 
+@layer utilities {
+  .scroll-smooth-custom {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* index.css */
+:root {
+  --text-main: #5C3A21;
+  --text-sub: #A78D72;
+  --text-heading: #7D5A3A;
+
+  --btn-primary-bg: #f59e0b; /* amber-500 */
+  --btn-primary-hover: #d97706; /* amber-600 */
+  --card-bg: #fff;
+  --section-bg: #fff7ed; /* bg-orange-50/20 */
+}
+
+/* Tiện ích dùng lại */
+.text-main {
+  color: var(--text-main);
+}
+
+.text-sub {
+  color: var(--text-sub);
+}
+
+.text-heading {
+  color: var(--text-heading);
+}
+
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  color: white;
+  padding: 0.75rem 2rem;
+  font-size: 1.0rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: var(--btn-primary-hover);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #d97706;
+}
+/* Map */
+@import "leaflet/dist/leaflet.css";

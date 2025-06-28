@@ -3,158 +3,148 @@ import { useQuery } from '@tanstack/react-query'
 
 import CategoryService from '../../../services/CategoryService'
 import ProductService from '../../../services/ProductService'
-
 import { CustomCard } from '../../../components/CustomCard'
 
 export function ProductShowcase() {
   const { data: categories = [], isLoading: loadingCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => CategoryService.getAllCategories().then(res => res.data.data),
-  });
+  })
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ['products'],
     queryFn: () => ProductService.getAllProducts().then(res => res.data.data),
-  });
+  })
 
   const demoCategories = Array.from({ length: 8 }, (_, i) => ({
     categoryId: `demo-cat-${i}`,
     name: `Bánh Mẫu ${i + 1}`,
     img: `https://i.pinimg.com/736x/32/27/61/322761c59b52a2f0e4cce7a06347b65a.jpg`,
-  }));
+  }))
 
-  const enrichedCategories = categories.length >= 8 ? categories : demoCategories;
+  const enrichedCategories = (categories.length >= 4 ? categories : demoCategories).slice(0, 4)
 
   const demoHotProducts = Array.from({ length: 4 }, (_, i) => ({
     productId: `hot-${i}`,
     name: `Bánh Hot ${i + 1}`,
     imgs: `https://i.pinimg.com/736x/8b/ba/e7/8bbae712ed51359ef8a109318b05838d.jpg`,
     unitPrice: (10 + i).toFixed(2),
-  }));
+  }))
 
   const demoFavProducts = Array.from({ length: 6 }, (_, i) => ({
     productId: `fav-${i}`,
     name: `Bánh Yêu Thích ${i + 1}`,
     imgs: `https://i.pinimg.com/736x/b9/09/4d/b9094dc229550d7d7a661a73edd99e5f.jpg`,
     unitPrice: (12 + i).toFixed(2),
-  }));
+  }))
 
-  const hotProducts = products.filter(p => p.activeStatus === 1);
-  const enrichedHotProducts =
-    hotProducts.length >= 4
-      ? hotProducts.slice(0, 4)
-      : [...hotProducts, ...demoHotProducts.slice(0, 4 - hotProducts.length)];
+  const hotProducts = products.filter(p => p.activeStatus === 1)
+  const enrichedHotProducts = hotProducts.length >= 4
+    ? hotProducts.slice(0, 4)
+    : [...hotProducts, ...demoHotProducts.slice(0, 4 - hotProducts.length)]
 
-  const favoriteProducts = products.filter(p => p.favorite === true);
-  const enrichedFavProducts =
-    favoriteProducts.length >= 6
-      ? favoriteProducts.slice(0, 6)
-      : [...favoriteProducts, ...demoFavProducts.slice(0, 6 - favoriteProducts.length)];
+  const favoriteProducts = products.filter(p => p.favorite === true)
+  const enrichedFavProducts = (
+    favoriteProducts.length >= 4
+      ? favoriteProducts
+      : [...favoriteProducts, ...demoFavProducts.slice(0, 4 - favoriteProducts.length)]
+  ).slice(0, 4)
 
   return (
-    <section className="flex flex-col gap-20 px-10 my-10 bg-orange-50/20 text-[#5C3A21] text-lg">
-
-      <div className="space-y-10">
-
-        <div className="text-center">
-          <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Danh Mục Sản Phẩm</h2>
-          <p className="text-[#7D5A3A]">
+    <section className="px-4 md:px-24 py-16 space-y-24 bg-section text-main text-base">
+      {/* Danh Mục Sản Phẩm */}
+      <div>
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-amber-600 mb-3">Danh Mục Sản Phẩm</h2>
+          <p className="text-heading max-w-2xl mx-auto">
             Khám phá các loại bánh đa dạng, được làm thủ công mỗi ngày từ nguyên liệu tươi ngon nhất.
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto">
-
-          {loadingCategories ? (
-            <p className="text-center text-[#A78D72]">Đang tải danh mục...</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:grid-cols-4 place-items-center">
-
-              {enrichedCategories.map((cat, index) => (
-                <div
-                  key={cat.categoryId}
-                  className="w-[187px] flex-shrink-0 snap-start mr-4 last:mr-0 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
-                >
-                  <img
-                    src={cat.img || '/placeholder.jpg'}
-                    alt={cat.name}
-                    className="w-full h-40 object-cover"
-                  />
-                  <div className="p-4 font-semibold text-center">{cat.name}</div>
+        {loadingCategories ? (
+          <p className="text-center text-sub">Đang tải danh mục...</p>
+        ) : (
+          
+            <div className="px-24">
+              <div className="grid grid-cols-4 gap-12">
+            {enrichedCategories.map((cat) => (
+              <div
+                key={cat.categoryId}
+                className="bg-white rounded-xl shadow-md border border-orange-100 transition hover:-translate-y-1"
+              >
+                <img
+                  src={
+                    cat.img && cat.img.trim() !== ''
+                      ? cat.img
+                      : 'https://i.pinimg.com/736x/19/33/80/1933806d5ccb3e262fae2feadabe593a.jpg'
+                  }
+                  alt={cat.name}
+                  className="h-40 w-full object-cover object-center rounded-t-xl"
+                />
+                <div className="p-4 text-center">
+                  <h4 className="text-base font-semibold text-main truncate">{cat.name}</h4>
+                  <p className="text-sm text-sub mt-1">Khám phá ngay</p>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
             </div>
-          )}
-        </div>
+          
+        )}
       </div>
 
-      <div className="space-y-10">
-
-        <div className="text-center">
-          <h2 className="mb-4 text-4xl font-extrabold text-amber-600">Sản Phẩm Bán Chạy</h2>
-          <p className="text-[#7D5A3A]">Những chiếc bánh được yêu thích và đặt nhiều nhất gần đây.</p>
+      {/* Sản Phẩm Bán Chạy */}
+      <div>
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-amber-600 mb-3">Sản Phẩm Bán Chạy</h2>
+          <p className="text-heading max-w-xl mx-auto">
+            Những chiếc bánh được yêu thích và đặt nhiều nhất gần đây.
+          </p>
         </div>
 
-        <div className="max-w-6xl mx-auto">
-
-          {loadingProducts ? (
-            <p className="text-center text-[#A78D72]">Đang tải sản phẩm...</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
-
-              {enrichedHotProducts.map(product => (
-                <CustomCard key={product.productId} product={product} />
-              ))}
-
-            </div>
-          )}
-
-        </div>
+        {loadingProducts ? (
+          <p className="text-center text-sub">Đang tải sản phẩm...</p>
+        ) : (
+          <div className="grid grid-cols-4 gap-12">
+            {enrichedHotProducts.map(product => (
+              <div key={product.productId} className="">
+                <CustomCard product={product} tag="Hot" />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="flex justify-center">
+      {/* Xem tất cả */}
+      <div className="flex justify-center mt-10">
         <Link
           to="/products"
-          className="bg-[#C06014] text-white px-8 py-3 text-lg rounded-lg hover:bg-[#a35010] transition"
+          className="btn-primary"
         >
           Xem tất cả các sản phẩm
         </Link>
       </div>
 
-      <div className="space-y-10">
-
-        <div className="text-center">
-          <h2 className="text-4xl font-extrabold text-amber-600 mb-4">Sản Phẩm Yêu Thích</h2>
-          <p className="text-[#7D5A3A]">Những chiếc bánh được khách hàng đánh giá cao và yêu thích nhất.</p>
+      {/* Sản phẩm yêu thích */}
+      <div className="">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-amber-600 mb-3">Sản Phẩm Yêu Thích</h2>
+          <p className="text-heading max-w-xl mx-auto">
+            Những chiếc bánh được khách hàng đánh giá cao và yêu thích nhất.
+          </p>
         </div>
 
-        <div className="max-w-6xl mx-auto">
-
-          {loadingProducts ? (
-            <p className="text-center text-[#A78D72]">Đang tải sản phẩm yêu thích...</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-5 p-5 md:grid-cols-3 lg:grid-cols-4 place-items-center">
-              {enrichedFavProducts.map(product => (
-                <div
-                  key={product.productId}
-                  className="w-[187px] rounded-xl shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1 bg-white/70 border border-orange-100"
-                >
-                  <img
-                    src={product.imgs || '/placeholder.jpg'}
-                    alt={product.name}
-                    className="w-full h-40 object-cover"
-                  />
-                  <div className="p-4 text-center font-semibold">
-                    <h3>{product.name}</h3>
-                    <p className="text-[#C06014] font-medium mt-1">${product.unitPrice}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-        </div>
-
+        {loadingProducts ? (
+          <p className="text-center text-sub">Đang tải sản phẩm yêu thích...</p>
+        ) : (
+          <div className="grid grid-cols-4 gap-12">
+            {enrichedFavProducts.map(product => (
+              <div key={product.productId} className="">
+                <CustomCard product={product} tag="Yêu thích" />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
