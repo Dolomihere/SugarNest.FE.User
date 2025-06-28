@@ -39,23 +39,35 @@ export function AboutPage() {
 
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#fffaf3] text-gray-800">
+
       <Header />
 
       <main className="flex flex-col gap-16 px-4 mx-auto my-12 md:px-6 lg:px-8 max-w-7xl">
-        {/* Giới thiệu */}
+
         <div className="space-y-3 text-center">
+>>>>>>>>> Temporary merge branch 2
           <p className="text-sm italic text-gray-500">Hành trình từ 2010</p>
           <h1 className="text-4xl font-bold tracking-tight text-amber-600">Về Chúng Tôi</h1>
           <p className="text-gray-600 text-md">
             Hành trình mang hương vị ngọt ngào đến với mọi người từ năm 2010
           </p>
+
         </div>
 
+<<<<<<<<< Temporary merge branch 1
+        <section>
+          <h2 className="text-2xl font-semibold text-[#5b3c11] mb-6">Câu Chuyện Của SweetCake</h2>
+          <div className="grid items-center grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+=========
          {/* Câu chuyện thương hiệu */}
         <section className="space-y-8">
           <h2 className="text-2xl font-semibold text-amber-600">Câu Chuyện Của SweetCake</h2>
+
           <div className="grid items-center gap-10 md:grid-cols-2">
+
             <div className="space-y-5 leading-relaxed text-justify text-gray-700">
+>>>>>>>>> Temporary merge branch 2
               <p>
                 SweetCake ra đời từ niềm đam mê thuần khiết với nghệ thuật làm bánh của chị Minh Ngọc – một người yêu thích ẩm thực và tin rằng mỗi chiếc bánh đều có thể kể một câu chuyện.
               </p>
@@ -70,18 +82,68 @@ export function AboutPage() {
                 <span className="block mt-2 text-right">- Minh Ngọc, Sáng lập</span>
               </blockquote>
             </div>
+
             <img
               src="https://cafefcdn.com/2019/7/29/5ba17e0767e2b10c916afcaapexels-photo-209356-15643727408821030708797.jpeg"
               alt="Ly trà"
               className="rounded-xl shadow-lg w-full max-h-[400px] object-cover"
             />
+
           </div>
         </section>
-<section>
-  <h2 className="mb-12 text-2xl font-semibold text-center text-amber-600">
-    Hành Trình Phát Triển
-  </h2>
 
+        <section>
+          <h2 className="mb-12 text-2xl font-semibold text-center text-amber-600">
+            Hành Trình Phát Triển
+          </h2>
+
+<<<<<<<<< Temporary merge branch 1
+        <section>
+          <h2 className="text-2xl font-semibold text-[#5b3c11] mb-12 text-center">Hành Trình Phát Triển</h2>
+
+          <div className="relative">
+            <div className="absolute left-1/2 top-0 h-full w-[3px] bg-yellow-500 transform -translate-x-1/2 z-0" />
+
+            <div className="relative z-10 space-y-20">
+
+              {timeline.map((item, index) => (
+
+                <div
+                  key={index}
+                  className={`relative flex flex-col md:flex-row items-center ${
+                    index % 2 === 0 ? 'md:flex-row-reverse' : ''
+                  }`}
+                >
+
+                  <div className="z-20 w-10 h-10 rounded-full bg-white border-[3px] border-yellow-500 flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2 shadow-md">
+                    {item.icon}
+                  </div>
+
+                  <div className="w-full px-4 md:w-1/2">
+                    <img
+                      src={item.image}
+                      alt={`Mốc ${item.year}`}
+                      className="object-cover w-full rounded shadow-md max-h-56"
+                    />
+                  </div>
+
+                  <div className="flex justify-center w-full px-4 md:w-1/2">
+                    <div className="bg-[#f7f7f1] rounded-lg shadow-sm p-4 border border-[#ddd] w-full max-w-md">
+                      <h3 className="text-lg font-semibold text-[#5b3c11] mb-1">{item.year}</h3>
+                      <p className="text-gray-700">{item.event}</p>
+                    </div>
+                  </div>
+
+                </div>
+              ))}
+
+            </div>
+          </div>
+          
+        </section>
+
+        <div className="text-center">
+=========
   <div className="relative">
     {/* Đường kẻ vàng ở giữa */}
     <div className="absolute left-1/2 top-0 h-full w-[3px] bg-yellow-500 -translate-x-1/2 z-0" />
@@ -99,40 +161,41 @@ export function AboutPage() {
             </div>
           </div>
 
-          {/* Ảnh */}
-          <div
-          className={`flex justify-center md:justify-end ${
-            index % 2 === 0
-              ? 'md:order-2 md:pl-[100px]' // ảnh bên phải: đẩy cách icon 100px
-              : 'md:order-1 md:pr-[100px]' // ảnh bên trái: đẩy cách icon 100px
-          }`}
-          >
-            <img
-              src={item.image}
-              alt={`Mốc ${item.year}`}
-              className="object-cover rounded-xl shadow-lg w-full max-w-md max-h-[360px]"
-            />
-          </div>
+                  <div
+                  className={`flex justify-center md:justify-end ${
+                    index % 2 === 0
+                      ? 'md:order-2 md:pl-[100px]'
+                      : 'md:order-1 md:pr-[100px]'
+                  }`}
+                  >
+                    <img
+                      src={item.image}
+                      alt={`Mốc ${item.year}`}
+                      className="object-cover rounded-xl shadow-lg w-full max-w-md max-h-[360px]"
+                    />
+                  </div>
 
-          {/* Nội dung */}
-          <div
-            className={`flex justify-center md:justify-start ${
-              index % 2 === 0 ? 'md:order-1' : 'md:order-2 md:pl-[100px]'
-            }`}
-          >
-            <div className="bg-[#fdfcf9] rounded-lg shadow-md p-6 border border-[#e8e4da] w-full max-w-md space-y-2 text-gray-700">
-              <h3 className="text-xl font-semibold text-[#5b3c11]">{item.year}</h3>
-              <p className="leading-relaxed">{item.event}</p>
+                  <div
+                    className={`flex justify-center md:justify-start ${
+                      index % 2 === 0 ? 'md:order-1' : 'md:order-2 md:pl-[100px]'
+                    }`}
+                  >
+
+                    <div className="bg-[#fdfcf9] rounded-lg shadow-md p-6 border border-[#e8e4da] w-full max-w-md space-y-2 text-gray-700">
+                      <h3 className="text-xl font-semibold text-[#5b3c11]">{item.year}</h3>
+                      <p className="leading-relaxed">{item.event}</p>
+                    </div>
+                    
+                  </div>
+
+                </div>
+              ))}
+
             </div>
+
           </div>
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
+        </section>
 
-
-        {/* CTA */}
         <div className="mt-10 text-center">
           <Link
             to="/products"

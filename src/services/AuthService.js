@@ -5,7 +5,7 @@ const endpoint = '/auth'
 const AuthService = {
   check: (token) => httpClient.get(endpoint, { 
     headers: {
-      Authorization: `Bearer ${token.trim()}`,
+      Authorization: `Bearer ${token}`,
     },
   }),
   register: (formdata) => httpClient.post(`${endpoint}/register`, formdata),

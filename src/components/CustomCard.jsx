@@ -1,8 +1,9 @@
-const CustomCard = () => {
+
+export function CustomCard () {
   return (
     <div className="antialiased text-gray-900 cursor-pointer">
       <div className="bg-white rounded-lg overflow-hidden shadow-2xl group transition-transform duration-300 hover:translate-y-[-10px]">
-        {/* Image */}
+
         <div className="w-full h-32 overflow-hidden">
           <img
             className="h-full w-full object-cover transform overflow-hidden transition-transform duration-[300ms] hover:scale-115 object-end"
@@ -11,30 +12,32 @@ const CustomCard = () => {
           />
         </div>
 
-        {/* Content */}
         <div className="p-6 pb-4 group-hover:bg-gray-100 duration-[0.3s]">
+
           <div className="mt-1 group-hover:text-gray-800">
             <span className="text-2xl font-semibold group-hover:text-inherit">
-              $8.99
+              8.99đ
             </span>
-            {/* <span className="text-sm group-hover:text-inherit">/ wk</span> */}
           </div>
+
           <h4 className="mt-1 font-bold text-xl leading-tight truncate text-amber-600 shadow-gray-300 duration-[0.3s]">
             Delightful Strawberry Cheesecake
           </h4>
+
           <p className="mt-2 text-gray-500 Card-info ">
             A rich and creamy cheesecake topped with fresh strawberries and a
             delicate glaze. Perfectly balanced sweetness in every bite!
           </p>
 
-          {/* Author */}
           <div className="flex items-center mt-4">
             <img
               className="w-10 h-10 rounded-full"
               src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&auto=format&fit=facearea&w=256&q=80"
               alt="Daniela Metz"
             />
+
             <div className="ml-3">
+
               <p className="text-sm font-medium text-gray-900">
                 <a
                   href="#"
@@ -43,17 +46,19 @@ const CustomCard = () => {
                   Handsome administrator
                 </a>
               </p>
+
               <div className="flex space-x-1 text-sm text-gray-500  duration-[0.3s]">
                 <time dateTime="2020-02-12">Feb 12, 2020</time>
                 <span aria-hidden="true">·</span>
-                {/* <span>11 min read</span> */}
               </div>
+
             </div>
+
           </div>
 
-          {/* Rating */}
           <div className="flex items-center justify-between mt-2">
             <span className="font-semibold text-amber-500">★★★★☆</span>
+
             <div className="flex items-center text-gray-600 ">
               <span className="text-sm text-inherit group-hover:text-inherit">
                 34 reviews
@@ -63,10 +68,10 @@ const CustomCard = () => {
               </span>
             </div>
           </div>
+
         </div>
+        
       </div>
     </div>
-  );
-};
-
-export default CustomCard;
+  )
+}

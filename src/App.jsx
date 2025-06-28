@@ -5,12 +5,13 @@ import { ProductPage } from './pages/Product'
 import { ProductDetailPage } from './pages/ProductDetail'
 import { RegisterPage } from './pages/Register'
 import { LoginPage } from './pages/Login'
-import { ResetPassword } from './pages/layouts/otp/ResetPassword'
-import { Enable2fa } from './pages/layouts/otp/Enable2fa'
-import { VerifyEmail } from './pages/layouts/otp/VerifyEmail'
+// import { ResetPassword } from './pages/layouts/otp/ResetPassword'
+// import { Enable2fa } from './pages/layouts/otp/Enable2fa'
+// import { VerifyEmail } from './pages/layouts/otp/VerifyEmail'
 import { ContactPage } from './pages/Contact'
 import { AboutPage } from './pages/About'
 import { UserPage } from './pages/User'
+import { CheckoutPage } from './pages/Checkout'
 
 function App() {
   return (
@@ -20,12 +21,13 @@ function App() {
       <Route path="/products/:id" element={<ProductDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/otp/verifyMail" element={<VerifyEmail />} />
+      {/* <Route path="/otp/verifyMail" element={<VerifyEmail />} />
       <Route path="/otp/2fa" element={<Enable2fa />} />
-      <Route path="/otp/resetpwd" element={<ResetPassword />} />
+      <Route path="/otp/resetpwd" element={<ResetPassword />} /> */}
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/user" element={<UserPage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
     </Routes>
   )
 }
