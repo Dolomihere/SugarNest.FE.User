@@ -44,15 +44,15 @@ export function Footer() {
           <h3 className="text-xl font-bold text-[#FFDAB9] uppercase mb-4">Thông tin liên hệ</h3>
           <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
             <FontAwesomeIcon icon={faLocationDot} className="text-[#FFB877]" />
-            123 Bakery Street, Sweetville
+            123 Bakery Street, SugarNestville
           </p>
           <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
             <FontAwesomeIcon icon={faEnvelope} className="text-[#FFB877]" />
-            contact@sweetcake.com
+            contact@sugarnestcake.com
           </p>
           <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
             <FontAwesomeIcon icon={faPhone} className="text-[#FFB877]" />
-            (555) 123-4567
+            0915 027 930
           </p>
         </section>
 

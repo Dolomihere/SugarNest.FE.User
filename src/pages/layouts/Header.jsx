@@ -12,7 +12,6 @@ export function Header() {
     { to: "/", label: "Trang chủ", end: true },
     { to: "/products", label: "Sản phẩm" },
     { to: "/about", label: "Về chúng tôi" },
-    { to: "/intro", label: "Giới thiệu" },
   ]
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export function Header() {
       <nav className="flex items-center justify-between p-5">
 
         {/* Logo */}
-        <div className="text-2xl font-bold text-amber-600">SweetCake</div>
+        <div className="text-2xl font-bold text-amber-600">SugarNest</div>
 
         {/* Nav Links */}
         <ul className="hidden gap-6 font-medium text-gray-600 md:flex">
