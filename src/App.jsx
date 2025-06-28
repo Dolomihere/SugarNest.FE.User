@@ -12,6 +12,7 @@ import { LoginPage } from './pages/Login'
 import { ContactPage } from './pages/Contact'
 import { AboutPage } from './pages/About'
 import UserPage from './pages/User.jsx'
+
 import { PaymentPage } from './pages/Payment'
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
       <Route path="/user" element={<UserPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/payment" element={<PaymentPage></PaymentPage>} />
+
     </Routes>
   )
 }
