@@ -10,7 +10,7 @@ import { LoginPage } from './pages/Login'
 // import { VerifyEmail } from './pages/layouts/otp/VerifyEmail'
 import { ContactPage } from './pages/Contact'
 import { AboutPage } from './pages/About'
-import { UserPage } from './pages/User'
+import UserPage from './pages/User.jsx'
 import { CheckoutPage } from './pages/Checkout'
 
 function App() {

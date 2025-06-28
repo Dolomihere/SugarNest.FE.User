@@ -7,32 +7,32 @@ import { Mailing } from './layouts/home/Mailing'
 
 export function HomePage() {
   return (
-    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-orange-50/70 text-stone-800">
+    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-section text-main">
 
       <Header />
 
       {/* Hero Section */}
       <section className="flex flex-col md:flex-row flex-wrap gap-5 p-5 max-w-7xl mx-auto">
         <div className="flex flex-col gap-5 p-5 flex-1">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-[#5C3A21] leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-main leading-tight">
             Bánh Ngọt <span className="text-amber-600">Tuyệt Hảo</span><br />
             Cho Mọi Dịp
           </h1>
 
-          <p className="text-lg text-stone-600 max-w-prose">
+          <p className="text-lg text-sub max-w-prose">
             Hãy để mỗi khoảnh khắc trong cuộc sống thêm phần ngọt ngào với những chiếc bánh thủ công tinh tế từ chúng tôi được chế biến từ nguyên liệu tự nhiên, kết hợp giữa hương vị truyền thống và sự sáng tạo hiện đại trong từng lớp bánh.
           </p>
 
-          <p className="text-lg text-stone-600 max-w-prose">
+          <p className="text-lg text-sub max-w-prose">
             Từ những chiếc bánh sinh nhật rực rỡ, bánh cưới sang trọng cho đến các món tráng miệng thường ngày, mỗi sản phẩm đều là một tác phẩm nghệ thuật được làm bằng cả trái tim. Chúng tôi không chỉ mang đến hương vị tuyệt vời, mà còn trao gửi yêu thương và sự chăm chút trong từng chi tiết nhỏ nhất.           
           </p>
 
-          <p className="text-lg text-stone-600 max-w-prose">
+          <p className="text-lg text-sub max-w-prose">
             Hãy cùng chúng tôi lan tỏa niềm vui, chia sẻ những khoảnh khắc ý nghĩa, và tạo nên những kỷ niệm ngọt ngào không thể nào quên.
           </p>
 
           <div className="flex flex-wrap gap-4 mt-4">
-            <button className="bg-amber-500 hover:bg-amber-600 transition text-white px-5 py-3 rounded-xl text-lg shadow-md hover:shadow-lg cursor-pointer">
+            <button className="btn-primary shadow-md hover:shadow-lg cursor-pointer">
               Đặt bánh ngay
             </button>
 
