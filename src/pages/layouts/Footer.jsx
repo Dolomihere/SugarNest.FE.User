@@ -1,6 +1,11 @@
-import { Link } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFacebook, faInstagram } from "@fortawesome/free-brands-svg-icons";
+import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faLocationDot,
+  faEnvelope,
+  faPhone,
+} from '@fortawesome/free-solid-svg-icons';
+import { faFacebook, faInstagram } from '@fortawesome/free-brands-svg-icons';
 
 export function Footer() {
   const navLinks = [
@@ -12,8 +17,8 @@ export function Footer() {
   ];
 
   return (
-    <footer className="text-gray-100 bg-gray-900">
-      <div className="grid grid-cols-1 gap-8 px-6 py-12 mx-auto max-w-7xl sm:grid-cols-2 md:grid-cols-4">
+    <footer className="bg-[#4B2E2B] text-[#F9E8D9]">
+      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12">
         
         <section>
           <h2 className="text-xl font-bold text-[#FFDAB9] uppercase mb-4">SugarNest</h2>
@@ -23,32 +28,37 @@ export function Footer() {
         </section>
 
         <nav>
-          <h3 className="mb-2 font-semibold text-white">Liên kết nhanh</h3>
-          <ul className="space-y-1 text-sm text-gray-400">
-
+          <h3 className="text-xl font-bold text-[#FFDAB9] uppercase mb-4">Liên kết nhanh</h3>
+          <ul className="space-y-1 text-sm text-[#EFD8C5]">
             {navLinks.map((link, i) => (
               <li key={i}>
-
-                <Link to={link.to} className="transition hover:text-white hover:underline">
+                <Link to={link.to} className="hover:text-white hover:underline transition">
                   {link.label}
                 </Link>
               </li>
             ))}
-
           </ul>
         </nav>
 
         <section>
-          <h3 className="mb-2 font-semibold text-white">Thông tin liên hệ</h3>
-          <p className="text-sm text-gray-400">📍 123 Bakery Street, Sweetville</p>
-          <p className="text-sm text-gray-400">📧 contact@sweetcake.com</p>
-          <p className="text-sm text-gray-400">📞 (555) 123-4567</p>
+          <h3 className="text-xl font-bold text-[#FFDAB9] uppercase mb-4">Thông tin liên hệ</h3>
+          <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
+            <FontAwesomeIcon icon={faLocationDot} className="text-[#FFB877]" />
+            123 Bakery Street, Sweetville
+          </p>
+          <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
+            <FontAwesomeIcon icon={faEnvelope} className="text-[#FFB877]" />
+            contact@sweetcake.com
+          </p>
+          <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
+            <FontAwesomeIcon icon={faPhone} className="text-[#FFB877]" />
+            (555) 123-4567
+          </p>
         </section>
 
         <div>
-          <h3 className="mb-2 font-semibold text-white">Giờ mở cửa</h3>
-
-          <ul className="space-y-1 text-sm text-gray-400">
+          <h3 className="text-xl font-bold text-[#FFDAB9] uppercase mb-4">Giờ mở cửa</h3>
+          <ul className="space-y-1 text-sm text-[#EFD8C5]">
             <li className="flex justify-between">
               <span>Thứ 2 - thứ 6:</span>
               <span>7:00 - 21:00</span>
@@ -84,7 +94,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="py-4 text-sm text-center text-gray-600 border-t border-gray-700">
+      <div className="border-t border-[#6C4C42] text-center py-4 text-sm text-[#DCC5AF]">
         &copy; {new Date().getFullYear()} SweetCake Bakery. All rights reserved.
       </div>
     </footer>
