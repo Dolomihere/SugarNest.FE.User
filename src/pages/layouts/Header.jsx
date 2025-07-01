@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCartShopping } from '@fortawesome/free-solid-svg-icons'
+import { faCartShopping, faSearch } from '@fortawesome/free-solid-svg-icons'
 
 export function Header() {
   const navigate = useNavigate()
@@ -12,6 +12,7 @@ export function Header() {
     { to: "/", label: "Trang chủ", end: true },
     { to: "/products", label: "Sản phẩm" },
     { to: "/about", label: "Về chúng tôi" },
+    { to: "/contact", label: "Liên hệ" }, // Thêm mục liên hệ
   ]
 
   useEffect(() => {
@@ -49,6 +50,14 @@ export function Header() {
 
         {/* Right controls */}
         <div className="flex items-center gap-4">
+          {/* Search Icon */}
+          <button
+            onClick={() => navigate('/search')}
+            className="text-2xl text-gray-600 hover:text-gray-800"
+          >
+            <FontAwesomeIcon icon={faSearch} />
+          </button>
+
           {/* Cart Icon */}
           <button
             onClick={() => navigate('/user')}
@@ -88,7 +97,6 @@ export function Header() {
       {menuOpen && (
         <div className="absolute left-0 w-full bg-white shadow-md md:hidden top-full">
           <ul className="flex flex-col items-start px-4 py-2 space-y-2 font-medium text-gray-600">
-
             {navLinks.map((link, i) => (
               <li key={i}>
                 <Link
@@ -100,6 +108,20 @@ export function Header() {
                 </Link>
               </li>
             ))}
+
+            <li>
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/search')
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-50 transition duration-200"
+            >
+              <span className="text-base">🔍</span>
+              <span>Tìm kiếm</span>
+            </button>
+          </li>
+
 
             <li>
               {isLoggedIn ? (
@@ -124,10 +146,18 @@ export function Header() {
                 </button>
               )}
             </li>
-
           </ul>
         </div>
       )}
     </header>
   )
 }
+<button
+                  onClick={() => {
+                    setMenuOpen(false)
+                    navigate('/login')
+                  }}
+                  className="px-2 py-1 text-left text-amber-600 transition border border-amber-600 rounded hover:bg-amber-600 hover:text-white"
+                >
+                  Đăng nhập
+                </button>

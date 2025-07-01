@@ -95,7 +95,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-[#6C4C42] text-center py-4 text-sm text-[#DCC5AF]">
-        &copy; {new Date().getFullYear()} SweetCake Bakery. All rights reserved.
+        &copy; {new Date().getFullYear()} SugarNest Bakery. All rights reserved.
       </div>
     </footer>
   );
