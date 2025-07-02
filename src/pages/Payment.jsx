@@ -1,37 +1,111 @@
+import { useState, useEffect } from 'react';
 
 export function PaymentPage() {
-  return(
-        <section className="bg-white py-8 antialiased dark:bg-gray-900 md:py-16">
-      <div className="mx-auto max-w-2xl px-4 2xl:px-0">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl mb-2">Thanks for your order!</h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-6 md:mb-8">Your order <a href="#" className="font-medium text-gray-900 dark:text-white hover:underline">#7564804</a> will be processed within 24 hours during working days. We will notify you by email once your order has been shipped.</p>
-        <div className="space-y-4 sm:space-y-2 rounded-lg border border-gray-100 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800 mb-6 md:mb-8">
-          <dl className="sm:flex items-center justify-between gap-4">
-            <dt className="font-normal mb-1 sm:mb-0 text-gray-500 dark:text-gray-400">Date</dt>
-            <dd className="font-medium text-gray-900 dark:text-white sm:text-end">14 May 2024</dd>
-          </dl>
-          <dl className="sm:flex items-center justify-between gap-4">
-            <dt className="font-normal mb-1 sm:mb-0 text-gray-500 dark:text-gray-400">Payment Method</dt>
-            <dd className="font-medium text-gray-900 dark:text-white sm:text-end">JPMorgan monthly installments</dd>
-          </dl>
-          <dl className="sm:flex items-center justify-between gap-4">
-            <dt className="font-normal mb-1 sm:mb-0 text-gray-500 dark:text-gray-400">Name</dt>
-            <dd className="font-medium text-gray-900 dark:text-white sm:text-end">Flowbite Studios LLC</dd>
-          </dl>
-          <dl className="sm:flex items-center justify-between gap-4">
-            <dt className="font-normal mb-1 sm:mb-0 text-gray-500 dark:text-gray-400">Address</dt>
-            <dd className="font-medium text-gray-900 dark:text-white sm:text-end">34 Scott Street, San Francisco, California, USA</dd>
-        </dl>
-        <dl className="sm:flex items-center justify-between gap-4">
-            <dt className="font-normal mb-1 sm:mb-0 text-gray-500 dark:text-gray-400">Phone</dt>
-            <dd className="font-medium text-gray-900 dark:text-white sm:text-end">+(123) 456 7890</dd>
-          </dl>
+  const [isSuccess, setIsSuccess] = useState(true); // bạn có thể set từ props, URL param, hoặc API real-time
+
+  // Redirect tự động sau 3 giây nếu thanh toán thành công
+  useEffect(() => {
+    if (isSuccess) {
+      const timer = setTimeout(() => {
+        window.location.href = '/';
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess]);
+
+  return (
+    <section className="min-h-screen flex items-center justify-center bg-[#FFF9F4] px-4">
+      <div className="bg-white rounded-2xl shadow-2xl border border-[#F1D9C0] w-full max-w-md px-8 py-12 text-center animate-fade-in">
+
+        {/* Logo */}
+        <div className="flex justify-center items-center mb-6">
+          <img
+            src="/images/logo_bakery.jpg"
+            alt="SugarNest Logo"
+            className="h-10"
+          />
         </div>
-        <div className="flex items-center space-x-4">
-          <a href="#" className="text-white bg-[#1d4ed8] hover:bg-[#1e40af] focus:ring-4 focus:ring-[#93c5fd] font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-[#2563eb] dark:hover:bg-[#1d4ed8] focus:outline-none dark:focus:ring-[#1e40af]">Track your order</a>
-          <a href="#" className="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-[#1d4ed8] focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Return to shopping</a>
+
+        {/* Success Case */}
+        {isSuccess ? (
+          <>
+            {/* Success Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="bg-green-100 p-4 rounded-full shadow-inner">
+                <svg
+                  className="w-10 h-10 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-[#5C4033] mb-2">Thanh toán thành công!</h2>
+            <p className="text-sm text-[#8B5E3C] mb-4">
+              Quý khách vui lòng <span className="font-bold text-red-600">KHÔNG</span> tắt trình duyệt.
+            </p>
+            <p className="text-sm text-gray-500 italic">
+              Trở lại trang mua hàng trong vài giây… Xin vui lòng chờ.
+            </p>
+
+            <div className="my-6 border-t border-dashed border-[#E8D3BD]"></div>
+
+            <div className="text-left text-sm text-[#5C4033] space-y-2">
+              <p><strong>Nhà cung cấp:</strong> Techcent.vn</p>
+              <p><strong>Số tiền:</strong> 100.000đ</p>
+              <p><strong>Thông tin đơn hàng:</strong> Flowbite Studios</p>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Error Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="bg-red-100 p-4 rounded-full shadow-inner">
+                <svg
+                  className="w-10 h-10 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-red-600 mb-2">Thanh toán thất bại</h2>
+            <p className="text-sm text-[#5C4033] mb-4">
+              Giao dịch không hoàn tất. Vui lòng thử lại hoặc kiểm tra phương thức thanh toán.
+            </p>
+            <p className="text-sm text-gray-500 italic">
+              Nếu tiền đã bị trừ, hệ thống sẽ hoàn lại trong vòng 1–3 ngày làm việc.
+            </p>
+
+            <div className="my-6 border-t border-dashed border-[#E8D3BD]"></div>
+
+            <div className="text-left text-sm text-[#5C4033] space-y-2">
+              <p><strong>Mã lỗi:</strong> #PAY_FAILED_001</p>
+              <p><strong>Thời gian:</strong> {new Date().toLocaleString()}</p>
+              <p><strong>Trạng thái:</strong> Chưa thanh toán</p>
+            </div>
+          </>
+        )}
+
+        {/* Button */}
+        <div className="mt-8">
+          <button
+            className="w-full bg-[#D9A16C] hover:bg-[#C98B55] text-white font-semibold py-2 px-4 rounded-lg transition shadow"
+            onClick={() => window.location.href = isSuccess ? '/' : '/checkout'}
+          >
+            {isSuccess ? 'Quay về trang chủ' : 'Thử lại thanh toán'}
+          </button>
         </div>
+
       </div>
     </section>
-  )
+  );
 }
