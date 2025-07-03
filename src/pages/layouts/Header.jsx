@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCartShopping, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faCartShopping } from '@fortawesome/free-solid-svg-icons'
 
 export function Header() {
   const navigate = useNavigate()
@@ -12,7 +12,7 @@ export function Header() {
     { to: "/", label: "Trang chủ", end: true },
     { to: "/products", label: "Sản phẩm" },
     { to: "/about", label: "Về chúng tôi" },
-    { to: "/contact", label: "Liên hệ" }, // Thêm mục liên hệ
+    { to: "/contact", label: "Liên hệ" },
   ]
 
   useEffect(() => {
@@ -48,23 +48,22 @@ export function Header() {
           ))}
         </ul>
 
-        {/* Right controls */}
+        {/* Right controls (desktop) */}
         <div className="flex items-center gap-4">
-          {/* Search Icon */}
-          <button
-            onClick={() => navigate('/search')}
-            className="text-2xl text-gray-600 hover:text-gray-800"
-          >
-            <FontAwesomeIcon icon={faSearch} />
-          </button>
-
-          {/* Cart Icon */}
           <button
             onClick={() => navigate('/user')}
             className="text-2xl text-amber-600 cursor-pointer hover:text-amber-700"
           >
             <FontAwesomeIcon icon={faCartShopping} />
           </button>
+
+          {/* Avatar icon (luôn hiển thị) */}
+          <img
+            onClick={() => navigate('/account')}
+            src="/images/owner.png"
+            alt="avatar"
+            className="w-9 h-9 rounded-full cursor-pointer border "
+          />
 
           {/* Auth Buttons */}
           {isLoggedIn ? (
@@ -83,7 +82,7 @@ export function Header() {
             </button>
           )}
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Toggle */}
           <button
             className="text-2xl text-gray-700 md:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -110,18 +109,29 @@ export function Header() {
             ))}
 
             <li>
-            <button
-              onClick={() => {
-                setMenuOpen(false)
-                navigate('/search')
-              }}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-50 transition duration-200"
-            >
-              <span className="text-base">🔍</span>
-              <span>Tìm kiếm</span>
-            </button>
-          </li>
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  navigate('/user')
+                }}
+                className="flex items-center gap-1 text-amber-600"
+              >
+                <FontAwesomeIcon icon={faCartShopping} />
+                <span>Giỏ hàng</span>
+              </button>
+            </li>
 
+            <li>
+              <img
+                onClick={() => {
+                  setMenuOpen(false)
+                  navigate('/account')
+                }}
+                src="https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg"
+                alt="avatar"
+                className="w-9 h-9 rounded-full cursor-pointer border border-amber-600 hover:shadow-md"
+              />
+            </li>
 
             <li>
               {isLoggedIn ? (
@@ -152,12 +162,3 @@ export function Header() {
     </header>
   )
 }
-<button
-                  onClick={() => {
-                    setMenuOpen(false)
-                    navigate('/login')
-                  }}
-                  className="px-2 py-1 text-left text-amber-600 transition border border-amber-600 rounded hover:bg-amber-600 hover:text-white"
-                >
-                  Đăng nhập
-                </button>
