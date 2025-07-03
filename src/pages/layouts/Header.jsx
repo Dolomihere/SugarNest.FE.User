@@ -12,6 +12,7 @@ export function Header() {
     { to: "/", label: "Trang chủ", end: true },
     { to: "/products", label: "Sản phẩm" },
     { to: "/about", label: "Về chúng tôi" },
+    { to: "/contact", label: "Liên hệ" },
   ]
 
   useEffect(() => {
@@ -47,15 +48,22 @@ export function Header() {
           ))}
         </ul>
 
-        {/* Right controls */}
+        {/* Right controls (desktop) */}
         <div className="flex items-center gap-4">
-          {/* Cart Icon */}
           <button
             onClick={() => navigate('/user')}
             className="text-2xl text-amber-600 cursor-pointer hover:text-amber-700"
           >
             <FontAwesomeIcon icon={faCartShopping} />
           </button>
+
+          {/* Avatar icon (luôn hiển thị) */}
+          <img
+            onClick={() => navigate('/account')}
+            src="/images/owner.png"
+            alt="avatar"
+            className="w-9 h-9 rounded-full cursor-pointer border "
+          />
 
           {/* Auth Buttons */}
           {isLoggedIn ? (
@@ -74,7 +82,7 @@ export function Header() {
             </button>
           )}
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Toggle */}
           <button
             className="text-2xl text-gray-700 md:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -88,7 +96,6 @@ export function Header() {
       {menuOpen && (
         <div className="absolute left-0 w-full bg-white shadow-md md:hidden top-full">
           <ul className="flex flex-col items-start px-4 py-2 space-y-2 font-medium text-gray-600">
-
             {navLinks.map((link, i) => (
               <li key={i}>
                 <Link
@@ -100,6 +107,31 @@ export function Header() {
                 </Link>
               </li>
             ))}
+
+            <li>
+              <button
+                onClick={() => {
+                  setMenuOpen(false)
+                  navigate('/user')
+                }}
+                className="flex items-center gap-1 text-amber-600"
+              >
+                <FontAwesomeIcon icon={faCartShopping} />
+                <span>Giỏ hàng</span>
+              </button>
+            </li>
+
+            <li>
+              <img
+                onClick={() => {
+                  setMenuOpen(false)
+                  navigate('/account')
+                }}
+                src="https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg"
+                alt="avatar"
+                className="w-9 h-9 rounded-full cursor-pointer border border-amber-600 hover:shadow-md"
+              />
+            </li>
 
             <li>
               {isLoggedIn ? (
@@ -124,7 +156,6 @@ export function Header() {
                 </button>
               )}
             </li>
-
           </ul>
         </div>
       )}

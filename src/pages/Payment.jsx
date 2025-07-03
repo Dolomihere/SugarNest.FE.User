@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export function PaymentPage() {
-  const [isSuccess, setIsSuccess] = useState(true); // bạn có thể set từ props, URL param, hoặc API real-time
+  const [isSuccess, setIsSuccess] = useState(false); // bạn có thể set từ props, URL param, hoặc API real-time
 
   // Redirect tự động sau 3 giây nếu thanh toán thành công
   useEffect(() => {
