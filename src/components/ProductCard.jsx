@@ -29,7 +29,7 @@ export function ProductCard({ product }) {
           />
           {/* Price overlay */}
           <div className="absolute px-2 py-1 text-sm font-semibold text-yellow-700 rounded-md shadow-md top-2 left-2 bg-white/80 backdrop-blur-sm">
-            {unitPrice.toFixed(2)}
+            {unitPrice.toFixed(0)}
           </div>
         </Link>
 
@@ -70,7 +70,7 @@ export function ProductCard({ product }) {
           {/* Button */}
           <Link
             to={`/products/${productId}`}
-            className="px-4 py-2 mt-4 text-sm font-medium text-center text-white transition-all bg-amber-500 rounded-lg hover:bg-amber-600 hover:scale-105 active:scale-95"
+            className="px-4 py-2 mt-4 text-sm font-medium text-center text-white transition-all rounded-lg bg-amber-500 hover:bg-amber-600 hover:scale-105 active:scale-95"
           >
             Xem Chi Tiết
           </Link>
