@@ -18,13 +18,8 @@ export function LoginPage() {
     onSuccess: (res) => {
       let token = res.data.data;
 
-      if (remember) {
-        localStorage.setItem('accessToken', token.accessToken);
-        localStorage.setItem('refreshToken', token.refreshToken);
-      } else {
-        sessionStorage.setItem('accessToken', token.accessToken);
-        sessionStorage.setItem('refreshToken', token.refreshToken);
-      }
+      localStorage.setItem('accessToken', token.accessToken);
+      localStorage.setItem('refreshToken', token.refreshToken);
       
       let path = localStorage.getItem('lastAccessPath');
 

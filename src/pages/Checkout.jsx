@@ -17,7 +17,7 @@ export function CheckoutPage() {
   const [cartItems, setCartItems] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+  const accessToken = localStorage.getItem("accessToken");
   const isLoggedIn = !!accessToken;
 
   useEffect(() => {
