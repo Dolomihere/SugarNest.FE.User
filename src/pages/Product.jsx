@@ -15,7 +15,7 @@ export function ProductPage() {
   const [search, setSearch] = useState('');
   const [selectedCategoryId, setSelectedCategory] = useState('');
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState([0, 100000]);
 
   const { data: categories = [], isLoading: loadingCategories } = useQuery({
     queryKey: ['categories'],
@@ -47,7 +47,7 @@ export function ProductPage() {
           <p className="text-sub">Khám phá các loại bánh thơm ngon, được làm thủ công mỗi ngày</p>
         </div>
 
-        <div className="flex flex-col justify-between gap-4 md:flex-row mt-8">
+        <div className="flex flex-col justify-between gap-4 mt-8 md:flex-row">
 
           <input
             type="text"
@@ -95,7 +95,7 @@ export function ProductPage() {
           </div>
         </div>
 
-        <div className="grid flex-1 grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-8">
+        <div className="grid flex-1 grid-cols-1 gap-6 mt-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {paginatedProducts.map((p) => (
             <ProductCard key={p.productId} product={p} />
           ))}
@@ -105,7 +105,7 @@ export function ProductPage() {
           <button
             onClick={() => handlePageChange(currentPageIndex - 1)}
             disabled={currentPageIndex === 1}
-            className="px-4 py-2 text-amber-600 border border-amber-600 rounded cursor-pointer transition hover:bg-amber-600 hover:text-white disabled:opacity-50"
+            className="px-4 py-2 transition border rounded cursor-pointer text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white disabled:opacity-50"
           >
             ← Trước
           </button>
@@ -117,7 +117,7 @@ export function ProductPage() {
           <button
             onClick={() => handlePageChange(currentPageIndex + 1)}
             disabled={currentPageIndex === totalPages}
-            className="px-4 py-2 text-amber-600 border border-amber-600 rounded cursor-pointer transition hover:bg-amber-600 hover:text-white disabled:opacity-50"
+            className="px-4 py-2 transition border rounded cursor-pointer text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white disabled:opacity-50"
           >
             Tiếp →
           </button>
