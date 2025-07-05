@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import OrderService from '../services/OrderService'
-import CartService from '../services/CartService'
-
 export function CheckoutPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({

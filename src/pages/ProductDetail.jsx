@@ -5,10 +5,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Header } from './layouts/Header'
 import { Footer } from './layouts/Footer'
 
-import ProductService from '../services/ProductService'
-import ProductOptionService from '../services/ProductOption'
-import CartService from '../services/CartService'
-
 export function ProductDetailPage() {
   const { id } = useParams();
   const [selectedOptions, setSelectedOptions] = useState({});

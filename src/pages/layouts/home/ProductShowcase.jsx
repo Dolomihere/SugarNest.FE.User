@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 
-import CategoryService from '../../../services/CategoryService'
-import ProductService from '../../../services/ProductService'
-
 import { CustomCard } from '../../../components/CustomCard'
 
 export function ProductShowcase() {

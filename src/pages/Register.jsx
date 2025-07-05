@@ -4,8 +4,6 @@ import { useMutation } from '@tanstack/react-query'
 import { FcGoogle } from 'react-icons/fc'
 import { HiArrowLeft } from 'react-icons/hi'
 
-import AuthService from '../services/AuthService'
-
 export function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', email: '', password: '', role: 'customer' });

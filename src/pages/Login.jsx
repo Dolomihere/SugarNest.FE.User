@@ -5,8 +5,6 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaXTwitter } from 'react-icons/fa6'
 import { HiArrowLeft } from 'react-icons/hi'
 
-import AuthService from '../services/AuthService'
-
 export function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ userNameOrEmail: '', password: '' });

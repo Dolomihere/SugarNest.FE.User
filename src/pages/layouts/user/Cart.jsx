@@ -2,9 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { FaTrashCan } from 'react-icons/fa6'
 
-import CartService from '../../../services/CartService'
-import ProductService from '../../../services/ProductService'
-
 export function Cart() {
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');

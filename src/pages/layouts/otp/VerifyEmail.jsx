@@ -2,8 +2,6 @@ import { useState, useRef } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 
-import AuthService from "../../../services/AuthService"
-
 export function VerifyEmail(email) {
   const goto = useNavigate();
 

@@ -6,12 +6,6 @@ import { Footer } from './layouts/Footer'
 
 import { ProductCard } from '../components/ProductCard'
 
-import CategoryService from '../services/CategoryService'
-import ProductService from '../services/ProductService'
-
-import pagination from '../utils/Pagination'
-import { ProductFilter } from '../utils/ProductUtil'
-
 export function ProductPage() {
   const [search, setSearch] = useState('');
   const [selectedCategoryId, setSelectedCategory] = useState('');
