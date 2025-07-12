@@ -136,10 +136,10 @@ export function ProductDetailPage() {
             {optionGroups.map((group) => (
               <div key={group.optionGroupId} className="space-y-2">
                 <p className="text-2xl font-medium text-gray-700">{group.name}</p>
-             <p className="text-sm text-amber-600">{group.description}</p>
+                <p className="text-sm text-amber-600">{group.description}</p>
                 <div className="mt-2 space-y-2">
                   {group.isMultipleChoice
-                    ? group.optionItems.map((item) => (
+                    ? group.optionItems?.map((item) => (
                         <label key={item.optionItemId} className="flex items-center gap-2 text-sm">
                           <input
                             type="checkbox"
@@ -156,7 +156,7 @@ export function ProductDetailPage() {
                           </span>
                         </label>
                       ))
-                    : group.optionItems.map((item) => (
+                    : group.optionItems?.map((item) => (
                         <label key={item.optionItemId} className="flex items-center gap-2 text-sm">
                           <input
                             type="radio"
@@ -176,6 +176,7 @@ export function ProductDetailPage() {
                 </div>
               </div>
             ))}
+
 
             {/* Số lượng */}
             <div className="flex items-center gap-4 mt-6">

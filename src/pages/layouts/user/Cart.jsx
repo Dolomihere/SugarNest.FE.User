@@ -64,7 +64,7 @@ export function Cart() {
       {cartData?.cartItems?.length ? (
         <>
           <h2 className="text-2xl font-bold text-[#5C4033] px-4 pt-6 border-b border-[#E8D3BD]">Giỏ hàng của bạn</h2>
-          <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+          <div className="flex flex-col flex-1 gap-4 px-4 py-4 overflow-y-auto">
 
             {cartData.cartItems.map((item) => (
               <div
@@ -74,10 +74,10 @@ export function Cart() {
                 <img
                   src={getProductImage(item.productId)}
                   alt={item.productName}
-                  className="w-24 h-24 object-cover rounded"
+                  className="object-cover w-24 h-24 rounded"
                 />
 
-                <div className="flex-1 flex flex-col justify-between">
+                <div className="flex flex-col justify-between flex-1">
 
                   <div>
                     <h3 className="text-lg font-semibold text-[#5C4033]">{item.productName}</h3>
@@ -101,7 +101,7 @@ export function Cart() {
 
                 </div>
 
-                <div className="flex flex-col justify-between items-end">
+                <div className="flex flex-col items-end justify-between">
                   <button onClick={() => handleDelete(item.cartItemId)} className="text-red-500 hover:text-red-700">
                     <FaTrashCan />
                   </button>
@@ -129,7 +129,7 @@ export function Cart() {
           </div>
         </>
       ) : (
-        <div className="text-3xl my-auto self-center">Giỏ hàng trống</div>
+        <div className="self-center my-auto text-3xl">Giỏ hàng trống</div>
       )}
 
     </div>

@@ -2,7 +2,6 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -837,7 +836,6 @@ span.flatpickr-weekday,
   background-color: #111827;
 }
 
-
 @keyframes modal-drop-in {
   from {
     transform: translateY(-40px);
@@ -848,7 +846,6 @@ span.flatpickr-weekday,
     opacity: 1;
   }
 }
-
 
 /* Modal animation */
 @keyframes modal-drop-out {
@@ -888,9 +885,9 @@ span.flatpickr-weekday,
 
 /* index.css */
 :root {
-  --text-main: #5C3A21;
-  --text-sub: #A78D72;
-  --text-heading: #7D5A3A;
+  --text-main: #5c3a21;
+  --text-sub: #a78d72;
+  --text-heading: #7d5a3a;
 
   --btn-primary-bg: #f59e0b; /* amber-500 */
   --btn-primary-hover: #d97706; /* amber-600 */
@@ -915,7 +912,7 @@ span.flatpickr-weekday,
   background-color: var(--btn-primary-bg);
   color: white;
   padding: 0.75rem 2rem;
-  font-size: 1.0rem;
+  font-size: 1rem;
   border-radius: 0.5rem;
   transition: background-color 0.2s ease-in-out;
 }
@@ -924,7 +921,12 @@ span.flatpickr-weekday,
   background-color: var(--btn-primary-hover);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: #d97706;
 }
 /* Map */
