@@ -87,7 +87,8 @@ export function ProductDetailPage() {
 
   const { data: optionGroups = [] } = useQuery({
     queryKey: ["options", id],
-    queryFn: () => ProductOptionService.getOptionOfProductById(id).then((res) => res.data.data),
+    queryFn: () => ProductOptionService.getOptionOfProductById(id).then((res) => { 
+      return res.data.data}),
   });
 
   const suggestions = useMemo(() => {
@@ -213,7 +214,7 @@ export function ProductDetailPage() {
                   className="transition text-amber-500 hover:text-blue-500"
                   title="Sao chép liên kết"
                 >
-                  <i class="fa-regular fa-copy fa-lg"></i>
+                  <i className="fa-regular fa-copy fa-lg"></i>
                 </button>
                 {copied && (
                   <div className="absolute px-2 py-1 text-xs text-white -translate-x-1/2 bg-black rounded shadow -top-8 left-1/2">

@@ -7,10 +7,6 @@ export function ProductCard({ product }) {
     unitPrice,
     imgs,
     description,
-    author = {
-      name: 'Handsome Administrator',
-      img: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&auto=format&fit=facearea&w=256&q=80',
-    },
     rating = 4,
     reviews = 34,
     createdDate = 'Feb 12, 2020',
@@ -40,24 +36,6 @@ export function ProductCard({ product }) {
           <h3 className="mt-1 font-bold leading-tight transition-all duration-300 text-amber-600 group-hover:text-amber-700 line-clamp-1 group-hover:line-clamp-none">
             {name}
           </h3>
-
-          {/* Author */}
-          <div className="flex items-center mt-4">
-            <img
-              className="w-10 h-8 rounded-full"
-              src={author.img}
-              alt={author.name}
-            />
-            <div className="ml-3">
-              <p className="text-sm font-semibold text-gray-600 hover:underline">
-                {author.name}
-              </p>
-              <div className="flex space-x-1 text-sm text-gray-500">
-                <time dateTime={createdDate}>{createdDate}</time>
-                <span aria-hidden="true">·</span>
-              </div>
-            </div>
-          </div>
 
           {/* Rating */}
           <div className="flex items-center justify-between mt-2">
