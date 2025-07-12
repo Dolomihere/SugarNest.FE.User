@@ -3,19 +3,20 @@ import httpClient from '../configs/AxiosConfig'
 const endpoint = '/carts'
 
 const CartService = {
-  getUserCart: (token) => httpClient.get(`${endpoint}/mine`, {
+  getUserCart: async (token) => await ttpClient.get(`${endpoint}/mine`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   }),
-  addItemToCart: (itemData, token) => httpClient.post(`${endpoint}/items`, itemData, {
+  getGuestCart: async (cartId) => await httpClient.get(`${endpoint}/guest/${cartId}`),
+  addItemToCart: async (itemData, token) => await httpClient.post(`${endpoint}/items`, itemData, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   }),
-  updateQuantity: (cartItemId, quantity) => httpClient.patch(`${endpoint}/items/${cartItemId}/quantity`, { quantity }),
-  updateNote: (cartItemId, note) => httpClient.patch(`${endpoint}/items/${cartItemId}/note`, { note }),
-  deleteItem: (cartItemId) => httpClient.delete(`${endpoint}/items/${cartItemId}`),
+  updateQuantity: async (cartItemId, quantity, cartId) => await httpClient.patch(`${endpoint}/items/${cartItemId}/quantity?cartId=${cartId}`, { quantity }),
+  updateNote: async (cartItemId, note) => await httpClient.patch(`${endpoint}/items/${cartItemId}/note`, { note }),
+  deleteItem: async (cartItemId) => await httpClient.delete(`${endpoint}/items/${cartItemId}`),
 };
 
 export default CartService;
