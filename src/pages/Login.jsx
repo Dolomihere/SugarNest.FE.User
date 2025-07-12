@@ -5,19 +5,26 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaXTwitter } from 'react-icons/fa6'
 import { HiArrowLeft } from 'react-icons/hi'
 
+import { AuthService } from '../services/AuthService'
+
 export function LoginPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ userNameOrEmail: '', password: '' });
+  const [form, setForm] = useState({ userNameOrEmail: JSON.parse(sessionStorage.getItem('email')) || '', password: '' });
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
 
   const loginMutation = useMutation({
     mutationFn: (formData) => AuthService.login(formData),
     onSuccess: (res) => {
-      let token = res.data.data;
+      let token = res.data;
 
-      localStorage.setItem('accessToken', token.accessToken);
-      localStorage.setItem('refreshToken', token.refreshToken);
+      if (remember) {
+        localStorage.setItem('accessToken', token.accessToken);
+        localStorage.setItem('refreshToken', token.refreshToken);
+      }
+      else {
+        localStorage.setItem('accessToken', token.accessToken);
+      }
       
       let path = localStorage.getItem('lastAccessPath');
 

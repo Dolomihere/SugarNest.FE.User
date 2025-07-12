@@ -3,9 +3,6 @@ import { useState } from 'react'
 import { Header } from './layouts/Header'
 import { Footer } from './layouts/Footer'
 
-import { Cart } from './layouts/user/Cart'
-import { Order } from './layouts/user/Order'
-
 export function UserPage() {
   const [mode, setMode] = useState(1);
   const links = [
@@ -37,12 +34,6 @@ export function UserPage() {
           
         </nav>
         
-        <div className="overflow-y-auto">
-          {mode === 0 
-          ? <Cart />
-          : <Order />
-          }
-        </div>
       </main>
 
       <Footer />

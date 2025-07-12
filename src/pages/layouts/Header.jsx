@@ -14,13 +14,13 @@ export function Header() {
   ];
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    const token = localStorage.getItem('accessToken');
     setIsLoggedIn(!!token);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    sessionStorage.removeItem("accessToken");
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken')
     setIsLoggedIn(false);
     navigate("/");
   };
@@ -49,7 +49,7 @@ export function Header() {
         <div className="flex items-center gap-4">
 
           <button 
-            onClick={() => navigate('/user')}
+            onClick={() => navigate('/cart')}
             className="text-2xl text-gray-600 cursor-pointer hover:text-pink-600">
             <i className="fa-solid fa-cart-shopping"></i>
           </button>

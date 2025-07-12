@@ -4,6 +4,8 @@ import { useMutation } from '@tanstack/react-query'
 import { FcGoogle } from 'react-icons/fc'
 import { HiArrowLeft } from 'react-icons/hi'
 
+import { AuthService } from '../services/AuthService'
+
 export function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', email: '', password: '', role: 'customer' });
@@ -13,7 +15,8 @@ export function RegisterPage() {
   const registerMutation = useMutation({
     mutationFn: (formData) => AuthService.register(formData),
     onSuccess: () => {
-      navigate('/login');
+      sessionStorage.setItem('email', JSON.stringify(form.email));
+      navigate('/otp/verifyemail');
     },
     onError: (err) => {
       setError('Đăng ký thất bại. Vui lòng thử lại.');

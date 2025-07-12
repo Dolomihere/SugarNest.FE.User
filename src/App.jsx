@@ -11,6 +11,7 @@ import { AboutPage } from './pages/About'
 import { UserPage } from './pages/User'
 import { CheckoutPage } from './pages/Checkout'
 import { PaymentPage } from './pages/Payment'
+import { Cart } from './pages/layouts/user/Cart'
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
       <Route path="/user" element={<UserPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/payment" element={<PaymentPage />} />
+      <Route path="/cart" element={<Cart />} />
     </Routes>
   )
 }
