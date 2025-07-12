@@ -76,7 +76,7 @@ export function Header() {
             </button>
           ) : (
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/signin')}
               className="hidden px-4 py-1 transition border rounded text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white md:block"
             >
               Đăng nhập
@@ -149,7 +149,7 @@ export function Header() {
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    navigate('/login');
+                    navigate('/signin');
                   }}
                   className="px-2 py-1 text-left transition border rounded text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white"
                 >
