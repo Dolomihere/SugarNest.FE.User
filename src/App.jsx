@@ -14,6 +14,7 @@ import UserPage from './pages/User.jsx';
 import { PaymentPage } from './pages/Payment';
 import { AccountPage } from './pages/AccountPage.jsx';
 import DiscountBlog from './pages/DiscountBlog.jsx';
+import UnityGame from './pages/UnityGame.jsx';
 
 function App() {
   return (
@@ -33,6 +34,8 @@ function App() {
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/discounts" element={<DiscountBlog />} /> {/* Thêm route cho DiscountBlog */}
+      <Route path="/unity-game" element={<UnityGame />} /> {/* Thêm route cho DiscountBlog */}
+
     </Routes>
   );
 }

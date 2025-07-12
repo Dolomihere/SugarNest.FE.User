@@ -13,7 +13,8 @@ export function Header() {
     { to: "/products", label: "Sản phẩm" },
     { to: "/about", label: "Về chúng tôi" },
     { to: "/contact", label: "Liên hệ" },
-    { to: "/discounts", label: "Chương trình giảm giá" }, // Thêm link cho DiscountBlog
+    { to: "/discounts", label: "Chương trình giảm giá" },
+    { to: "/unity-game", label: "Giải trí" }
   ];
 
   useEffect(() => {
