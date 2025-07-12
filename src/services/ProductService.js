@@ -1,6 +1,6 @@
-import httpClient from '../configs/AxiosConfig'
+import httpClient from "../configs/AxiosConfig";
 
-const endpoint = '/products'
+const endpoint = "/products/sellable";
 
 const ProductService = {
   getAllProducts: () => httpClient.get(endpoint),
