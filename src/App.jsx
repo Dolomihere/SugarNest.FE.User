@@ -16,11 +16,14 @@ import AuthLayout from "./pages/auth/AuthLayout";
 import SignInForm from "./pages/auth/SignIn";
 import SignUpForm from "./pages/auth/SignUp";
 import UnityGame from "./pages/UnityGame";
+import ScrollToTop from './pages/layouts/ScrollToTopLayout.jsx';
 
 
 function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop/>
+     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/products" element={<ProductPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
@@ -52,6 +55,8 @@ function App() {
   }
 />
     </Routes>
+    </>
+   
   );
 }
 
