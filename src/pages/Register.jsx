@@ -5,7 +5,7 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaXTwitter } from 'react-icons/fa6'
 import { HiArrowLeft } from 'react-icons/hi'
 
-import AuthService from '../services/AuthService'
+import { register } from '../services/AuthService'
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function RegisterPage() {
   const [error, setError] = useState('');
 
   const registerMutation = useMutation({
-    mutationFn: (formData) => AuthService.register(formData),
+    mutationFn: (formData) => register(formData),
     onSuccess: () => {
       navigate('/login');
     },
@@ -164,7 +164,7 @@ export function RegisterPage() {
 
       <div className="hidden md:block w-1/2 relative">
         <img
-          src="/images/SignUp.png"
+          src="images/sign-up.png"
           alt="Sign Up Illustration"
           className="w-full h-full object-cover"
         />

@@ -11,13 +11,13 @@ import UserPage from './pages/User.jsx';
 import { PaymentPage } from './pages/Payment';
 import { AccountPage } from './pages/AccountPage.jsx';
 import DiscountBlog from './pages/DiscountBlog.jsx';
-
 import AuthLayout from "./pages/auth/AuthLayout";
 import SignInForm from "./pages/auth/SignIn";
 import SignUpForm from "./pages/auth/SignUp";
 import UnityGame from "./pages/UnityGame";
 import ScrollToTop from './pages/layouts/ScrollToTopLayout.jsx';
-
+import ChatPage from './pages/ChatPage.jsx';
+import UnityGame from './pages/UnityGame.jsx';
 
 function App() {
   return (
@@ -36,8 +36,6 @@ function App() {
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/discounts" element={<DiscountBlog />} /> {/* Thêm route cho DiscountBlog */}
-      <Route path="/discounts" element={<DiscountBlog />} />
-      <Route path="/unity-game" element={<UnityGame />} />
       <Route
   path="/signin"
   element={
@@ -54,6 +52,8 @@ function App() {
     </AuthLayout>
   }
 />
+      <Route path="/chat" element={<ChatPage />} />
+      <Route path="/unity-game" element={<UnityGame />} /> {/* Thêm route cho DiscountBlog */}
     </Routes>
     </>
    
