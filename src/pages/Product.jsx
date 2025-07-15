@@ -1,47 +1,57 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-
-import { Header } from "./layouts/Header";
-import { Footer } from "./layouts/Footer";
 import { ProductCard } from "../components/ProductCard";
-
 import CategoryService from "../services/CategoryService";
 import useFetchList from "../core/hooks/useFetchList";
 import { useDebouncedSearch } from "../core/hooks/useDebouncedSearch";
+import { Header } from "./layouts/Header";
+import { Footer } from "./layouts/Footer";
 
 export function ProductPage() {
   const [categories, setCategories] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
-
-  // Lấy danh sách danh mục
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const favs = localStorage.getItem("favoriteProducts");
+      return favs ? JSON.parse(favs) : [];
+    } catch {
+      return [];
+    }
+  });
+  
+  // Categories
   const { data: allCategories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: () => CategoryService.getAllCategories().then((res) => res.data.data),
-    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
     if (!allCategories) return;
-    const options = allCategories.map((cat) => ({
-      value: cat.categoryId,
-      label: cat.name,
-    }));
-    setCategories(options);
+    setCategories(
+      allCategories.map((cat) => ({
+        value: cat.categoryId,
+        label: cat.name,
+      }))
+    );
   }, [allCategories]);
 
-  const DEFAULT_ProductQuery = {
+  // Query state
+  const DEFAULT_QUERY = {
     SearchTerm: "",
     SortBy: "CreatedAt",
     SortDescending: true,
-    Filter: { CategoryId: "" },
-    PageSize: 12,
+    Filter: { CategoryId: "", Season: "" },
+    PageSize: 16,
     PageIndex: 1,
   };
 
   const [selectedSort, setSelectedSort] = useState("0");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [productQuery, setProductQuery] = useState(DEFAULT_ProductQuery);
+  const [selectedSeason, setSelectedSeason] = useState("");
+  const [productQuery, setProductQuery] = useState(DEFAULT_QUERY);
+  const [reloadTrigger, setReloadTrigger] = useState(false);
 
+  // Debounced search
   const { inputValue, setInputValue } = useDebouncedSearch(500, (value) => {
     setProductQuery((prev) => ({
       ...prev,
@@ -50,17 +60,20 @@ export function ProductPage() {
     }));
   });
 
+  // Clear filters
   const handleClearFilters = () => {
-    setProductQuery(DEFAULT_ProductQuery);
-    setInputValue("");
+    setProductQuery(DEFAULT_QUERY);
     setSelectedSort("0");
     setSelectedCategory("");
+    setSelectedSeason("");
+    setInputValue("");
   };
 
+  // Fetch products
   const { response: apiResponse, loading, error } = useFetchList(
     "products/sellable",
     productQuery,
-    {}
+    { reloadTrigger }
   );
 
   const meta = apiResponse?.meta ?? {};
@@ -69,11 +82,7 @@ export function ProductPage() {
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
-  const visiblePages = [];
-  const startPage = Math.max(1, currentPage - 2);
-  const endPage = Math.min(totalPages, currentPage + 2);
-  for (let i = startPage; i <= endPage; i++) visiblePages.push(i);
-
+  // Pagination
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > totalPages) return;
     setProductQuery((prev) => ({
@@ -82,29 +91,21 @@ export function ProductPage() {
     }));
   };
 
+  // Sort change
   const sortOptions = [
     { value: "0", label: "Ngày tạo (mới - cũ)" },
     { value: "1", label: "Ngày tạo (cũ - mới)" },
     { value: "2", label: "Tên (a - z)" },
     { value: "3", label: "Tên (z - a)" },
-    { value: "4", label: "Giá (nhỏ - lớn)" },
-    { value: "5", label: "Giá (lớn - nhỏ)" },
+    { value: "4", label: "Giá (thấp - cao)" },
+    { value: "5", label: "Giá (cao - thấp)" },
   ];
 
-  const handleCategoryChange = (newId) => {
-    setSelectedCategory(newId);
-    setProductQuery((prev) => ({
-      ...prev,
-      Filter: { ...prev.Filter, CategoryId: newId },
-      PageIndex: 1,
-    }));
-  };
-
-  const handleSortChange = (selectedValue) => {
-    setSelectedSort(selectedValue);
+  const handleSortChange = (value) => {
+    setSelectedSort(value);
     let sortBy = "CreatedAt";
     let sortDescending = true;
-    switch (selectedValue) {
+    switch (value) {
       case "1":
         sortDescending = false;
         break;
@@ -135,134 +136,286 @@ export function ProductPage() {
     }));
   };
 
+  // Category filter
+  const handleCategoryChange = (id) => {
+    setSelectedCategory(id);
+    setProductQuery((prev) => ({
+      ...prev,
+      Filter: { ...prev.Filter, CategoryId: id },
+      PageIndex: 1,
+    }));
+  };
+
+  // Season filter
+  const seasonOptions = [
+    { value: "", label: "Tất cả mùa" },
+    { value: "Spring", label: "Xuân" },
+    { value: "Summer", label: "Hè" },
+    { value: "Fall", label: "Thu" },
+    { value: "Winter", label: "Đông" },
+  ];
+
+  const handleSeasonChange = (season) => {
+    setSelectedSeason(season);
+    setProductQuery((prev) => ({
+      ...prev,
+      Filter: { ...prev.Filter, Season: season },
+      PageIndex: 1,
+    }));
+  };
+
+  // Fetch seasonal products using useQuery
+  const seasonalQueries = seasonOptions
+    .filter((opt) => opt.value !== "")
+    .map((season) => ({
+      season,
+      query: useQuery({
+        queryKey: ["products", "seasonal", season.value, reloadTrigger],
+        queryFn: () =>
+          useFetchList("products/sellable", {
+            ...DEFAULT_QUERY,
+            Filter: { ...DEFAULT_QUERY.Filter, Season: season.value },
+            PageSize: 16,
+          }).then((res) => res.response),
+      }),
+    }));
+
+  // Tạo seasonalProducts cố định
+  const seasonalProducts = useMemo(() => {
+    return seasonalQueries.map(({ season, query }, index) => {
+      const { data: response, isLoading: loading, error } = query;
+      let startIndex, endIndex;
+      switch (index) {
+        case 0: // Xuân
+          startIndex = 0;
+          endIndex = 4;
+          break;
+        case 1: // Hè
+          startIndex = 4;
+          endIndex = 8;
+          break;
+        case 2: // Thu
+          startIndex = 8;
+          endIndex = 12;
+          break;
+        case 3: // Đông
+          startIndex = 12;
+          endIndex = 16;
+          break;
+        default:
+          startIndex = 0;
+          endIndex = 4;
+      }
+      return {
+        season,
+        products: response?.data?.slice(startIndex, endIndex) || [],
+        loading,
+        error,
+      };
+    });
+  }, [seasonalQueries]);
+
+  // Favorites
+  const addToFavorites = (product) => {
+  setFavorites((prev) => {
+    const exists = prev.some((p) => p.productId === product.productId);
+    if (exists) return prev;
+    const updated = [...prev, product];
+    try {
+      localStorage.setItem("favoriteProducts", JSON.stringify(updated));
+    } catch (e) {
+      console.error("Error saving to localStorage:", e);
+    }
+    return updated;
+  });
+};
+
+  const removeFromFavorites = (productId) => {
+    setFavorites((prev) => {
+      const updated = prev.filter((p) => p.productId !== productId);
+      try {
+        localStorage.setItem("favoriteProducts", JSON.stringify(updated));
+      } catch (e) {
+        console.error("Error saving to localStorage:", e);
+      }
+      return updated;
+    });
+  };
+
   return (
     <div className="min-h-screen grid grid-rows-[auto_1fr_auto] bg-[#fffaf3] text-gray-700">
       <Header />
-      <main className="px-[40px] mx-auto flex flex-col gap-5 max-w-7xl">
-        <div className="mb-10 text-center">
-          <h2 className="mb-2 text-3xl font-bold mt-18 text-amber-600">Sản Phẩm Của Chúng Tôi</h2>
-          <p>Khám phá các loại bánh thơm ngon, được làm thủ công mỗi ngày</p>
+      <main className="w-full px-8 py-6 mx-auto max-w-7xl">
+        <h2 className="mb-6 text-3xl font-bold text-center text-amber-600">Sản Phẩm Của Chúng Tôi</h2>
+
+        {/* Filters */}
+        <div className="grid grid-cols-12 gap-4 mb-6">
+          <input
+            type="text"
+            placeholder="Tìm kiếm..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            className="col-span-12 p-2 border rounded lg:col-span-3"
+          />
+          <select
+            className="col-span-12 p-2 border rounded lg:col-span-3"
+            value={selectedCategory}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+          >
+            <option value="">Tất cả danh mục</option>
+            {categories.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className="col-span-12 p-2 border rounded lg:col-span-3"
+            value={selectedSeason}
+            onChange={(e) => handleSeasonChange(e.target.value)}
+          >
+            {seasonOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className="col-span-12 p-2 border rounded lg:col-span-3"
+            value={selectedSort}
+            onChange={(e) => handleSortChange(e.target.value)}
+          >
+            {sortOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="mb-10 space-y-4">
-          <div className="grid grid-cols-12 gap-4">
-            <input
-              type="text"
-              placeholder="Tìm kiếm..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className="col-span-12 px-4 py-2 border rounded-md lg:col-span-4 focus:ring-amber-500"
-            />
-            <select
-              value={selectedCategory}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="col-span-12 px-4 py-2 border rounded-md lg:col-span-4 focus:ring-amber-500"
+        {/* Actions */}
+        <div className="flex flex-wrap justify-between gap-2 mb-6">
+          <div className="flex gap-2">
+            <button onClick={handleClearFilters} className="px-3 py-2 border rounded-md hover:bg-amber-100">
+              Bỏ lọc
+            </button>
+            <button
+              onClick={() => setReloadTrigger((prev) => !prev)}
+              className="px-3 py-2 border rounded-md hover:bg-amber-100"
             >
-              <option value="">Tất cả danh mục</option>
-              {categories.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={selectedSort}
-              onChange={(e) => handleSortChange(e.target.value)}
-              className="col-span-12 px-4 py-2 border rounded-md lg:col-span-4 focus:ring-amber-500"
-            >
-              {sortOptions.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+              Lọc và sắp xếp
+            </button>
           </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-2">
-              <button
-                onClick={handleClearFilters}
-                className="px-3 py-2 border rounded-md hover:bg-amber-100"
-              >
-                Bỏ lọc
-              </button>
-              <button
-                onClick={() => setReloadTrigger(!reloadTrigger)}
-                className="px-3 py-2 border rounded-md hover:bg-amber-100"
-              >
-                Lọc và sắp xếp
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
-                  viewMode === "grid" ? "bg-amber-200" : ""
-                }`}
-              >
-                Dạng lưới
-              </button>
-              <button
-                onClick={() => setViewMode("blog")}
-                className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
-                  viewMode === "blog" ? "bg-amber-200" : ""
-                }`}
-              >
-                Dạng blog
-              </button>
-            </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
+                viewMode === "grid" ? "bg-amber-200" : ""
+              }`}
+            >
+              Dạng lưới
+            </button>
+            <button
+              onClick={() => setViewMode("blog")}
+              className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
+                viewMode === "blog" ? "bg-amber-200" : ""
+              }`}
+            >
+              Dạng blog
+            </button>
           </div>
         </div>
 
+        {/* Product List */}
         {loading ? (
           <p>Đang tải sản phẩm...</p>
         ) : error ? (
-          <p className="text-red-500">Lỗi: {error}</p>
-        ) : Array.isArray(apiResponse?.data) && apiResponse.data.length > 0 ? (
-          viewMode === "grid" ? (
-            <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {apiResponse.data.map((p) => (
-                <ProductCard key={p.productId} product={p} viewMode="grid" />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-6">
-              {apiResponse.data.map((p) => (
-                <ProductCard key={p.productId} product={p} viewMode="blog" />
-              ))}
-            </div>
-          )
+          <p className="text-red-500">Lỗi: {error.message}</p>
+        ) : apiResponse?.data?.length > 0 ? (
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8"
+                : "flex flex-col gap-6 mb-8"
+            }
+          >
+            {apiResponse.data.map((p) => (
+              <ProductCard
+                key={p.productId}
+                product={p}
+                viewMode={viewMode}
+                isFavorite={favorites.some((fav) => fav.productId === p.productId)}
+                onAddFavorite={() =>
+                  favorites.some((fav) => fav.productId === p.productId)
+                    ? removeFromFavorites(p.productId)
+                    : addToFavorites(p)
+                }
+              />
+            ))}
+          </div>
         ) : (
           <p>Không có sản phẩm nào.</p>
         )}
 
-        <div className="flex items-center justify-center gap-2 mt-10 mb-16">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={isFirstPage}
-            className="px-3 py-1 border rounded border-amber-600 text-amber-600 disabled:opacity-50"
-          >
-            ← Trước
-          </button>
-          {visiblePages.map((page) => (
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center gap-2 mb-10">
             <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={`px-3 py-1 border rounded ${
-                page === currentPage ? "bg-amber-600 text-white" : "hover:bg-amber-100"
-              }`}
+              disabled={isFirstPage}
+              onClick={() => handlePageChange(currentPage - 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
             >
-              {page}
+              ← Trước
             </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={isLastPage}
-            className="px-3 py-1 border rounded border-amber-600 text-amber-600 disabled:opacity-50"
-          >
-            Tiếp →
-          </button>
-        </div>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-3 py-1 border rounded ${
+                  page === currentPage ? "bg-amber-600 text-white" : "hover:bg-amber-100"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              disabled={isLastPage}
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Tiếp →
+            </button>
+          </div>
+        )}
+
+        {/* Favorite Products */}
+        <section>
+          <h3 className="mb-4 text-2xl font-semibold text-amber-600">❤️ Sản phẩm yêu thích</h3>
+          {favorites.length === 0 ? (
+            <p>Bạn chưa có sản phẩm yêu thích nào.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {favorites.map((p) => (
+                <div key={p.productId} className="relative">
+                  <ProductCard
+                    product={p}
+                    viewMode="grid"
+                    isFavorite={true}
+                    onAddFavorite={() => removeFromFavorites(p.productId)}
+                  />
+                  <button
+                    onClick={() => removeFromFavorites(p.productId)}
+                    className="absolute px-2 py-1 text-white bg-red-500 rounded top-2 right-2 hover:bg-red-600"
+                    title="Xóa khỏi yêu thích"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+       
       </main>
       <Footer />
     </div>

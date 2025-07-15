@@ -5,7 +5,7 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaXTwitter } from 'react-icons/fa6'
 import { HiArrowLeft } from 'react-icons/hi'
 
-import { login } from '../services/AuthService'
+import AuthService from '../services/AuthService'
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
 
   const loginMutation = useMutation({
-    mutationFn: (formData) => login(formData),
+    mutationFn: (formData) => AuthService.login(formData),
     onSuccess: (res) => {
       let token = res.data.data;
 
@@ -163,7 +163,7 @@ export function LoginPage() {
       <div className="hidden md:block w-1/2">
 
         <img
-          src="/images/sign-in.png"
+          src="/images/SignIn.png"
           alt="Bakery Promo"
           className="w-full h-full object-cover"
         />

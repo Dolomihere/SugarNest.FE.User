@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import useFetchList from "../services/useFetchList";
+import useFetchList from "../core/hooks/useFetchList";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
