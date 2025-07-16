@@ -23,7 +23,7 @@ export default function SignInForm() {
     <div className="flex flex-col flex-1 bg-white dark:bg-gray-900 dark:text-[#f5deb3] min-h-screen relative">
       <div className="absolute inset-0 bg-[url('/images/bg-milk-tea.jpg')] bg-cover bg-center opacity-10 dark:opacity-5 pointer-events-none z-0" />
       <div className="relative flex flex-col justify-center flex-1 w-full max-w-md mx-auto dark:text-white/90">
-      <Link to="/" className="inline-flex items-center text-sm text-gray-700 dark:text-gray-400">
+      <Link to="/" className="inline-flex items-center mb-8 text-sm text-gray-700 dark:text-gray-400">
                 ← Quay về trang trang chủ
               </Link>
         <div className="mb-5 sm:mb-8">

@@ -11,7 +11,7 @@ export default function SignUpForm() {
     <div className="flex flex-col flex-1 bg-white dark:bg-gray-900 dark:text-[#f5deb3] min-h-screen relative">
       <div className="absolute inset-0 bg-[url('/images/bg-milk-tea.jpg')] bg-cover bg-center opacity-10 dark:opacity-5 pointer-events-none z-0" />
       <div className="relative w-full max-w-md pt-10 mx-auto mb-8">
-        <Link to="/signin" className="inline-flex items-center text-sm text-gray-700 dark:text-gray-400">
+        <Link to="/signin" className="inline-flex items-center text-sm text-gray-700 dark:text-gray-400 ">
           ← Quay về trang đăng nhập
         </Link>
       </div>
@@ -61,7 +61,9 @@ export default function SignUpForm() {
               <span
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute -translate-y-1/2 cursor-pointer right-4 top-1/2"
-              >👁️</span>
+              >
+                <i class="fa-regular fa-eye"></i>
+              </span>
             </div>
           </div>
 
@@ -72,7 +74,9 @@ export default function SignUpForm() {
               <span
                 onClick={() => setShowRePassword(!showRePassword)}
                 className="absolute -translate-y-1/2 cursor-pointer right-4 top-1/2"
-              >👁️</span>
+              >
+                <i class="fa-regular fa-eye"></i>
+              </span>
             </div>
           </div>
 

@@ -236,11 +236,11 @@ export function ProductPage() {
           <p>Không có sản phẩm nào.</p>
         )}
 
-        <div className="flex items-center justify-center gap-2 mt-10">
+        <div className="flex items-center justify-center gap-2 mt-10 mb-16">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={isFirstPage}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded border-amber-600 text-amber-600 disabled:opacity-50"
           >
             ← Trước
           </button>
@@ -258,7 +258,7 @@ export function ProductPage() {
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={isLastPage}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded border-amber-600 text-amber-600 disabled:opacity-50"
           >
             Tiếp →
           </button>
