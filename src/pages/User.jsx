@@ -166,7 +166,6 @@ export default function UserPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f5f5f5] text-gray-800">
       <Header />
-      
       <main className="w-full max-w-7xl mx-auto px-4 pt-12 pb-24 min-h-[90vh] space-y-6">
         {isLoading && <p className="text-center text-gray-600">Đang tải giỏ hàng...</p>}
         {error && (
