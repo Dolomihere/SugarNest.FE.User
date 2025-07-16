@@ -29,6 +29,33 @@ export function CustomCard () {
             delicate glaze. Perfectly balanced sweetness in every bite!
           </p>
 
+          <div className="flex items-center mt-4">
+            <img
+              className="w-10 h-10 rounded-full"
+              src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&auto=format&fit=facearea&w=256&q=80"
+              alt="Daniela Metz"
+            />
+
+            <div className="ml-3">
+
+              <p className="text-sm font-medium text-gray-900">
+                <a
+                  href="#"
+                  className="font-black  hover:underline duration-[0.3s]"
+                >
+                  Handsome administrator
+                </a>
+              </p>
+
+              <div className="flex space-x-1 text-sm text-gray-500  duration-[0.3s]">
+                <time dateTime="2020-02-12">Feb 12, 2020</time>
+                <span aria-hidden="true">·</span>
+              </div>
+
+            </div>
+
+          </div>
+
           <div className="flex items-center justify-between mt-2">
             <span className="font-semibold text-amber-500">★★★★☆</span>
 

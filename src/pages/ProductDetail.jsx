@@ -1,22 +1,35 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
-
 import ProductService from "../services/ProductService";
 import ProductOptionService from "../services/ProductOption";
 import CartService from "../services/CartService";
 
 export function ProductDetailPage() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
   const [selectedOptions, setSelectedOptions] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [copied, setCopied] = useState(false);
 
   const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
-  const isLoggedIn = !!token;
+  const isLoggedIn = token && token !== "undefined" && token !== "null";
+  console.log("Token in ProductDetailPage:", token);
+
+  // Lấy dữ liệu giỏ hàng để kiểm tra sản phẩm tồn tại
+  const { data: cartData } = useQuery({
+    queryKey: ["userCart", token || null],
+    queryFn: async () => {
+      if (isLoggedIn) {
+        const response = await CartService.getUserCart(token);
+        return response.data.data;
+      } else {
+        return { cartItems: JSON.parse(localStorage.getItem("local_cart") || "[]") };
+      }
+    },
+  });
 
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -56,22 +69,69 @@ export function ProductDetailPage() {
       productId: id,
       note: null,
       quantity,
-      productItemOptionModels: optionEntries,
+      productItemOptionModels: optionEntries.sort((a, b) =>
+        a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
+      ),
     };
 
     try {
       if (isLoggedIn) {
-        await CartService.addItemToCart(item, token);
+        // Kiểm tra sản phẩm đã tồn tại trong giỏ hàng server
+        const existingItem = cartData?.cartItems?.find(
+          (cartItem) =>
+            cartItem.productId === id &&
+            JSON.stringify(cartItem.cartItemOptions?.sort((a, b) =>
+              a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
+            )) === JSON.stringify(item.productItemOptionModels)
+        );
+
+        if (existingItem) {
+          // Cập nhật số lượng
+          await CartService.updateQuantity(existingItem.cartItemId, existingItem.quantity + quantity, token);
+          console.log("Updated quantity for existing item:", existingItem.cartItemId);
+        } else {
+          // Thêm sản phẩm mới
+          await CartService.addItemToCart(item, token);
+          console.log("Added new item to cart");
+        }
+        queryClient.invalidateQueries(["userCart"]);
         alert("Đã thêm vào giỏ hàng (đăng nhập)!");
       } else {
+        // Kiểm tra sản phẩm đã tồn tại trong local_cart
         const cart = JSON.parse(localStorage.getItem("local_cart") || "[]");
-        cart.push(item);
+        const existingItem = cart.find(
+          (cartItem) =>
+            cartItem.productId === id &&
+            JSON.stringify(cartItem.productItemOptionModels?.sort((a, b) =>
+              a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
+            )) === JSON.stringify(item.productItemOptionModels)
+        );
+
+        if (existingItem) {
+          // Cập nhật số lượng
+          existingItem.quantity += quantity;
+          console.log("Updated quantity for existing local item:", existingItem);
+        } else {
+          // Thêm sản phẩm mới
+          cart.push(item);
+          console.log("Added new item to local cart");
+        }
         localStorage.setItem("local_cart", JSON.stringify(cart));
+        queryClient.invalidateQueries(["userCart"]);
         alert("Đã thêm vào giỏ hàng (khách)!");
       }
+      setQuantity(1); // Reset số lượng sau khi thêm
     } catch (error) {
-      console.error("Add to cart failed:", error);
-      alert("Lỗi khi thêm vào giỏ hàng.");
+      console.error("Add to cart failed:", error.response?.data || error.message);
+      if (error.message.includes("Phiên đăng nhập hết hạn")) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        sessionStorage.removeItem("accessToken");
+        alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+        navigate("/login");
+      } else {
+        alert("Lỗi khi thêm vào giỏ hàng: " + (error.response?.data?.message || error.message));
+      }
     }
   };
 
@@ -87,8 +147,7 @@ export function ProductDetailPage() {
 
   const { data: optionGroups = [] } = useQuery({
     queryKey: ["options", id],
-    queryFn: () => ProductOptionService.getOptionOfProductById(id).then((res) => { 
-      return res.data.data}),
+    queryFn: () => ProductOptionService.getOptionOfProductById(id).then((res) => res.data.data),
   });
 
   const suggestions = useMemo(() => {
@@ -105,25 +164,22 @@ export function ProductDetailPage() {
   return (
     <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
       <Header />
-
       <div className="px-4 mx-auto my-12 space-y-16 max-w-7xl">
         {/* Sản phẩm chính */}
         <div className="flex flex-col gap-10 p-6 bg-white shadow-lg rounded-2xl md:flex-row md:gap-12 lg:gap-16">
           <div className="flex items-center justify-center w-full overflow-hidden md:w-1/2 rounded-xl">
             <img
-              src={product.imgs}
-              alt={product.name}
+              src={product.imgs?.[0] || "/images/placeholder.png"}
+              alt={product.name || "Sản phẩm"}
               className="object-cover w-full max-h-[400px] rounded-xl shadow transition-transform duration-300 hover:scale-105"
             />
           </div>
-
           <div className="w-full space-y-6 md:w-1/2">
             <h2 className="text-3xl font-bold text-gray-800 md:text-4xl">{product.name}</h2>
             <p className="text-2xl leading-relaxed text-gray-600">{product.description}</p>
             <p className="text-2xl font-semibold text-amber-600">
               {Number(product.unitPrice).toLocaleString("vi-VN")}₫
             </p>
-
             {/* Thông tin bổ sung */}
             <div className="space-y-1 text-sm text-gray-500">
               <p><span className="font-medium text-gray-700">Trọng lượng:</span> 500g</p>
@@ -131,7 +187,6 @@ export function ProductDetailPage() {
               <p><span className="font-medium text-gray-700">Thành phần:</span> Bột mì, đường, trứng, bơ, sữa, dầu thực vật,...</p>
               <p><span className="font-medium text-gray-700">Ngày sản xuất:</span> {new Date().toLocaleDateString("vi-VN")}</p>
             </div>
-
             {/* Tùy chọn */}
             {optionGroups.map((group) => (
               <div key={group.optionGroupId} className="space-y-2">
@@ -176,8 +231,6 @@ export function ProductDetailPage() {
                 </div>
               </div>
             ))}
-
-
             {/* Số lượng */}
             <div className="flex items-center gap-4 mt-6">
               <button
@@ -194,15 +247,11 @@ export function ProductDetailPage() {
                 +
               </button>
             </div>
-
             {/* Nút hành động */}
             <div className="flex items-center gap-4 mt-6">
               <button
-                onClick={() => {
-                  handleAddToCart();
-                  setQuantity(1);
-                }}
-                className="px-6 py-3 text-white transition rounded-lg btn-primary hover:bg-amber-700"
+                onClick={handleAddToCart}
+                className="px-6 py-3 text-white transition rounded-lg bg-amber-600 hover:bg-amber-700"
               >
                 Thêm vào giỏ hàng
               </button>
@@ -226,7 +275,6 @@ export function ProductDetailPage() {
             </div>
           </div>
         </div>
-
         {/* Sản phẩm gợi ý */}
         <div className="space-y-8">
           <h3 className="text-2xl font-bold text-gray-800">Sản phẩm gợi ý</h3>
@@ -239,7 +287,7 @@ export function ProductDetailPage() {
               >
                 <div className="overflow-hidden bg-white shadow-md rounded-xl">
                   <img
-                    src={p.imgs}
+                    src={p.imgs?.[0] || "/images/placeholder.png"}
                     alt={p.name}
                     className="object-cover w-full h-40"
                   />
@@ -255,18 +303,16 @@ export function ProductDetailPage() {
               </Link>
             ))}
           </div>
-
           <div className="text-center">
             <Link
               to="/products"
-              className="inline-block px-6 py-3 text-white transition rounded-lg btn-primary hover:bg-amber-700"
+              className="inline-block px-6 py-3 text-white transition rounded-lg bg-amber-600 hover:bg-amber-700"
             >
               Xem thêm sản phẩm
             </Link>
           </div>
         </div>
       </div>
-
       <Footer />
     </div>
   );
