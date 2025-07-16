@@ -2,61 +2,61 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { FaTrashCan } from 'react-icons/fa6'
 
-import CartService from '../../../services/CartService'
-import ProductService from '../../../services/ProductService'
+import { CartService } from '../../../services/CartService'
 
 export function Cart() {
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
+  const isLoggedIn = !!token;
 
   const { data: cartData, refetch: refetchCart } = useQuery({
     queryKey: ['userCart', token],
-    queryFn: () => CartService.getUserCart(token),
-    enabled: !!token,
+    queryFn: () => CartService.getUserCart(),
+    enabled: isLoggedIn,
     select: res => res.data.data,
   });
 
-  const { data: products } = useQuery({
-    queryKey: ['allProducts'],
-    queryFn: ProductService.getAllProducts,
-    select: res => res.data.data,
-  });
+  // const { data: products } = useQuery({
+  //   queryKey: ['allProducts'],
+  //   queryFn: ProductService.getAllProducts,
+  //   select: res => res.data.data,
+  // });
 
-  const updateQuantityMutation = useMutation({
-    mutationFn: ({ cartItemId, quantity }) =>
-      CartService.updateQuantity(cartItemId, quantity),
-    onSuccess: () => refetchCart(),
-    onError: () => setError('Không thể cập nhật số lượng.'),
-  });
+  // const updateQuantityMutation = useMutation({
+  //   mutationFn: ({ cartItemId, quantity }) =>
+  //     CartService.updateQuantity(cartItemId, quantity),
+  //   onSuccess: () => refetchCart(),
+  //   onError: () => setError('Không thể cập nhật số lượng.'),
+  // });
 
-  const deleteItemMutation = useMutation({
-    mutationFn: (cartItemId) => CartService.deleteItem(cartItemId),
-    onSuccess: () => refetchCart(),
-    onError: () => setError('Không thể xóa sản phẩm khỏi giỏ hàng.'),
-  });
+  // const deleteItemMutation = useMutation({
+  //   mutationFn: (cartItemId) => CartService.deleteItem(cartItemId),
+  //   onSuccess: () => refetchCart(),
+  //   onError: () => setError('Không thể xóa sản phẩm khỏi giỏ hàng.'),
+  // });
 
-  const handleQuantityChange = (cartItemId, quantity) => {
-    if (quantity < 1) return;
-    updateQuantityMutation.mutate({ cartItemId, quantity });
-  };
+  // const handleQuantityChange = (cartItemId, quantity) => {
+  //   if (quantity < 1) return;
+  //   updateQuantityMutation.mutate({ cartItemId, quantity });
+  // };
 
-  const handleDelete = (cartItemId) => {
-    deleteItemMutation.mutate(cartItemId);
-  };
+  // const handleDelete = (cartItemId) => {
+  //   deleteItemMutation.mutate(cartItemId);
+  // };
 
-  const getProductImage = (productId) => {
-    const product = products?.find(p => p.productId === productId);
-    return product?.imgs?.[0] || '/images/placeholder.png';
-  };
+  // const getProductImage = (productId) => {
+  //   const product = products?.find(p => p.productId === productId);
+  //   return product?.imgs?.[0] || '/images/placeholder.png';
+  // };
 
-  const handleCheckout = () => {
-    if (!cartData?.cartItems?.length) {
-      return alert("Your cart is empty.");
-    }
-    navigate('/checkout');
-  };
+  // const handleCheckout = () => {
+  //   if (!cartData?.cartItems?.length) {
+  //     return alert("Your cart is empty.");
+  //   }
+  //   navigate('/checkout');
+  // };
 
-  const total = cartData?.cartItems?.reduce((acc, item) => acc + item.total, 0) ?? 0;
+  // const total = cartData?.cartItems?.reduce((acc, item) => acc + item.total, 0) ?? 0;
 
   return (
     <div className="h-full flex flex-col font-[Montserrat] bg-[#FFFDF9]">

@@ -129,6 +129,21 @@ const CheckoutPage = () => {
     }
   }, [selectedProvince]);
 
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    address: '',
+    phoneNumber: '',
+    email: '',
+    deliveryTime: '',
+    note: '',
+    userVoucher: '',
+  });
+  const [cartItems, setCartItems] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const accessToken = localStorage.getItem("accessToken");
+  const isLoggedIn = !!accessToken;
+
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] text-gray-700 bg-[#fffaf3]">
       <Header />

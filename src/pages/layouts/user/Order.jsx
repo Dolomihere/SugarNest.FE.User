@@ -1,8 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 
-import OrderService from '../../../services/OrderService'
-import ProductService from '../../../services/ProductService'
-
 export function Order() {
   const orderId = "5B5FEE37-1EB2-4FA3-EE20-08DDB474117B"
   const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');

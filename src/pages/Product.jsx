@@ -22,7 +22,13 @@ export function ProductPage() {
   // Categories
   const { data: allCategories = [] } = useQuery({
     queryKey: ["categories"],
-    queryFn: () => CategoryService.getAllCategories().then((res) => res.data.data),
+    queryFn: () =>
+      CategoryService.getAllCategories().then((res) =>
+        res.data.data.map((cat) => ({
+          value: cat.categoryId,
+          label: cat.name,
+        }))
+      ),
   });
 
   useEffect(() => {
@@ -165,55 +171,75 @@ export function ProductPage() {
   };
 
   // Fetch seasonal products using useQuery
-  const seasonalQueries = seasonOptions
-    .filter((opt) => opt.value !== "")
-    .map((season) => ({
-      season,
-      query: useQuery({
-        queryKey: ["products", "seasonal", season.value, reloadTrigger],
-        queryFn: () =>
-          useFetchList("products/sellable", {
-            ...DEFAULT_QUERY,
-            Filter: { ...DEFAULT_QUERY.Filter, Season: season.value },
-            PageSize: 16,
-          }).then((res) => res.response),
-      }),
-    }));
+  const springQuery = useQuery({
+    queryKey: ["products", "seasonal", "Spring", reloadTrigger],
+    queryFn: () =>
+      useFetchList("products/sellable", {
+        ...DEFAULT_QUERY,
+        Filter: { ...DEFAULT_QUERY.Filter, Season: "Spring" },
+        PageSize: 16,
+      }).then((res) => res.response),
+  });
+
+  const summerQuery = useQuery({
+    queryKey: ["products", "seasonal", "Summer", reloadTrigger],
+    queryFn: () =>
+      useFetchList("products/sellable", {
+        ...DEFAULT_QUERY,
+        Filter: { ...DEFAULT_QUERY.Filter, Season: "Summer" },
+        PageSize: 16,
+      }).then((res) => res.response),
+  });
+
+  const fallQuery = useQuery({
+    queryKey: ["products", "seasonal", "Fall", reloadTrigger],
+    queryFn: () =>
+      useFetchList("products/sellable", {
+        ...DEFAULT_QUERY,
+        Filter: { ...DEFAULT_QUERY.Filter, Season: "Fall" },
+        PageSize: 16,
+      }).then((res) => res.response),
+  });
+
+  const winterQuery = useQuery({
+    queryKey: ["products", "seasonal", "Winter", reloadTrigger],
+    queryFn: () =>
+      useFetchList("products/sellable", {
+        ...DEFAULT_QUERY,
+        Filter: { ...DEFAULT_QUERY.Filter, Season: "Winter" },
+        PageSize: 16,
+      }).then((res) => res.response),
+  });
 
   // Tạo seasonalProducts cố định
   const seasonalProducts = useMemo(() => {
-    return seasonalQueries.map(({ season, query }, index) => {
-      const { data: response, isLoading: loading, error } = query;
-      let startIndex, endIndex;
-      switch (index) {
-        case 0: // Xuân
-          startIndex = 0;
-          endIndex = 4;
-          break;
-        case 1: // Hè
-          startIndex = 4;
-          endIndex = 8;
-          break;
-        case 2: // Thu
-          startIndex = 8;
-          endIndex = 12;
-          break;
-        case 3: // Đông
-          startIndex = 12;
-          endIndex = 16;
-          break;
-        default:
-          startIndex = 0;
-          endIndex = 4;
-      }
-      return {
-        season,
-        products: response?.data?.slice(startIndex, endIndex) || [],
-        loading,
-        error,
-      };
-    });
-  }, [seasonalQueries]);
+    return [
+      {
+        season: { value: "Spring", label: "Xuân" },
+        products: springQuery.data?.data?.slice(0, 4) || [],
+        loading: springQuery.isLoading,
+        error: springQuery.error,
+      },
+      {
+        season: { value: "Summer", label: "Hè" },
+        products: summerQuery.data?.data?.slice(0, 4) || [],
+        loading: summerQuery.isLoading,
+        error: summerQuery.error,
+      },
+      {
+        season: { value: "Fall", label: "Thu" },
+        products: fallQuery.data?.data?.slice(0, 4) || [],
+        loading: fallQuery.isLoading,
+        error: fallQuery.error,
+      },
+      {
+        season: { value: "Winter", label: "Đông" },
+        products: winterQuery.data?.data?.slice(0, 4) || [],
+        loading: winterQuery.isLoading,
+        error: winterQuery.error,
+      },
+    ];
+  }, [springQuery.data, summerQuery.data, fallQuery.data, winterQuery.data]);
 
   // Favorites
   const addToFavorites = (product) => {

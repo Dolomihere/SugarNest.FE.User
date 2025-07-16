@@ -1,11 +1,11 @@
-import httpClient from "../configs/AxiosConfig";
+import { publicApi } from "../configs/AxiosConfig";
 
 const endpoint = "/carts";
 
 const CartService = {
   getUserCart: async (token) => {
     try {
-      const response = await httpClient.get(`${endpoint}/mine`, {
+      const response = await publicApi.get(`${endpoint}/mine`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -21,10 +21,10 @@ const CartService = {
     }
   },
   getGuestCart: async (cartId) =>
-    await httpClient.get(`${endpoint}/guest/${cartId}`),
+    await publicApi.get(`${endpoint}/guest/${cartId}`),
   addItemToCart: async (itemData, token) => {
     try {
-      const response = await httpClient.post(`${endpoint}/items`, itemData, {
+      const response = await publicApi.post(`${endpoint}/items`, itemData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -38,7 +38,7 @@ const CartService = {
   },
   updateQuantity: async (cartItemId, quantity, token) => {
     try {
-      const response = await httpClient.patch(
+      const response = await publicApi.patch(
         `${endpoint}/items/${cartItemId}/quantity`,
         { quantity },
         {
@@ -56,7 +56,7 @@ const CartService = {
   },
   updateNote: async (cartItemId, note, token) => {
     try {
-      const response = await httpClient.patch(
+      const response = await publicApi.patch(
         `${endpoint}/items/${cartItemId}/note`,
         { note },
         {
@@ -74,7 +74,7 @@ const CartService = {
   },
   deleteItem: async (cartItemId, token) => {
     try {
-      const response = await httpClient.delete(`${endpoint}/items/${cartItemId}`, {
+      const response = await publicApi.delete(`${endpoint}/items/${cartItemId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

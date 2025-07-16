@@ -17,9 +17,6 @@ import SignUpForm from "./pages/auth/SignUp";
 import UnityGame from "./pages/UnityGame";
 import ScrollToTop from "./pages/layouts/ScrollToTopLayout.jsx";
 import { Header } from "./pages/layouts/Header";
-
-
-
 import { Footer } from "./pages/layouts/Footer.jsx";
 
 function App() {

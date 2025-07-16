@@ -1,18 +1,19 @@
-import httpClient from '../configs/AxiosConfig'
+import { publicApi } from "../configs/AxiosConfig"
 
-const endpoint = '/auth'
-
-const AuthService = {
-  check: (token) => httpClient.get(endpoint, { 
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }),
-  register: (formdata) => httpClient.post(`${endpoint}/register`, formdata),
-  login: (formdata) => httpClient.post(`${endpoint}/login`, formdata),
-  enable2fa: (formdata) => httpClient.post(`${endpoint}/login2fa`, formdata),
-  verifyEmail: (formdata) => httpClient.patch(`${endpoint}/verify`, formdata),
-  resetPassword: (formdata) => httpClient.patch(`${endpoint}/reset-password`, formdata),
+export const AuthService = {
+  register: async (formdata) => {
+    const payload = { ...formdata };
+    const res = await publicApi.post('/auth/register', payload);
+    return res.data;
+  },
+  verifyemail: async (formdata) => {
+    const payload = { ...formdata };
+    const res = await publicApi.post('/auth/verify', payload);
+    return res.data;
+  },
+  login: async (formdata) => {
+    const payload = { ...formdata };
+    const res = await publicApi.post('auth/login', payload);
+    return res.data;
+  }
 };
-
-export default AuthService;

@@ -18,13 +18,13 @@ export function Header() {
   ];
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    const token = localStorage.getItem('accessToken');
     setIsLoggedIn(!!token);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    sessionStorage.removeItem("accessToken");
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken')
     setIsLoggedIn(false);
     navigate("/");
   };
