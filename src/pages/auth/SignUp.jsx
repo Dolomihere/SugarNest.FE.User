@@ -7,10 +7,10 @@ export default function SignUpForm() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    userName: "",
+    fullName: "",
     email: "",
-    phone: "",
+    phoneNumber: "",
     password: "",
     confirmPassword: "",
     role: "Customer"
@@ -23,7 +23,8 @@ export default function SignUpForm() {
   const mutation = useMutation({
     mutationFn: AuthService.register,
     onSuccess: () => {
-      navigate("/signin"); // redirect after successful registration
+      sessionStorage.setItem('email', formData.email);
+      navigate("/otp:verifyemail");
     },
     onError: (err) => {
       setError("Đăng ký thất bại. Vui lòng thử lại.");
@@ -52,10 +53,10 @@ export default function SignUpForm() {
 
     setError("");
     mutation.mutate({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
+      userName: formData.userName,
+      fullName: formData.fullName,
       email: formData.email,
-      phone: formData.phone,
+      phoneNumber: formData.phoneNumber,
       password: formData.password,
     });
   };
@@ -80,27 +81,26 @@ export default function SignUpForm() {
         )}
 
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-              <label className="block font-bold">Họ <span className="text-red-600">*</span></label>
-              <input
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
-                placeholder="Nguyễn"
-              />
-            </div>
-            <div>
-              <label className="block font-bold">Tên <span className="text-red-600">*</span></label>
-              <input
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
-                placeholder="Bánh Ngọt"
-              />
-            </div>
+
+          <div>
+            <label className="block font-bold">Tên tài khoản <span className="text-red-600">*</span></label>
+            <input
+              name="userName"
+              value={formData.userName}
+              onChange={handleChange}
+              className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+              placeholder="Account123"
+            />
+          </div>
+          <div>
+            <label className="block font-bold">Họ tên <span className="text-red-600">*</span></label>
+            <input
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+              placeholder="Nguyễn Bánh Ngọt"
+            />
           </div>
 
           <div>
@@ -118,8 +118,8 @@ export default function SignUpForm() {
           <div>
             <label className="block font-bold">Số điện thoại <span className="text-red-600">*</span></label>
             <input
-              name="phone"
-              value={formData.phone}
+              name="phoneNumber"
+              value={formData.phoneNumber}
               onChange={handleChange}
               className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
             />

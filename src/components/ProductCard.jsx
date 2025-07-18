@@ -8,10 +8,6 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
     unitPrice,
     imgs = ["/placeholder.jpg"],
     description = "",
-    author = {
-      name: "Handsome Administrator",
-      img: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&auto=format&fit=facearea&w=256&q=80",
-    },
     rating = 4,
     reviews = 34,
     createdDate = "Feb 12, 2020",
@@ -23,13 +19,13 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
       const viewed = JSON.parse(localStorage.getItem("viewedProducts") || "[]");
       const alreadyExists = viewed.find((p) => p.productId === productId);
       if (!alreadyExists) {
-        const updated = [...viewed.slice(-9), { productId, name, unitPrice, imgs, author, rating, reviews, createdDate }];
+        const updated = [...viewed.slice(-9), { productId, name, unitPrice, imgs, rating, reviews, createdDate }];
         localStorage.setItem("viewedProducts", JSON.stringify(updated));
       }
     } catch (error) {
       console.error("Error updating viewedProducts:", error);
     }
-  }, [productId, name, unitPrice, imgs, author, rating, reviews, createdDate]);
+  }, [productId, name, unitPrice, imgs, rating, reviews, createdDate]);
 
   const productImg = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : "/placeholder.jpg";
 
@@ -71,15 +67,7 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
           <h3 className="text-lg font-bold transition-all text-amber-600 line-clamp-1 hover:line-clamp-none">
             {name}
           </h3>
-          <div className="flex items-center mt-4">
-            <img src={author.img} alt={author.name} className="w-10 h-10 rounded-full" />
-            <div className="ml-3">
-              <p className="text-sm font-semibold text-gray-600 hover:underline">{author.name}</p>
-              <time className="text-xs text-gray-500" dateTime={createdDate}>
-                {createdDate}
-              </time>
-            </div>
-          </div>
+
           <div className="flex items-center justify-between mt-2">
             <span className="text-base font-semibold text-amber-500">
               {"★".repeat(rating) + "☆".repeat(5 - rating)}
@@ -120,15 +108,7 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
       <div className="flex flex-col w-1/2 p-6">
         <h3 className="mb-2 text-2xl font-bold text-amber-600">{name}</h3>
         {description && <p className="mt-2 text-gray-600 line-clamp-3">{description}</p>}
-        <div className="flex items-center mt-6">
-          <img src={author.img} alt={author.name} className="w-12 h-12 rounded-full" />
-          <div className="ml-3">
-            <p className="text-base font-semibold text-gray-600 hover:underline">{author.name}</p>
-            <time className="text-sm text-gray-500" dateTime={createdDate}>
-              {createdDate}
-            </time>
-          </div>
-        </div>
+
         <div className="flex items-center justify-between mt-4">
           <span className="text-lg font-semibold text-amber-500">
             {"★".repeat(rating) + "☆".repeat(5 - rating)}
