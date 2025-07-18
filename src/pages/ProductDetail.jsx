@@ -18,17 +18,17 @@ export function ProductDetailPage() {
   const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
   const isLoggedIn = token && token !== "undefined" && token !== "null";
 
-  // Lấy dữ liệu giỏ hàng
+  // Lấy dữ liệu giỏ hàng (chỉ cho người dùng đã đăng nhập)
   const { data: cartData } = useQuery({
-    queryKey: ["userCart", token || null],
+    queryKey: ["userCart", token],
     queryFn: async () => {
       if (isLoggedIn) {
         const response = await CartService.getUserCart(token);
-        return response.data.data;
-      } else {
-        return { cartItems: JSON.parse(localStorage.getItem("local_cart") || "[]") };
+        return response.data.data || { cartItems: [] };
       }
+      return { cartItems: [] };
     },
+    enabled: !!isLoggedIn,
   });
 
   // Lấy dữ liệu sản phẩm
@@ -40,7 +40,7 @@ export function ProductDetailPage() {
   // Lấy dữ liệu tùy chọn sản phẩm
   const { data: optionGroups = [], isLoading: isOptionsLoading, error: optionsError } = useQuery({
     queryKey: ["options", id],
-    queryFn: () => ProductOptionService.getOptionOfProductById(id), // Lấy trực tiếp từ service
+    queryFn: () => ProductOptionService.getOptionOfProductById(id),
     onError: (error) => {
       console.error("Failed to fetch product options:", error.response?.data || error.message);
     },
@@ -84,59 +84,57 @@ export function ProductDetailPage() {
   };
 
   const handleAddToCart = async () => {
+    if (!isLoggedIn) {
+      alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+      navigate("/signin", { state: { from: `/products/${id}` } });
+      return;
+    }
+
     const optionEntries = Object.entries(selectedOptions).flatMap(([groupId, values]) => {
       if (Array.isArray(values)) {
         return values.map((v) => ({ optionGroupId: groupId, optionItemId: v }));
       } else {
         return [{ optionGroupId: groupId, optionItemId: values }];
       }
-    });
+    }).sort((a, b) =>
+      a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
+    );
 
     const item = {
       productId: id,
       note: null,
       quantity: quantity,
-      productItemOptionModels: optionEntries.sort((a, b) =>
-        a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
-      ),
+      productItemOptionModels: optionEntries,
     };
 
     try {
-      if (isLoggedIn) {
-        const existingItem = cartData?.cartItems?.find(
-          (cartItem) =>
-            cartItem.productId === id &&
-            JSON.stringify(cartItem.cartItemOptions?.sort((a, b) =>
-              a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
-            )) === JSON.stringify(item.productItemOptionModels)
-        );
+      // Normalize cart item options for comparison
+      const normalizeOptions = (options) =>
+        options
+          ?.map((opt) => ({
+            optionGroupId: opt.optionGroupId || opt.option_group_id,
+            optionItemId: opt.optionItemId || opt.option_item_id,
+          }))
+          ?.sort((a, b) =>
+            a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
+          ) || [];
 
-        if (existingItem) {
-          await CartService.updateQuantity(existingItem.cartItemId, existingItem.quantity + quantity, token);
-        } else {
-          await CartService.addItemToCart(item, token);
-        }
-        queryClient.invalidateQueries(["userCart"]);
-        alert("Đã thêm vào giỏ hàng (đăng nhập)!");
+      // Check for existing item with identical productId and options
+      const existingItem = cartData?.cartItems?.find(
+        (cartItem) =>
+          cartItem.productId === id &&
+          JSON.stringify(normalizeOptions(cartItem.cartItemOptions)) === JSON.stringify(normalizeOptions(item.productItemOptionModels))
+      );
+
+      if (existingItem) {
+        // Update quantity of existing item
+        await CartService.updateQuantity(existingItem.cartItemId, existingItem.quantity + quantity, token);
       } else {
-        const cart = JSON.parse(localStorage.getItem("local_cart") || "[]");
-        const existingItem = cart.find(
-          (cartItem) =>
-            cartItem.productId === id &&
-            JSON.stringify(cartItem.productItemOptionModels?.sort((a, b) =>
-              a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
-            )) === JSON.stringify(item.productItemOptionModels)
-        );
-
-        if (existingItem) {
-          existingItem.quantity += quantity;
-        } else {
-          cart.push(item);
-        }
-        localStorage.setItem("local_cart", JSON.stringify(cart));
-        queryClient.invalidateQueries(["userCart"]);
-        alert("Đã thêm vào giỏ hàng (khách)!");
+        // Add new item to cart
+        await CartService.addItemToCart(item, token);
       }
+      queryClient.invalidateQueries(["userCart"]);
+      alert("Đã thêm vào giỏ hàng!");
       setQuantity(1);
     } catch (error) {
       console.error("Add to cart failed:", error.response?.data || error.message);
@@ -145,7 +143,7 @@ export function ProductDetailPage() {
         localStorage.removeItem("refreshToken");
         sessionStorage.removeItem("accessToken");
         alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-        navigate("/login");
+        navigate("/signin", { state: { from: `/products/${id}` } });
       } else {
         alert("Lỗi khi thêm vào giỏ hàng: " + (error.response?.data?.message || error.message));
       }
