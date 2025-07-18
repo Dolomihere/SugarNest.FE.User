@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { replace, useNavigate } from 'react-router-dom'
 import { Header } from './layouts/Header'
 import { Footer } from './layouts/Footer'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -49,6 +50,16 @@ export function AccountPage() {
     })
     setEditProfile(false)
   }
+
+  // Logic
+  const goto = useNavigate();
+  
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) goto("/signin", { replace: true });
+  }, [goto]);
+  // Logic
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fffaf3] text-brown-800">

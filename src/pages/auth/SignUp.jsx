@@ -1,11 +1,65 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { AuthService } from "../../services/AuthService";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SignUpForm() {
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    userName: "",
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: "",
+    role: "Customer"
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const 
-[showRePassword, setShowRePassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [error, setError] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: AuthService.register,
+    onSuccess: () => {
+      sessionStorage.setItem('email', formData.email);
+      navigate("/otp:verifyemail");
+    },
+    onError: (err) => {
+      setError("Đăng ký thất bại. Vui lòng thử lại.");
+    },
+  });
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!isChecked) {
+      setError("Bạn phải đồng ý với Điều khoản và Chính sách bảo mật.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setError("");
+    mutation.mutate({
+      userName: formData.userName,
+      fullName: formData.fullName,
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      password: formData.password,
+    });
+  };
 
   return (
     <div className="flex flex-col flex-1 bg-white dark:bg-gray-900 dark:text-[#f5deb3] min-h-screen relative">
@@ -19,50 +73,73 @@ export default function SignUpForm() {
         <h1 className="mb-2 text-2xl font-semibold">Đăng ký</h1>
         <p className="mb-5 text-sm text-gray-600 dark:text-gray-400">Nhập thông tin để tạo tài khoản mới</p>
 
-        <div className="grid grid-cols-1 gap-3 mb-5 sm:grid-cols-2 sm:gap-5">
-          <button className="inline-flex items-center justify-center gap-3 py-3 text-sm text-gray-700 bg-gray-100 rounded-lg px-7 hover:bg-gray-200 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-            Đăng nhập Google
-          </button>
-          <button className="inline-flex items-center justify-center gap-3 py-3 text-sm text-gray-700 bg-gray-100 rounded-lg px-7 hover:bg-gray-200 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-            Đăng nhập X
-          </button>
-        </div>
-
-        <div className="relative py-5 text-gray-500">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300 dark:border-gray-400" />
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 text-sm text-red-600 bg-red-100 border border-red-300 rounded">
+            {error}
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-5 bg-white dark:bg-gray-900 dark:text-gray-400">hoặc</span>
-          </div>
-        </div>
+        )}
 
-        <form className="space-y-6">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-              <label className="block font-bold">Họ <span className="text-red-600">*</span></label>
-              <input className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800" placeholder="Nguyễn" />
-            </div>
-            <div>
-              <label className="block font-bold">Tên <span className="text-red-600">*</span></label>
-              <input className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800" placeholder="Bánh Ngọt" />
-            </div>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+
+          <div>
+            <label className="block font-bold">Tên tài khoản <span className="text-red-600">*</span></label>
+            <input
+              name="userName"
+              value={formData.userName}
+              onChange={handleChange}
+              className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+              placeholder="Account123"
+            />
+          </div>
+          <div>
+            <label className="block font-bold">Họ tên <span className="text-red-600">*</span></label>
+            <input
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+              placeholder="Nguyễn Bánh Ngọt"
+            />
           </div>
 
           <div>
             <label className="block font-bold">Email <span className="text-red-600">*</span></label>
-            <input type="email" placeholder="banhngot@sugarnest.vn" className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800" />
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="banhngot@sugarnest.vn"
+              className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold">Số điện thoại <span className="text-red-600">*</span></label>
+            <input
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+            />
           </div>
 
           <div>
             <label className="block font-bold">Mật khẩu <span className="text-red-600">*</span></label>
             <div className="relative">
-              <input type={showPassword ? "text" : "password"} className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800" />
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+              />
               <span
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute -translate-y-1/2 cursor-pointer right-4 top-1/2"
               >
-                <i class="fa-regular fa-eye"></i>
+                <i className="fa-regular fa-eye"></i>
               </span>
             </div>
           </div>
@@ -70,25 +147,41 @@ export default function SignUpForm() {
           <div>
             <label className="block font-bold">Xác nhận mật khẩu <span className="text-red-600">*</span></label>
             <div className="relative">
-              <input type={showRePassword ? "text" : "password"} className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800" />
+              <input
+                name="confirmPassword"
+                type={showRePassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+              />
               <span
                 onClick={() => setShowRePassword(!showRePassword)}
                 className="absolute -translate-y-1/2 cursor-pointer right-4 top-1/2"
               >
-                <i class="fa-regular fa-eye"></i>
+                <i className="fa-regular fa-eye"></i>
               </span>
             </div>
           </div>
 
           <label className="flex items-start gap-3">
-            <input type="checkbox" checked={isChecked} onChange={() => setIsChecked(!isChecked)} />
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={() => setIsChecked(!isChecked)}
+            />
             <span className="text-sm">
-              Bằng việc đăng ký, bạn đồng ý với <span className="text-blue-600 cursor-pointer hover:underline">Điều khoản</span> và <span className="text-blue-600 cursor-pointer hover:underline">Chính sách bảo mật</span> của chúng tôi.
+              Bằng việc đăng ký, bạn đồng ý với{" "}
+              <span className="text-blue-600 cursor-pointer hover:underline">Điều khoản</span> và{" "}
+              <span className="text-blue-600 cursor-pointer hover:underline">Chính sách bảo mật</span> của chúng tôi.
             </span>
           </label>
 
-          <button className="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-            Đăng ký
+          <button
+            type="submit"
+            disabled={mutation.isLoading}
+            className="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-60"
+          >
+            {mutation.isLoading ? "Đang đăng ký..." : "Đăng ký"}
           </button>
         </form>
 

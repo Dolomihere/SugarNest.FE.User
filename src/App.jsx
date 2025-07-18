@@ -5,6 +5,7 @@ import { ProductPage } from "./pages/Product";
 import { ProductDetailPage } from "./pages/ProductDetail";
 import { RegisterPage } from "./pages/Register";
 import { LoginPage } from "./pages/Login";
+import { OtpPage } from "./pages/Otp.jsx";
 import { ContactPage } from "./pages/Contact";
 import { AboutPage } from "./pages/About";
 import UserPage from "./pages/User.jsx";
@@ -29,6 +30,7 @@ function App() {
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/otp/:mode" element={<OtpPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/user" element={<UserPage />} />
