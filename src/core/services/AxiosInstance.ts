@@ -8,7 +8,7 @@ const AxiosInstance = axios.create({
   },
 });
 
-// Gắn access token trước mỗi request
+// Attach access token to requests
 AxiosInstance.interceptors.request.use((config) => {
   const token = getAccessToken();
   if (token) {
@@ -17,13 +17,12 @@ AxiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// 👉 Tự động refresh token nếu gặp 401
+// Handle 401 errors and refresh token
 AxiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Nếu là 401 và chưa thử lại
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -31,19 +30,17 @@ AxiosInstance.interceptors.response.use(
         const newAccessToken = await refreshToken();
         if (newAccessToken) {
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return AxiosInstance(originalRequest); // 👈 Retry request với token mới
+          return AxiosInstance(originalRequest);
         }
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
       }
 
-      // 👉 Nếu không thể refresh hoặc refresh lỗi → logout & chuyển đến login
       logout();
       window.location.href = `/signin?returnUrl=${encodeURIComponent(window.location.pathname)}`;
       return Promise.reject(error);
     }
 
-    // 👉 Nếu là lỗi 403 hoặc lỗi tùy chỉnh yêu cầu đăng nhập
     const msg = error.response?.data?.message?.toLowerCase?.();
     if (msg?.includes("unauthorized") || msg?.includes("login required")) {
       logout();
@@ -53,4 +50,5 @@ AxiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 export default AxiosInstance;
