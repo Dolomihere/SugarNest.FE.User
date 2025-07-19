@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCartShopping } from '@fortawesome/free-solid-svg-icons';
 import AxiosInstance from '../../core/services/AxiosInstance';
+
 export function Header() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -62,7 +63,7 @@ export function Header() {
         </ul>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/user')}
+            onClick={() => navigate("/user")}
             className="text-2xl cursor-pointer text-amber-600 hover:text-amber-700"
           >
             <FontAwesomeIcon icon={faCartShopping} />
@@ -82,7 +83,7 @@ export function Header() {
             </button>
           ) : (
             <button
-              onClick={() => navigate('/signin')}
+              onClick={() => navigate("/signin")}
               className="hidden px-4 py-1 transition border rounded text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white md:block"
             >
               Đăng nhập
@@ -114,7 +115,7 @@ export function Header() {
               <button
                 onClick={() => {
                   setMenuOpen(false);
-                  navigate('/user');
+                  navigate("/user");
                 }}
                 className="flex items-center gap-1 text-amber-600"
               >
@@ -126,7 +127,7 @@ export function Header() {
               <img
                 onClick={() => {
                   setMenuOpen(false);
-                  navigate('/account');
+                  navigate("/account");
                 }}
                 src={avatar}
                 alt="avatar"
@@ -150,7 +151,7 @@ export function Header() {
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    navigate('/signin');
+                    navigate("/signin");
                   }}
                   className="px-2 py-1 text-left transition rounded border text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white"
                 >

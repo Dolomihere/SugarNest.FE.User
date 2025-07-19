@@ -4,6 +4,10 @@ import { logout } from '../core/services/AuthService';
 import { Header } from './layouts/Header'; // Giả sử bạn có component Header
 import { Footer } from './layouts/Footer'; // Giả sử bạn có component Footer
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { replace, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+
 import {
   faUser,
   faEnvelope,
@@ -12,6 +16,7 @@ import {
   faEdit,
   faSignOutAlt,
 } from '@fortawesome/free-solid-svg-icons';
+
 import {
   faFacebook,
   faInstagram,
@@ -227,7 +232,9 @@ const AccountPage = () => {
       <main className="w-full px-4 py-8 mx-auto space-y-6 max-w-7xl">
         <div className="p-6 bg-white border rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold text-amber-700">Thông tin người dùng</h1>
+            <h1 className="text-xl font-semibold text-amber-700">
+              Thông tin người dùng
+            </h1>
             {!editProfile && (
               <button
                 onClick={() => setEditProfile(true)}
@@ -272,12 +279,19 @@ const AccountPage = () => {
                 <p className="text-sm text-gray-500">{user.address}</p>
                 <p className="mt-2 text-sm text-gray-700">{user.bio || 'Chưa có tiểu sử.'}</p>
                 <div className="flex justify-center gap-4 mt-2 text-xl md:justify-start text-amber-600">
-                  <a href="#" className="hover:text-amber-800"><FontAwesomeIcon icon={faFacebook} /></a>
-                  <a href="#" className="hover:text-amber-800"><FontAwesomeIcon icon={faInstagram} /></a>
-                  <a href="#" className="hover:text-amber-800"><FontAwesomeIcon icon={faTwitter} /></a>
+                  <a href="#" className="hover:text-amber-800">
+                    <FontAwesomeIcon icon={faFacebook} />
+                  </a>
+                  <a href="#" className="hover:text-amber-800">
+                    <FontAwesomeIcon icon={faInstagram} />
+                  </a>
+                  <a href="#" className="hover:text-amber-800">
+                    <FontAwesomeIcon icon={faTwitter} />
+                  </a>
                 </div>
               </div>
             </div>
+
             <button
               onClick={handleUpdateAvatar}
               className="mt-4 w-full bg-amber-500 text-white p-2 rounded hover:bg-amber-600"
@@ -353,7 +367,9 @@ const AccountPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
           <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
             <div className="flex items-center justify-between pb-2 mb-4 border-b">
-              <h2 className="text-lg font-semibold text-amber-700">Chỉnh sửa thông tin cá nhân</h2>
+              <h2 className="text-lg font-semibold text-amber-700">
+                Chỉnh sửa thông tin cá nhân
+              </h2>
               <button
                 onClick={() => setEditProfile(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -364,7 +380,9 @@ const AccountPage = () => {
             <form onSubmit={handleUpdateFullname} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Họ</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Họ
+                  </label>
                   <input
                     type="text"
                     name="firstName"
@@ -374,17 +392,22 @@ const AccountPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Tên</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Tên
+                  </label>
                   <input
                     type="text"
                     name="lastName"
                     defaultValue={user.fullname.split(' ').slice(1).join(' ')}
+
                     className="w-full p-2 mt-1 border rounded-md"
                     required
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Số điện thoại
+                  </label>
                   <input
                     type="tel"
                     value={phoneNumber}
@@ -401,7 +424,9 @@ const AccountPage = () => {
                   </button>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Địa chỉ giao hàng</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Địa chỉ giao hàng
+                  </label>
                   <input
                     type="text"
                     value={address.address}

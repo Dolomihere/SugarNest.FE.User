@@ -5,7 +5,7 @@ import { FcGoogle } from 'react-icons/fc'
 import { FaXTwitter } from 'react-icons/fa6'
 import { HiArrowLeft } from 'react-icons/hi'
 
-import AuthService from '../services/AuthService'
+import { AuthService } from '../services/AuthService'
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -16,7 +16,8 @@ export function RegisterPage() {
   const registerMutation = useMutation({
     mutationFn: (formData) => AuthService.register(formData),
     onSuccess: () => {
-      navigate('/login');
+      sessionStorage.setItem('email', JSON.stringify(form.email));
+      navigate('/otp/verifyemail');
     },
     onError: (err) => {
       setError('Đăng ký thất bại. Vui lòng thử lại.');
