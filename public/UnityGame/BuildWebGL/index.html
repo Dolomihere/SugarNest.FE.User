@@ -121,6 +121,16 @@
             };
 
       document.body.appendChild(script);
+  // Khi người chơi hoàn tất, Unity gọi hàm này:
+  function sendScoreToParent(score, userName = "Người chơi") {
+    window.parent.postMessage({
+      type: "submitScore",
+      payload: {
+        score: score,
+        userName: userName
+      }
+    }, "*");
+  }
 
     </script>
   </body>

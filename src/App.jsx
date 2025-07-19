@@ -9,7 +9,6 @@ import { ContactPage } from "./pages/Contact";
 import { AboutPage } from "./pages/About";
 import UserPage from "./pages/User.jsx";
 import { PaymentPage } from "./pages/Payment";
-import { AccountPage } from "./pages/AccountPage.jsx";
 import DiscountBlog from "./pages/DiscountBlog.jsx";
 import AuthLayout from "./pages/auth/AuthLayout";
 import SignInForm from "./pages/auth/SignIn";
@@ -17,7 +16,7 @@ import SignUpForm from "./pages/auth/SignUp";
 import UnityGame from "./pages/UnityGame";
 import ScrollToTop from "./pages/layouts/ScrollToTopLayout.jsx";
 import { Header } from "./pages/layouts/Header";
-
+import AccountPage from './pages/AccountPage.jsx';
 
 
 import { Footer } from "./pages/layouts/Footer.jsx";
