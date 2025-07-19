@@ -66,13 +66,13 @@ export default function UserPage() {
         setPromoMessage("");
       } else {
         setSelectedVoucher(null);
-        setDiscount(0); // Reset discount on invalid voucher
+        setDiscount(0);
         setPromoMessage("Mã voucher không hợp lệ hoặc đã hết hạn.");
       }
     },
     onError: (err) => {
       setSelectedVoucher(null);
-      setDiscount(0); // Reset discount on error
+      setDiscount(0);
       setPromoMessage(`Không tìm thấy voucher: ${err.message}`);
     },
   });
@@ -211,15 +211,15 @@ export default function UserPage() {
 
     const subtotal = cartData?.cartItems?.reduce((sum, item) => sum + item.total, 0) ?? 0;
     if (selectedVoucher.minPriceCondition && subtotal < selectedVoucher.minPriceCondition) {
-      setSelectedVoucher(null); // Clear selected voucher
-      setDiscount(0); // Ensure no discount is applied
+      setSelectedVoucher(null);
+      setDiscount(0);
       setPromoMessage(`Tổng đơn hàng phải đạt tối thiểu ${formatCurrency(selectedVoucher.minPriceCondition)} để sử dụng voucher này.`);
       return;
     }
 
     if (!selectedVoucher.isActive || (selectedVoucher.endTime && new Date(selectedVoucher.endTime) < new Date())) {
-      setSelectedVoucher(null); // Clear selected voucher
-      setDiscount(0); // Ensure no discount is applied
+      setSelectedVoucher(null);
+      setDiscount(0);
       setPromoMessage("Voucher đã hết hạn hoặc không hoạt động.");
       return;
     }
@@ -252,6 +252,24 @@ export default function UserPage() {
   // Redirect to login with state to return to current page
   const handleLoginRedirect = () => {
     navigate("/signin", { state: { from: location.pathname } });
+  };
+
+  // Navigate to checkout with cart data and voucher
+  const handleCheckout = () => {
+    if (!isLoggedIn) {
+      navigate("/signin", { state: { from: "/checkout" } });
+      return;
+    }
+    navigate("/checkout", {
+      state: {
+        cartData,
+        selectedVoucher,
+        discount,
+        subtotal,
+        total,
+        guestCartId: isLoggedIn ? null : guestCartId,
+      },
+    });
   };
 
   return (
@@ -462,7 +480,7 @@ export default function UserPage() {
 
             {isLoggedIn ? (
               <button
-                onClick={() => navigate("/checkout")}
+                onClick={handleCheckout}
                 className="flex items-center justify-center w-full mt-2 text-sm font-semibold text-white rounded bg-amber-600 hover:bg-amber-700 h-11"
               >
                 Mua Hàng

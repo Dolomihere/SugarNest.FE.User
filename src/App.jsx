@@ -19,6 +19,8 @@ import UnityGame from "./pages/UnityGame";
 import ScrollToTop from "./pages/layouts/ScrollToTopLayout.jsx";
 import { Header } from "./pages/layouts/Header";
 import { Footer } from "./pages/layouts/Footer.jsx";
+import OrderConfirmation from "./pages/OrderConfirmation.jsx";
+import OrderHistoryPage from "./pages/OrderHistory.jsx";
 
 function App() {
   return (
@@ -39,6 +41,8 @@ function App() {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/discounts" element={<DiscountBlog />} />
         <Route path="/unity-game" element={<UnityGame />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        <Route path="/order-history" element={<OrderHistoryPage />} />
         <Route
           path="/signin"
           element={

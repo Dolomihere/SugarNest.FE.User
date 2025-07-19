@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import CartService from "../services/CartService";
+import OrderService from "../services/OrderService";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -13,8 +16,8 @@ const LeafletMap = ({ onAddressSelect }) => {
   useEffect(() => {
     const map = L.map(mapRef.current).setView([10.762622, 106.660172], 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
     setTimeout(() => {
@@ -25,19 +28,19 @@ const LeafletMap = ({ onAddressSelect }) => {
     markerRef.current = marker;
     fetchAddress(10.762622, 106.660172);
 
-    marker.on('dragend', (e) => {
+    marker.on("dragend", (e) => {
       const { lat, lng } = e.target.getLatLng();
       fetchAddress(lat, lng);
     });
 
-    map.on('click', (e) => {
+    map.on("click", (e) => {
       const { lat, lng } = e.latlng;
       if (markerRef.current) {
         markerRef.current.setLatLng([lat, lng]);
       } else {
         const newMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
         markerRef.current = newMarker;
-        newMarker.on('dragend', (e) => {
+        newMarker.on("dragend", (e) => {
           const { lat, lng } = e.target.getLatLng();
           fetchAddress(lat, lng);
         });
@@ -45,26 +48,26 @@ const LeafletMap = ({ onAddressSelect }) => {
       fetchAddress(lat, lng);
     });
 
-    return () => map.remove();
-  }, []);
-
-  const fetchAddress = async (lat, lng) => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
-      );
-      const data = await res.json();
-      onAddressSelect(data.display_name || `${lat}, ${lng}`);
-    } catch (err) {
-      console.error('Lỗi lấy địa chỉ:', err);
-      onAddressSelect(`${lat}, ${lng}`);
+    async function fetchAddress(lat, lng) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+        );
+        const data = await res.json();
+        onAddressSelect(data.display_name || `${lat}, ${lng}`);
+      } catch (err) {
+        console.error("Lỗi lấy địa chỉ:", err);
+        onAddressSelect(`${lat}, ${lng}`);
+      }
     }
-  };
+
+    return () => map.remove();
+  }, [onAddressSelect]);
 
   return (
     <>
-      <div ref={mapRef} className="w-full h-64 rounded-lg border" />
-      <p className="text-sm text-gray-500 mt-2">
+      <div ref={mapRef} className="w-full h-64 border rounded-lg" />
+      <p className="mt-2 text-sm text-gray-500">
         🔍 Bấm vào bản đồ hoặc kéo marker để chọn vị trí giao hàng.
       </p>
     </>
@@ -72,179 +75,476 @@ const LeafletMap = ({ onAddressSelect }) => {
 };
 
 const CheckoutPage = () => {
-  const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [selectedProvince, setSelectedProvince] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [addressFromMap, setAddressFromMap] = useState('');
-
-  const products = [
-    {
-      name: 'Bánh sandwich cam',
-      description: 'Bánh mềm thơm vị cam, đóng gói 3 cái',
-      price: 12000,
-      originalPrice: 20000,
-      image: 'https://i.pinimg.com/736x/62/69/ae/6269aef34a3350f503b78cd52375ceeb.jpg',
-    },
-    {
-      name: 'Bánh tart trứng Hồng Kông',
-      description: 'Vỏ bánh giòn, nhân trứng mềm béo',
-      price: 22000,
-      originalPrice: 28000,
-      image: 'https://i.pinimg.com/736x/26/75/d7/2675d71396d515785595ec4f641be2f5.jpg',
-    },
-    {
-      name: 'Bánh donut chocolate',
-      description: 'Bánh donut phủ chocolate ngọt ngào',
-      price: 16000,
-      originalPrice: 20000,
-      image: 'https://i.pinimg.com/736x/4e/13/9d/4e139d2276aba52b7cfb7d0524300f57.jpg',
-    },
-    {
-      name: 'Bánh su kem mini',
-      description: 'Hộp 5 bánh su kem, nhân vanilla béo nhẹ',
-      price: 19000,
-      originalPrice: 25000,
-      image: 'https://i.pinimg.com/736x/90/aa/c5/90aac5189a4707e2f6dc4e7c702c3a74.jpg',
-    },
-  ];
-
-  const shippingFee = 40000;
-  const totalPrice = products.reduce((acc, item) => acc + item.price, 0) + shippingFee;
-
-  useEffect(() => {
-    fetch('https://provinces.open-api.vn/api/?depth=1')
-      .then((res) => res.json())
-      .then((data) => setProvinces(data))
-      .catch((err) => console.error('Lỗi tải tỉnh:', err));
-  }, []);
-
-  useEffect(() => {
-    if (selectedProvince) {
-      fetch(`https://provinces.open-api.vn/api/p/${selectedProvince}?depth=2`)
-        .then((res) => res.json())
-        .then((data) => setDistricts(data.districts))
-        .catch((err) => console.error('Lỗi tải quận/huyện:', err));
-    } else {
-      setDistricts([]);
-    }
-  }, [selectedProvince]);
-
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const [addressFromMap, setAddressFromMap] = useState("");
+  const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
+  const [shippingFee, setShippingFee] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
   const [form, setForm] = useState({
-    address: '',
-    phoneNumber: '',
-    email: '',
-    deliveryTime: '',
-    note: '',
-    userVoucher: '',
+    name: "",
+    phoneNumber: "",
+    email: "",
+    deliveryTime: "",
+    note: "",
+    userVoucher: "",
   });
-  const [cartItems, setCartItems] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const { cartData, selectedVoucher, discount, subtotal, total, guestCartId } = location.state || {};
+  const cartItems = cartData?.cartItems || [];
   const accessToken = localStorage.getItem("accessToken");
   const isLoggedIn = !!accessToken;
+
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+    }).format(value) + " VND";
+
+  const clearCartMutation = useMutation({
+    mutationFn: async () => {
+      for (const item of cartItems) {
+        try {
+          await CartService.deleteItem(item.cartItemId, accessToken);
+        } catch (err) {
+          console.error(`Failed to delete item ${item.cartItemId}:`, err);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        isLoggedIn ? ["userCart", accessToken] : ["guestCart", guestCartId]
+      );
+      if (!isLoggedIn && guestCartId) {
+        localStorage.removeItem("guestCartId");
+      }
+    },
+    onError: (err) => {
+      setError(`Không thể xóa giỏ hàng: ${err.message}. Đơn hàng vẫn được tạo thành công.`);
+    },
+  });
+
+  useEffect(() => {
+    if (addressFromMap) {
+      const coordsMatch = addressFromMap.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+      if (coordsMatch) {
+        const lat = parseFloat(coordsMatch[1]);
+        const lng = parseFloat(coordsMatch[2]);
+        setCoordinates({ lat, lng });
+        OrderService.calculateShippingFee({ lat, lng })
+          .then(({ shippingFee }) => setShippingFee(shippingFee))
+          .catch((err) => {
+            console.error("Lỗi tính phí vận chuyển:", err);
+            setShippingFee(0);
+          });
+      } else {
+        fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressFromMap)}`
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            if (data && data.length > 0) {
+              const { lat, lon } = data[0];
+              setCoordinates({ lat: parseFloat(lat), lng: parseFloat(lon) });
+              OrderService.calculateShippingFee({ lat: parseFloat(lat), lng: parseFloat(lon) })
+                .then(({ shippingFee }) => setShippingFee(shippingFee))
+                .catch((err) => {
+                  console.error("Lỗi tính phí vận chuyển:", err);
+                  setShippingFee(0);
+                });
+            } else {
+              setShippingFee(0);
+            }
+          })
+          .catch((err) => {
+            console.error("Lỗi lấy tọa độ từ địa chỉ:", err);
+            setShippingFee(0);
+          });
+      }
+    }
+  }, [addressFromMap]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePaymentMethodChange = (e) => {
+    setPaymentMethod(e.target.value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    if (!form.name.trim()) {
+      setError("Vui lòng nhập tên của bạn");
+      setLoading(false);
+      return;
+    }
+    if (!form.phoneNumber.trim()) {
+      setError("Vui lòng nhập số điện thoại");
+      setLoading(false);
+      return;
+    }
+    if (!form.email.trim()) {
+      setError("Vui lòng nhập email");
+      setLoading(false);
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError("Email không hợp lệ");
+      setLoading(false);
+      return;
+    }
+    if (!addressFromMap.trim()) {
+      setError("Vui lòng chọn địa chỉ giao hàng trên bản đồ");
+      setLoading(false);
+      return;
+    }
+    if (!paymentMethod) {
+      setError("Vui lòng chọn phương thức thanh toán");
+      setLoading(false);
+      return;
+    }
+    if (!isLoggedIn && !guestCartId) {
+      setError("Vui lòng đăng nhập hoặc cung cấp giỏ hàng khách");
+      setLoading(false);
+      navigate("/signin", { state: { from: "/checkout" } });
+      return;
+    }
+    if (cartItems.length === 0) {
+      setError("Giỏ hàng của bạn đang trống");
+      setLoading(false);
+      return;
+    }
+    if (!coordinates.lat || !coordinates.lng) {
+      setError("Vui lòng chọn vị trí hợp lệ trên bản đồ");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const orderData = {
+        address: addressFromMap,
+        longitude: coordinates.lng,
+        latitude: coordinates.lat,
+        deliveryTime: form.deliveryTime || "2025-07-19T22:25:00Z", // Default to 10:25 PM +07, 19/07/2025
+        customerName: form.name,
+        email: form.email,
+        phoneNumber: form.phoneNumber,
+        recipientName: form.name,
+        recipientEmail: form.email,
+        recipientPhone: form.phoneNumber,
+        note: form.note || null,
+        userVoucher: form.userVoucher || null,
+        cartItems: cartItems.map((item) => ({
+          productId: item.productId.toString(),
+          quantity: item.quantity,
+        })),
+      };
+
+      console.log("Access Token:", accessToken);
+      console.log("Guest Cart ID:", guestCartId);
+      console.log("Order Data (Stringified):", JSON.stringify(orderData, null, 2));
+
+      const response = await OrderService.createOrder(orderData, accessToken, guestCartId);
+      let orderId = null;
+
+      // Handle different response structures
+      if (response && response.data && response.data.orderId) {
+        orderId = response.data.orderId;
+      } else if (response && (response.orderId || response.id)) {
+        orderId = response.orderId || response.id; // Fallback to root-level orderId or id
+      } else {
+        throw new Error("Không thể xác định ID đơn hàng từ phản hồi server");
+      }
+
+      const paymentResponse = await OrderService.processPayment({
+        orderId,
+        amount: total + shippingFee,
+      });
+
+      if (paymentResponse.status !== "success") {
+        setError("Thanh toán không thành công. Vui lòng thử lại.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        await OrderService.sendOrderConfirmationEmail({
+          email: form.email,
+          orderId,
+          orderData: {
+            ...orderData,
+            subtotal,
+            discount,
+            shippingFee,
+            total: total + shippingFee,
+            paymentMethod,
+            createdAt: new Date().toISOString(),
+          },
+        });
+      } catch (emailError) {
+        console.error("Lỗi gửi email:", emailError);
+        setError("Đơn hàng đã được tạo nhưng không thể gửi email xác nhận.");
+      }
+
+      await clearCartMutation.mutateAsync();
+      queryClient.invalidateQueries(["orderHistory", accessToken]);
+
+      navigate("/order-confirmation", {
+        state: {
+          orderId,
+          paymentStatus: paymentResponse.status,
+          orderData: {
+            ...orderData,
+            subtotal,
+            discount,
+            shippingFee,
+            total: total + shippingFee,
+            paymentMethod,
+            createdAt: new Date().toISOString(),
+          },
+          showSuccessMessage: "Đơn hàng đã được đặt thành công!",
+          checkoutData: {
+            cartData,
+            selectedVoucher,
+            discount,
+            subtotal,
+            total,
+            guestCartId,
+            form: { ...form, address: addressFromMap },
+            paymentMethod,
+            shippingFee,
+            coordinates,
+          },
+        },
+      });
+    } catch (err) {
+      console.error("Order error:", err);
+      setError("Lỗi khi đặt hàng: " + (err.message || "Không xác định"));
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] text-gray-700 bg-[#fffaf3]">
       <Header />
-
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Cột trái */}
-          <div className="lg:col-span-1 space-y-6 order-1 lg:order-none sticky top-8 h-fit">
-            <div className="p-6 rounded-2xl shadow-md space-y-4 bg-white">
+      <main className="max-w-6xl px-4 py-8 mx-auto">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="sticky order-1 space-y-6 lg:col-span-1 lg:order-none top-8 h-fit">
+            <div className="p-6 space-y-4 bg-white shadow-md rounded-2xl">
               <h2 className="text-xl font-semibold text-heading">Đơn hàng của bạn</h2>
-              {products.map((item, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span>{item.name}</span>
-                  <span>{item.price.toLocaleString()} ₫</span>
-                </div>
-              ))}
+              {cartItems.length === 0 ? (
+                <p className="text-sm text-gray-600">Giỏ hàng trống</p>
+              ) : (
+                cartItems.map((item, index) => (
+                  <div key={index} className="flex justify-between text-sm">
+                    <span>{item.productName}</span>
+                    <span>{formatCurrency(item.total)}</span>
+                  </div>
+                ))
+              )}
               <div className="flex justify-between mt-2 text-sm">
                 <span>Phí vận chuyển:</span>
-                <span>{shippingFee.toLocaleString()} ₫</span>
+                <span>{shippingFee > 0 ? formatCurrency(shippingFee) : "Miễn phí"}</span>
               </div>
-              <div className="border-t pt-2 font-bold text-base flex justify-between text-amber-600">
+              {discount > 0 || (selectedVoucher?.hardValue && selectedVoucher) ? (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Giảm giá ({selectedVoucher?.name || "Voucher"}):</span>
+                  <span>-{formatCurrency(subtotal - total)}</span>
+                </div>
+              ) : null}
+              <div className="flex justify-between pt-2 text-base font-bold border-t text-amber-600">
                 <span>Tổng thanh toán:</span>
-                <span>{totalPrice.toLocaleString()} ₫</span>
+                <span>{formatCurrency(total + shippingFee)}</span>
               </div>
-              <button type="submit" className="btn-primary w-full text-center">
-                Đặt mua ngay
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="w-full text-center btn-primary"
+                disabled={loading || cartItems.length === 0}
+              >
+                {loading ? "Đang xử lý..." : "Đặt mua ngay"}
               </button>
+              {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
             </div>
 
-            <div className="p-6 rounded-2xl shadow-md text-sm bg-white text-main space-y-4">
-              <div className="grid grid-cols-1 gap-2 text-yellow-700 font-semibold text-center">
-                <div>✔ Miễn phí vận chuyển đơn từ 300k</div>
+            <div className="p-6 space-y-4 text-sm bg-white shadow-md rounded-2xl text-main">
+              <div className="grid grid-cols-1 gap-2 font-semibold text-center text-yellow-700">
+                <div>✔ Miễn phí vận chuyển đơn từ 300k hoặc dưới 5km</div>
                 <div>✔ Giao hàng 2–3 ngày</div>
                 <div>✔ Hỗ trợ hoàn 100%</div>
-                <div>✔ Thanh toán khi nhận</div>
+                <div>✔ Thanh toán khi nhận hoặc chuyển khoản</div>
               </div>
               <div className="pt-4 border-t">
-                <h3 className="font-bold mb-2 text-heading text-base">Hướng dẫn đặt hàng</h3>
-                <ul className="list-disc pl-5 space-y-1 text-sub">
+                <h3 className="mb-2 text-base font-bold text-heading">Hướng dẫn đặt hàng</h3>
+                <ul className="pl-5 space-y-1 list-disc text-sub">
                   <li>Chọn sản phẩm và thêm vào giỏ</li>
                   <li>Điền đầy đủ thông tin giao hàng</li>
-                  <li>Nhấn <strong className="text-heading">Đặt mua ngay</strong> để hoàn tất</li>
+                  <li>
+                    Nhấn <strong className="text-heading">Đặt mua ngay</strong> để hoàn tất
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
 
-          {/* Cột phải */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="p-6 rounded-2xl shadow-md space-y-6 bg-white">
+          <div className="space-y-6 lg:col-span-2">
+            <div className="p-6 space-y-6 bg-white shadow-md rounded-2xl">
               <h2 className="text-xl font-semibold text-heading">Sản phẩm đã chọn</h2>
               <div className="overflow-x-auto">
-                {products.map((product, idx) => (
-                  <div key={idx} className="flex md:flex-row items-start gap-6 mb-6">
-                    <img src={product.image} alt={product.name} className="w-32 h-32 object-cover rounded-lg border" />
-                    <div>
-                      <h3 className="text-lg font-semibold text-heading">{product.name}</h3>
-                      <p className="text-sub text-sm">{product.description}</p>
-                      <div className="mt-2 flex items-center space-x-2">
-                        <span className="text-xl font-bold text-primary">{product.price.toLocaleString()} ₫</span>
-                        <span className="text-gray-400 line-through text-sm">{product.originalPrice.toLocaleString()} ₫</span>
+                {cartItems.length === 0 ? (
+                  <p className="text-sm text-gray-600">Không có sản phẩm nào trong giỏ hàng</p>
+                ) : (
+                  cartItems.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-6 mb-6 md:flex-row">
+                      <img
+                        src={item.productImage || "/images/placeholder.png"}
+                        alt={item.productName}
+                        className="object-cover w-32 h-32 border rounded-lg"
+                      />
+                      <div>
+                        <h3 className="text-lg font-semibold text-heading">{item.productName}</h3>
+                        {item.cartItemOptions?.length > 0 && (
+                          <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
+                            {item.cartItemOptions.map((opt) => (
+                              <li key={opt.cartItemOptionId}>{opt.optionValue || "Tùy chọn"}</li>
+                            ))}
+                          </ul>
+                        )}
+                        <div className="flex items-center mt-2 space-x-2">
+                          <span className="text-xl font-bold text-primary">
+                            {formatCurrency(item.total / item.quantity)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
-            <div className="p-6 rounded-2xl shadow-md space-y-6 bg-white">
+            <div className="p-6 space-y-6 bg-white shadow-md rounded-2xl">
               <h2 className="text-xl font-semibold text-heading">Thông tin giao hàng</h2>
-              <form className="space-y-5 text-main">
+              <form className="space-y-5 text-main" onSubmit={handleSubmit}>
                 <div>
-                  <label className="block text-sm font-medium text-sub mb-1">Tên của bạn</label>
-                  <input type="text" className="w-full border border-gray-300 rounded-lg p-3" placeholder="Nhập tên của bạn" />
+                  <label className="block mb-1 text-sm font-medium text-sub">Tên của bạn</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    placeholder="Nhập tên của bạn"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-sub mb-1">Điện thoại</label>
-                  <input type="tel" className="w-full border border-gray-300 rounded-lg p-3" placeholder="Nhập số điện thoại" />
+                  <label className="block mb-1 text-sm font-medium text-sub">Điện thoại</label>
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={form.phoneNumber}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    placeholder="Nhập số điện thoại"
+                  />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-sub mb-1">Chọn vị trí trên bản đồ</label>
-                  <LeafletMap onAddressSelect={(addr) => setAddressFromMap(addr)} />
+                  <label className="block mb-1 text-sm font-medium text-sub">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    placeholder="Nhập email của bạn"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-sub mb-1">Địa chỉ chi tiết</label>
+                  <label className="block mb-1 text-sm font-medium text-sub">Chọn vị trí trên bản đồ</label>
+                  <LeafletMap onAddressSelect={setAddressFromMap} />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-sub">Địa chỉ chi tiết</label>
                   <textarea
                     value={addressFromMap}
                     readOnly
-                    className="w-full border border-gray-300 rounded-lg p-3"
+                    className="w-full p-3 border border-gray-300 rounded-lg"
                     rows="3"
                     placeholder="Địa chỉ tự động từ bản đồ"
                   />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-sub">Thời gian giao hàng</label>
+                  <input
+                    type="datetime-local"
+                    name="deliveryTime"
+                    value={form.deliveryTime}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    placeholder="Chọn thời gian giao hàng"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-sub">Ghi chú</label>
+                  <textarea
+                    name="note"
+                    value={form.note}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    rows="2"
+                    placeholder="Thêm ghi chú (tùy chọn)"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-sub">Mã voucher</label>
+                  <input
+                    type="text"
+                    name="userVoucher"
+                    value={form.userVoucher}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    placeholder="Nhập mã voucher (tùy chọn)"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-sub">Phương thức thanh toán</label>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="cash"
+                        checked={paymentMethod === "cash"}
+                        onChange={handlePaymentMethodChange}
+                        className="mr-2"
+                      />
+                      Tiền mặt
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="bank_transfer"
+                        checked={paymentMethod === "bank_transfer"}
+                        onChange={handlePaymentMethodChange}
+                        className="mr-2"
+                      />
+                      Chuyển khoản
+                    </label>
+                  </div>
                 </div>
               </form>
             </div>
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );

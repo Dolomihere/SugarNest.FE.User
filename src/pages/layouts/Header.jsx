@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCartShopping } from '@fortawesome/free-solid-svg-icons';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
 
 export function Header() {
   const navigate = useNavigate();
@@ -14,17 +14,18 @@ export function Header() {
     { to: "/about", label: "Về chúng tôi" },
     { to: "/contact", label: "Liên hệ" },
     { to: "/discounts", label: "Chương trình giảm giá" },
-    { to: "/unity-game", label: "Giải trí" }
+    { to: "/unity-game", label: "Giải trí" },
+    { to: "/order-history", label: "Lịch sử đơn hàng" },
   ];
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken')
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     setIsLoggedIn(false);
     navigate("/");
   };
@@ -52,7 +53,7 @@ export function Header() {
         {/* Right controls (desktop) */}
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/user')}
+            onClick={() => navigate("/user")}
             className="text-2xl cursor-pointer text-amber-600 hover:text-amber-700"
           >
             <FontAwesomeIcon icon={faCartShopping} />
@@ -60,7 +61,7 @@ export function Header() {
 
           {/* Avatar icon (luôn hiển thị) */}
           <img
-            onClick={() => navigate('/account')}
+            onClick={() => navigate("/account")}
             src="/images/owner.png"
             alt="avatar"
             className="border rounded-full cursor-pointer w-9 h-9"
@@ -76,7 +77,7 @@ export function Header() {
             </button>
           ) : (
             <button
-              onClick={() => navigate('/signin')}
+              onClick={() => navigate("/signin")}
               className="hidden px-4 py-1 transition border rounded text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white md:block"
             >
               Đăng nhập
@@ -113,7 +114,7 @@ export function Header() {
               <button
                 onClick={() => {
                   setMenuOpen(false);
-                  navigate('/user');
+                  navigate("/user");
                 }}
                 className="flex items-center gap-1 text-amber-600"
               >
@@ -126,7 +127,7 @@ export function Header() {
               <img
                 onClick={() => {
                   setMenuOpen(false);
-                  navigate('/account');
+                  navigate("/account");
                 }}
                 src="https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg"
                 alt="avatar"
@@ -149,7 +150,7 @@ export function Header() {
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    navigate('/signin');
+                    navigate("/signin");
                   }}
                   className="px-2 py-1 text-left transition border rounded text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white"
                 >
