@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import CartService from "../services/CartService";
 import OrderService from "../services/OrderService";
-import { Header } from "./layouts/Header";
-import { Footer } from "./layouts/Footer";
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+import { Header } from './layouts/Header';
+import { Footer } from './layouts/Footer';
 
 const LeafletMap = ({ onAddressSelect }) => {
   const mapRef = useRef(null);
