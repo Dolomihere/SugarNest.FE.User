@@ -6,6 +6,7 @@ import useFetchList from "../core/hooks/useFetchList";
 import { useDebouncedSearch } from "../core/hooks/useDebouncedSearch";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
+import ChatPage from '../pages/ChatPage';
 
 export function ProductPage() {
   const [categories, setCategories] = useState([]);

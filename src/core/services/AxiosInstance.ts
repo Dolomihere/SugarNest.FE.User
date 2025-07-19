@@ -2,7 +2,7 @@ import axios from "axios";
 import { getAccessToken, logout, refreshToken } from "./AuthService";
 
 const AxiosInstance = axios.create({
-  baseURL: "https://localhost:5001/api",
+  baseURL: "http://14.225.218.217:5000/api/",
   headers: {
     "Content-Type": "application/json",
   },

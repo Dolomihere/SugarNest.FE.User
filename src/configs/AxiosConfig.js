@@ -1,9 +1,11 @@
 // axiosSetup.js
 import axios from 'axios';
 
-export const publicApi = axios.create({
-  baseURL: 'https://localhost:5001/api',
-  headers: { 'Content-Type': 'application/json' },
+const httpClient = axios.create({
+  baseURL: 'http://14.225.218.217:5000/api/',
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 export const privateApi = axios.create({
