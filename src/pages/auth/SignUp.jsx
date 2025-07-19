@@ -23,8 +23,8 @@ export default function SignUpForm() {
   const mutation = useMutation({
     mutationFn: AuthService.register,
     onSuccess: () => {
-      sessionStorage.setItem('email', formData.email);
-      navigate("/otp:verifyemail");
+      sessionStorage.setItem('email', JSON.stringify(formData.email));
+      navigate("/otp/verifyemail");
     },
     onError: (err) => {
       setError("Đăng ký thất bại. Vui lòng thử lại.");
