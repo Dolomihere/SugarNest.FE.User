@@ -1,4 +1,3 @@
-// axiosSetup.js
 import axios from 'axios';
 
 export const publicApi = axios.create({
@@ -9,7 +8,7 @@ export const publicApi = axios.create({
 });
 
 export const privateApi = axios.create({
-  baseURL: 'https://localhost:5001/api',
+  baseURL: 'http://14.225.218.217:5000/',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -28,8 +27,8 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Attach access token to each request
 privateApi.interceptors.request.use(config => {
+  // If explicitly set to skip auth, don't add the token
   if (config.skipAuth) return config;
 
   const token = localStorage.getItem('accessToken');
@@ -39,53 +38,47 @@ privateApi.interceptors.request.use(config => {
   return config;
 });
 
-// Handle token expiration and refresh
 privateApi.interceptors.response.use(
-  response => response,
+  res => res,
   async error => {
     const originalRequest = error.config;
 
-    // If 401 and not already retried
+    // If it's a 401 error and not already retried
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
-        })
-        .then(token => {
+        }).then(token => {
           originalRequest.headers['Authorization'] = `Bearer ${token}`;
-          return privateApi(originalRequest);
-        })
-        .catch(err => Promise.reject(err));
+          return api(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
       }
 
+      originalRequest._retry = true;
       isRefreshing = true;
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await publicApi.post('/auth/refresh-token', {
-          refreshToken,
+        const response = await axios.post('https://localhost:5001/api/auth/refresh-token', {
+          refreshToken
         });
 
-        const newAccessToken = response.data.accessToken; // Adjust if needed
+        const newAccessToken = response.data.data.accessToken;
         localStorage.setItem('accessToken', newAccessToken);
-
-        // Update default headers for future requests
-        privateApi.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
 
         processQueue(null, newAccessToken);
+        return api(originalRequest);
+      } catch (err) {
+        processQueue(err, null);
 
-        // Retry original request with new token
-        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-        return privateApi(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-
+        // You might want to logout here
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';
-        return Promise.reject(refreshError);
+        return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }

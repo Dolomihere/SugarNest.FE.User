@@ -67,7 +67,7 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
           <h3 className="text-lg font-bold transition-all text-amber-600 line-clamp-1 hover:line-clamp-none">
             {name}
           </h3>
-
+          
           <div className="flex items-center justify-between mt-2">
             <span className="text-base font-semibold text-amber-500">
               {"★".repeat(rating) + "☆".repeat(5 - rating)}
@@ -108,7 +108,15 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
       <div className="flex flex-col w-1/2 p-6">
         <h3 className="mb-2 text-2xl font-bold text-amber-600">{name}</h3>
         {description && <p className="mt-2 text-gray-600 line-clamp-3">{description}</p>}
-
+        <div className="flex items-center mt-6">
+          <img src={author.img} alt={author.name} className="w-12 h-12 rounded-full" />
+          <div className="ml-3">
+            <p className="text-base font-semibold text-gray-600 hover:underline">{author.name}</p>
+            <time className="text-sm text-gray-500" dateTime={createdDate}>
+              {createdDate}
+            </time>
+          </div>
+        </div>
         <div className="flex items-center justify-between mt-4">
           <span className="text-lg font-semibold text-amber-500">
             {"★".repeat(rating) + "☆".repeat(5 - rating)}

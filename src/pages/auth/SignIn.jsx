@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { login } from "../../core/services/AuthService";
 import GoogleLoginButton from "/src/components/buttons/GoogleLoginButton";
-import { AuthService } from "../../services/AuthService";
 
 export default function SignInForm() {
   const navigate = useNavigate();
@@ -11,54 +9,14 @@ export default function SignInForm() {
   const returnUrl = searchParams.get("returnUrl");
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const [error, setError] = useState('');
-  
-  const [form, setForm] = useState({ userNameOrEmail: JSON.parse(sessionStorage.getItem('email')) || '', password: '' });
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const loginMutation = useMutation({
-    mutationFn: (formData) => AuthService.login(formData),
-    onSuccess: (res) => {
-      let token = res.data;
-
-      if (isChecked) {
-        localStorage.setItem('accessToken', token.accessToken);
-        localStorage.setItem('refreshToken', token.refreshToken);
-      }
-      else {
-        localStorage.setItem('accessToken', token.accessToken);
-      }
-      
-      let path = localStorage.getItem('lastAccessPath');
-
-      if (path) navigate(path);
-      else navigate("/");
-    },
-    onError: (err) => {
-      setError('Đăng nhập thất bại. Vui lòng thử lại.');
-      console.error(err);
-    },
-  });
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-
-    const { userNameOrEmail, password } = form;
-
-    if (!userNameOrEmail || !password) {
-      setError('Vui lòng điền đầy đủ thông tin bắt buộc.');
-      return;
+  const handleLogin = async () => {
+    const result = await login({ userNameOrEmail: username, password });
+    if (result) {
+      navigate(returnUrl ?? "/");
     }
-
-    setError('');
-    loginMutation.mutate(form);
-  }
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   return (
@@ -72,13 +30,6 @@ export default function SignInForm() {
           <h1 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-inherit">Đăng nhập</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">Nhập email và mật khẩu để đăng nhập</p>
         </div>
-
-        {error && (
-          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 mb-4 rounded">
-            {error}
-          </div>
-        )}
-
         <div className="grid grid-cols-1 gap-3 mb-5 sm:grid-cols-2 sm:gap-5">
           <GoogleLoginButton returnUrl={returnUrl} />
           <button className="inline-flex items-center justify-center gap-3 py-3 text-sm text-gray-700 bg-gray-100 rounded-lg px-7 hover:bg-gray-200 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
@@ -98,30 +49,27 @@ export default function SignInForm() {
             <label className="block font-bold">Tên tài khoản <span className="text-red-600">*</span></label>
             <input
               type="text"
-              name="userNameOrEmail"
-              value={form.userNameOrEmail}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-[#E8D3BD] rounded-lg bg-[#FFFDF9] text-[#5C4033] focus:outline-none focus:ring-2 focus:ring-[#D9A16C]"
               placeholder="banhngot@sugarnest.vn"
+              className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div>
             <label className="block font-bold">Mật khẩu <span className="text-red-600">*</span></label>
             <div className="relative">
               <input
-                type={!showPassword ? "password" : "text"}
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-[#E8D3BD] rounded-lg bg-[#FFFDF9] text-[#5C4033] focus:outline-none focus:ring-2 focus:ring-[#D9A16C]"
+                type={showPassword ? "text" : "password"}
                 placeholder="Nhập mật khẩu"
-                required
+                className="w-full p-3 mt-1 border border-gray-300 rounded-md dark:bg-gray-800"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <span
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute -translate-y-1/2 cursor-pointer right-4 top-1/2"
               >
-              <i className="fa-regular fa-eye"></i>
+              <i class="fa-regular fa-eye"></i>
               </span>
             </div>
           </div>

@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import AxiosInstance from '../core/services/AxiosInstance';
 import { logout } from '../core/services/AuthService';
 import { Header } from './layouts/Header'; // Giả sử bạn có component Header
 import { Footer } from './layouts/Footer'; // Giả sử bạn có component Footer
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
 import {
   faUser,

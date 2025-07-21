@@ -6,7 +6,7 @@ import { Enable2fa } from "./layouts/otp/Enable2fa"
 
 export function OtpPage() {
   const { mode } = useParams();
-  const email = JSON.parse(sessionStorage.getItem('email')) ?? '';
+  const email = JSON.parse(localStorage.getItem('email')) ?? '';
 
   if (mode === "verifyemail")
     return(
