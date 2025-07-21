@@ -1,4 +1,4 @@
-import { publicApi } from "../configs/AxiosConfig";
+import { publicApi } from "../configs/AxiosConfig"
 
 const endpoint = "/carts";
 

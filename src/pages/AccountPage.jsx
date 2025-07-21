@@ -4,8 +4,7 @@ import { logout } from '../core/services/AuthService';
 import { Header } from './layouts/Header'; // Giả sử bạn có component Header
 import { Footer } from './layouts/Footer'; // Giả sử bạn có component Footer
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { replace, useNavigate } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useNavigate } from 'react-router-dom';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 
 import {
@@ -24,19 +23,22 @@ import {
 } from '@fortawesome/free-brands-svg-icons';
 
 const AccountPage = () => {
+  const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editProfile, setEditProfile] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [previewAvatar, setPreviewAvatar] = useState('');
 
   // State cho form cập nhật
   const [address, setAddress] = useState({ address: '', latitude: 0, longitude: 0 });
   const [avatarFile, setAvatarFile] = useState(null);
   const [bio, setBio] = useState('');
   const [fullname, setFullname] = useState('');
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState(1);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [avatar, setAvatar] = useState('');
 
@@ -202,7 +204,7 @@ const AccountPage = () => {
   // Xử lý đăng xuất
   const handleLogout = () => {
     logout();
-    window.location.href = '/signin';
+    navigate('/signin');
   };
 
   if (loading) {
@@ -251,7 +253,7 @@ const AccountPage = () => {
               <div className="relative cursor-pointer group w-28 h-28"
                    onClick={() => document.getElementById('avatarInput')?.click()}>
                 <img
-                  src={avatar}
+                  src={previewAvatar || avatar}
                   alt="avatar"
                   className="object-cover w-full h-full transition duration-300 border-4 rounded-full border-amber-300 hover:scale-105"
                 />
@@ -267,7 +269,7 @@ const AccountPage = () => {
                     if (file) {
                       setAvatarFile(file);
                       const reader = new FileReader();
-                      reader.onloadend = () => setAvatar(reader.result);
+                      reader.onloadend = () => setPreviewAvatar(reader.result);
                       reader.readAsDataURL(file);
                     }
                   }}
@@ -386,7 +388,7 @@ const AccountPage = () => {
                   <input
                     type="text"
                     name="firstName"
-                    defaultValue={user.fullname.split(' ')[0]}
+                    defaultValue={user.fullname?.split(' ')[0] || ''}
                     className="w-full p-2 mt-1 border rounded-md"
                     required
                   />
@@ -398,7 +400,7 @@ const AccountPage = () => {
                   <input
                     type="text"
                     name="lastName"
-                    defaultValue={user.fullname.split(' ').slice(1).join(' ')}
+                    defaultValue={user.fullname?.split(' ').slice(1).join(' ') || ''}
 
                     className="w-full p-2 mt-1 border rounded-md"
                     required
@@ -461,7 +463,7 @@ const AccountPage = () => {
                   <label className="block text-sm font-medium text-gray-700">Giới tính</label>
                   <select
                     value={gender}
-                    onChange={(e) => setGender(e.target.value)}
+                    onChange={(e) => setGender(parseInt(e.target.value))}
                     className="w-full p-2 mt-1 border rounded-md"
                   >
                     <option value="1">Nam</option>
