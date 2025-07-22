@@ -1,4 +1,4 @@
-export const MapService = {
+export const mapService = {
   getAddressInfo: async (lat, lng) => {
     const apiKey = "df581d3dc5a5449c91907c4b3a5ab51c"; // 🔑 Thay bằng key thật
     const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${apiKey}&language=vi`;
