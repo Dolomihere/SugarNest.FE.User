@@ -11,5 +11,5 @@ export const MapService = {
       console.error("Lỗi khi reverse geocode:", error);
       return null;
     }
-  },
+  }
 };
