@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { login } from "../../core/services/AuthService";
+import { login } from "../core/services/AuthService";
 import GoogleLoginButton from "/src/components/buttons/GoogleLoginButton";
-import { AuthService } from "../../services/AuthService";
+import { AuthService } from "../services/AuthService";
 
 export default function SignInForm() {
   const navigate = useNavigate();

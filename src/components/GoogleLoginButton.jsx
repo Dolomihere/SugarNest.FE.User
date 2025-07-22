@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { signinWithGoogle } from "../../core/services/AuthService";
+import { signinWithGoogle } from "../core/services/AuthService";
 import { useNavigate } from "react-router";
 
 const GoogleLoginButton = ({ returnUrl }) => {

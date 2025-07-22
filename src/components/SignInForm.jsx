@@ -4,7 +4,7 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
-import { login, showTokens } from "../../core/services/AuthService";
+import { login, showTokens } from "../core/services/AuthService";
 import CustomButton from "../ui/button/CusomButton";
 import GoogleLoginButton from "../buttons/GoogleLoginButton";
 

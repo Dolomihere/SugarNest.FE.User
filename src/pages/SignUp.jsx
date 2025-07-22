@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { AuthService } from "../../services/AuthService";
+import { AuthService } from "../services/AuthService";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function SignUpForm() {

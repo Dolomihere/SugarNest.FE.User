@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { FaTrashCan } from 'react-icons/fa6'
 
-import { CartService } from '../../../services/CartService'
+import { CartService } from '../services/CartService'
 
 export function Cart() {
   const navigate = useNavigate();
