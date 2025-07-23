@@ -14,7 +14,7 @@ export function Header() {
     { to: '/about', label: 'Về chúng tôi' },
     { to: '/contact', label: 'Liên hệ' },
     { to: '/discounts', label: 'Chương trình giảm giá' },
-    { to: '/unity-game', label: 'Giải trí' },
+    { to: '/game', label: 'Giải trí' },
   ];
 
   // useEffect(() => {

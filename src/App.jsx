@@ -8,6 +8,7 @@ import AccountPage from './pages/Account';
 import Enable2fa from './pages/Enable2fa';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
+import GamePage from './pages/Game';
 
 import HomeLayoutPage from './pages/layout/HomeLayout';
 import AuthLayout from './pages/layout/AuthLayout';
@@ -22,6 +23,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="account" element={<AccountPage />} />
+          <Route path="game" element={<GamePage />} />
         </Route>
 
         <Route path="/auth" element={<AuthLayout />}>
