@@ -1,26 +1,52 @@
-import { useEffect, useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProductCard } from "../components/ProductCard";
 import CategoryService from "../services/CategoryService";
 import useFetchList from "../core/hooks/useFetchList";
 import { useDebouncedSearch } from "../core/hooks/useDebouncedSearch";
+import FavoriteService from "../services/FavoriteService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
-import ChatPage from '../pages/ChatPage';
 
 export function ProductPage() {
   const [categories, setCategories] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
-  const [favorites, setFavorites] = useState(() => {
-    try {
-      const favs = localStorage.getItem("favoriteProducts");
-      return favs ? JSON.parse(favs) : [];
-    } catch {
-      return [];
-    }
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const {
+    data: favoritesData,
+    isLoading: favoritesLoading,
+  } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: () => FavoriteService.getFavorites().then((res) => res.data.data),
   });
-  
-  // Categories
+const addFavoriteMutation = useMutation({
+  mutationFn: (productId) => FavoriteService.addFavorites([productId]),
+  onSuccess: () => {
+    queryClient.invalidateQueries(["favorites"]); // ✅ refetch
+  },
+});
+
+const removeFavoriteMutation = useMutation({
+  mutationFn: (productId) => FavoriteService.removeFavorites([productId]),
+  onSuccess: () => {
+    queryClient.invalidateQueries(["favorites"]); // ✅ refetch
+  },
+});
+
+const isFavorite = (productId) =>
+  favoritesData.some((fav) => fav.productId === productId);
+
+  const addToFavorites = (productId) => {
+    addFavoriteMutation.mutate(productId);
+  };
+
+  const removeFromFavorites = (productId) => {
+    removeFavoriteMutation.mutate(productId);
+  };
+
   const { data: allCategories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: () =>
@@ -33,16 +59,9 @@ export function ProductPage() {
   });
 
   useEffect(() => {
-    if (!allCategories) return;
-    setCategories(
-      allCategories.map((cat) => ({
-        value: cat.categoryId,
-        label: cat.name,
-      }))
-    );
+    setCategories(allCategories);
   }, [allCategories]);
 
-  // Query state
   const DEFAULT_QUERY = {
     SearchTerm: "",
     SortBy: "CreatedAt",
@@ -58,7 +77,6 @@ export function ProductPage() {
   const [productQuery, setProductQuery] = useState(DEFAULT_QUERY);
   const [reloadTrigger, setReloadTrigger] = useState(false);
 
-  // Debounced search
   const { inputValue, setInputValue } = useDebouncedSearch(500, (value) => {
     setProductQuery((prev) => ({
       ...prev,
@@ -67,16 +85,15 @@ export function ProductPage() {
     }));
   });
 
-  // Clear filters
   const handleClearFilters = () => {
     setProductQuery(DEFAULT_QUERY);
     setSelectedSort("0");
     setSelectedCategory("");
     setSelectedSeason("");
     setInputValue("");
+    setShowFavoritesOnly(false);
   };
 
-  // Fetch products
   const { response: apiResponse, loading, error } = useFetchList(
     "products/sellable",
     productQuery,
@@ -89,7 +106,6 @@ export function ProductPage() {
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
-  // Pagination
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > totalPages) return;
     setProductQuery((prev) => ({
@@ -98,7 +114,6 @@ export function ProductPage() {
     }));
   };
 
-  // Sort change
   const sortOptions = [
     { value: "0", label: "Ngày tạo (mới - cũ)" },
     { value: "1", label: "Ngày tạo (cũ - mới)" },
@@ -143,7 +158,6 @@ export function ProductPage() {
     }));
   };
 
-  // Category filter
   const handleCategoryChange = (id) => {
     setSelectedCategory(id);
     setProductQuery((prev) => ({
@@ -153,7 +167,6 @@ export function ProductPage() {
     }));
   };
 
-  // Season filter
   const seasonOptions = [
     { value: "", label: "Tất cả mùa" },
     { value: "Spring", label: "Xuân" },
@@ -171,109 +184,13 @@ export function ProductPage() {
     }));
   };
 
-  // Fetch seasonal products using useQuery
-  const springQuery = useQuery({
-    queryKey: ["products", "seasonal", "Spring", reloadTrigger],
-    queryFn: () =>
-      useFetchList("products/sellable", {
-        ...DEFAULT_QUERY,
-        Filter: { ...DEFAULT_QUERY.Filter, Season: "Spring" },
-        PageSize: 16,
-      }).then((res) => res.response),
-  });
-
-  const summerQuery = useQuery({
-    queryKey: ["products", "seasonal", "Summer", reloadTrigger],
-    queryFn: () =>
-      useFetchList("products/sellable", {
-        ...DEFAULT_QUERY,
-        Filter: { ...DEFAULT_QUERY.Filter, Season: "Summer" },
-        PageSize: 16,
-      }).then((res) => res.response),
-  });
-
-  const fallQuery = useQuery({
-    queryKey: ["products", "seasonal", "Fall", reloadTrigger],
-    queryFn: () =>
-      useFetchList("products/sellable", {
-        ...DEFAULT_QUERY,
-        Filter: { ...DEFAULT_QUERY.Filter, Season: "Fall" },
-        PageSize: 16,
-      }).then((res) => res.response),
-  });
-
-  const winterQuery = useQuery({
-    queryKey: ["products", "seasonal", "Winter", reloadTrigger],
-    queryFn: () =>
-      useFetchList("products/sellable", {
-        ...DEFAULT_QUERY,
-        Filter: { ...DEFAULT_QUERY.Filter, Season: "Winter" },
-        PageSize: 16,
-      }).then((res) => res.response),
-  });
-
-  // Tạo seasonalProducts cố định
-  const seasonalProducts = useMemo(() => {
-    return [
-      {
-        season: { value: "Spring", label: "Xuân" },
-        products: springQuery.data?.data?.slice(0, 4) || [],
-        loading: springQuery.isLoading,
-        error: springQuery.error,
-      },
-      {
-        season: { value: "Summer", label: "Hè" },
-        products: summerQuery.data?.data?.slice(0, 4) || [],
-        loading: summerQuery.isLoading,
-        error: summerQuery.error,
-      },
-      {
-        season: { value: "Fall", label: "Thu" },
-        products: fallQuery.data?.data?.slice(0, 4) || [],
-        loading: fallQuery.isLoading,
-        error: fallQuery.error,
-      },
-      {
-        season: { value: "Winter", label: "Đông" },
-        products: winterQuery.data?.data?.slice(0, 4) || [],
-        loading: winterQuery.isLoading,
-        error: winterQuery.error,
-      },
-    ];
-  }, [springQuery.data, summerQuery.data, fallQuery.data, winterQuery.data]);
-
-  // Favorites
-  const addToFavorites = (product) => {
-  setFavorites((prev) => {
-    const exists = prev.some((p) => p.productId === product.productId);
-    if (exists) return prev;
-    const updated = [...prev, product];
-    try {
-      localStorage.setItem("favoriteProducts", JSON.stringify(updated));
-    } catch (e) {
-      console.error("Error saving to localStorage:", e);
-    }
-    return updated;
-  });
-};
-
-  const removeFromFavorites = (productId) => {
-    setFavorites((prev) => {
-      const updated = prev.filter((p) => p.productId !== productId);
-      try {
-        localStorage.setItem("favoriteProducts", JSON.stringify(updated));
-      } catch (e) {
-        console.error("Error saving to localStorage:", e);
-      }
-      return updated;
-    });
-  };
-
   return (
     <div className="min-h-screen grid grid-rows-[auto_1fr_auto] bg-[#fffaf3] text-gray-700">
       <Header />
       <main className="w-full px-8 py-6 mx-auto max-w-7xl">
-        <h2 className="mb-6 text-3xl font-bold text-center text-amber-600">Sản Phẩm Của Chúng Tôi</h2>
+        <h2 className="mb-6 text-3xl font-bold text-center text-amber-600">
+          Sản Phẩm Của Chúng Tôi
+        </h2>
 
         {/* Filters */}
         <div className="grid grid-cols-12 gap-4 mb-6">
@@ -323,7 +240,10 @@ export function ProductPage() {
         {/* Actions */}
         <div className="flex flex-wrap justify-between gap-2 mb-6">
           <div className="flex gap-2">
-            <button onClick={handleClearFilters} className="px-3 py-2 border rounded-md hover:bg-amber-100">
+            <button
+              onClick={handleClearFilters}
+              className="px-3 py-2 border rounded-md hover:bg-amber-100"
+            >
               Bỏ lọc
             </button>
             <button
@@ -331,6 +251,16 @@ export function ProductPage() {
               className="px-3 py-2 border rounded-md hover:bg-amber-100"
             >
               Lọc và sắp xếp
+            </button>
+            <button
+              onClick={() => setShowFavoritesOnly((prev) => !prev)}
+              className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
+                showFavoritesOnly
+                  ? "bg-red-100 border-red-400 text-red-600"
+                  : ""
+              }`}
+            >
+              Yêu thích
             </button>
           </div>
           <div className="flex gap-2">
@@ -366,16 +296,19 @@ export function ProductPage() {
                 : "flex flex-col gap-6 mb-8"
             }
           >
-            {apiResponse.data.map((p) => (
+            {(showFavoritesOnly
+              ? apiResponse.data.filter((p) => isFavorite(p.productId))
+              : apiResponse.data
+            ).map((p) => (
               <ProductCard
                 key={p.productId}
                 product={p}
                 viewMode={viewMode}
-                isFavorite={favorites.some((fav) => fav.productId === p.productId)}
+                isFavorite={isFavorite(p.productId)}
                 onAddFavorite={() =>
-                  favorites.some((fav) => fav.productId === p.productId)
+                  isFavorite(p.productId)
                     ? removeFromFavorites(p.productId)
-                    : addToFavorites(p)
+                    : addToFavorites(p.productId)
                 }
               />
             ))}
@@ -399,7 +332,9 @@ export function ProductPage() {
                 key={page}
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-1 border rounded ${
-                  page === currentPage ? "bg-amber-600 text-white" : "hover:bg-amber-100"
+                  page === currentPage
+                    ? "bg-amber-600 text-white"
+                    : "hover:bg-amber-100"
                 }`}
               >
                 {page}
@@ -414,35 +349,6 @@ export function ProductPage() {
             </button>
           </div>
         )}
-
-        {/* Favorite Products */}
-        <section>
-          <h3 className="mb-4 text-2xl font-semibold text-amber-600">❤️ Sản phẩm yêu thích</h3>
-          {favorites.length === 0 ? (
-            <p>Bạn chưa có sản phẩm yêu thích nào.</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {favorites.map((p) => (
-                <div key={p.productId} className="relative">
-                  <ProductCard
-                    product={p}
-                    viewMode="grid"
-                    isFavorite={true}
-                    onAddFavorite={() => removeFromFavorites(p.productId)}
-                  />
-                  <button
-                    onClick={() => removeFromFavorites(p.productId)}
-                    className="absolute px-2 py-1 text-white bg-red-500 rounded top-2 right-2 hover:bg-red-600"
-                    title="Xóa khỏi yêu thích"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-       
       </main>
       <Footer />
     </div>

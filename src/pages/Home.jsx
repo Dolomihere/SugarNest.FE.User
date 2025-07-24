@@ -40,6 +40,7 @@ export function HomePage() {
 
           <p className="text-lg text-sub max-w-prose">
             Từ những chiếc bánh sinh nhật{' '}
+     
             <EmojiPopperMultiPosition
               popupIcon={<span>🎂</span>}
               trigger="hover"
@@ -49,7 +50,7 @@ export function HomePage() {
               <span className="inline-block">🎂</span>
             </EmojiPopperMultiPosition>
             , bánh cưới sang trọng cho đến các món tráng miệng thường ngày, mỗi sản phẩm đều là một tác phẩm nghệ thuật được làm bằng cả trái tim.
-          </p>
+               </p>
 
           <p className="text-lg text-sub max-w-prose">
             Hãy cùng chúng tôi lan tỏa niềm vui, chia sẻ những khoảnh khắc ý nghĩa, và tạo nên những kỷ niệm ngọt ngào không thể nào quên.

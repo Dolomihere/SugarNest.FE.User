@@ -1,18 +1,27 @@
 import { useState, useEffect } from 'react';
 import AxiosInstance from '../core/services/AxiosInstance';
 import { logout } from '../core/services/AuthService';
-import { Header } from './layouts/Header'; // Giả sử bạn có component Header
-import { Footer } from './layouts/Footer'; // Giả sử bạn có component Footer
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Header } from './layouts/Header';
+import { Footer } from './layouts/Footer';
 import { useNavigate } from 'react-router-dom';
-
+import { useQuery } from '@tanstack/react-query';
+import FavoriteService from '../services/FavoriteService';
+import { ProductCard } from '../components/ProductCard';
+import { useQueryClient } from '@tanstack/react-query';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import ToastMessage from '../components/ToastMessage';
 import {
   faUser,
-  faEnvelope,
   faPhone,
   faMapMarkerAlt,
+  faVenusMars,
+  faEnvelope,
+  faAlignLeft,
+  faCheck,
+  faTimes,
   faEdit,
   faSignOutAlt,
+
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -32,7 +41,6 @@ const AccountPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [previewAvatar, setPreviewAvatar] = useState('');
 
-  // State cho form cập nhật
   const [address, setAddress] = useState({ address: '', latitude: 0, longitude: 0 });
   const [avatarFile, setAvatarFile] = useState(null);
   const [bio, setBio] = useState('');
@@ -41,7 +49,31 @@ const AccountPage = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [avatar, setAvatar] = useState('');
 
-  // Fetch dữ liệu người dùng khi component mount
+  // Lấy sản phẩm yêu thích
+  const {
+    data: favoriteProducts = [],
+    isLoading: favoritesLoading,
+    isError: favoritesError,
+  } = useQuery({
+    queryKey: ['favorite-products'],
+    queryFn: async () => {
+      const res = await FavoriteService.getFavorites();
+      return res.data.data || [];
+    },
+  });
+  const queryClient = useQueryClient();
+
+  const handleRemoveFavorite = async (productId) => {
+    try {
+      await FavoriteService.removeFavorites([productId]);
+      queryClient.invalidateQueries(['favorite-products']);
+      setSuccess('Đã xoá sản phẩm khỏi danh sách yêu thích.');
+      setError('');
+    } catch (err) {
+      setError('Lỗi khi xoá sản phẩm yêu thích.');
+      setSuccess('');
+    }
+  };
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -73,25 +105,17 @@ const AccountPage = () => {
     fetchUser();
   }, []);
 
-  // Xử lý cập nhật địa chỉ
-  const handleUpdateAddress = async () => {
-    try {
-      const response = await AxiosInstance.patch('/users/address', address);
-      if (response.data.isSuccess) {
-        setUser({ ...user, address: address.address, latitude: address.latitude, longitude: address.longitude });
-        setSuccess('Cập nhật địa chỉ thành công.');
-        setError('');
-      } else {
-        setError(response.data.message || 'Không thể cập nhật địa chỉ.');
+  // ✅ TỰ ĐỘNG ẨN THÔNG BÁO
+  useEffect(() => {
+    if (success || error) {
+      const timer = setTimeout(() => {
         setSuccess('');
-      }
-    } catch (err) {
-      setError('Lỗi khi cập nhật địa chỉ.');
-      setSuccess('');
+        setError('');
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [success, error]);
 
-  // Xử lý cập nhật ảnh đại diện
   const handleUpdateAvatar = async () => {
     if (!avatarFile) {
       setError('Vui lòng chọn một tệp hình ảnh.');
@@ -115,20 +139,42 @@ const AccountPage = () => {
         setSuccess('');
       }
     } catch (err) {
-      console.error('Avatar Update Error:', err);
       setError('Lỗi khi cập nhật ảnh đại diện.');
       setSuccess('');
     }
   };
 
-  // Xử lý cập nhật tiểu sử
+  const handleUpdateAddress = async () => {
+    try {
+      const response = await AxiosInstance.patch('/users/address', address);
+      if (response.data.isSuccess) {
+        setUser((prev) => ({
+          ...prev,
+          address: address.address,
+          latitude: address.latitude,
+          longitude: address.longitude,
+        }));
+        setSuccess('Cập nhật địa chỉ thành công.');
+        setError('');
+        setEditProfile(false);
+      } else {
+        setError(response.data.message || 'Không thể cập nhật địa chỉ.');
+        setSuccess('');
+      }
+    } catch (err) {
+      setError('Lỗi khi cập nhật địa chỉ.');
+      setSuccess('');
+    }
+  };
+
   const handleUpdateBio = async () => {
     try {
       const response = await AxiosInstance.patch('/users/bio', { Bio: bio });
       if (response.data.isSuccess) {
-        setUser({ ...user, bio });
+        setUser((prev) => ({ ...prev, bio }));
         setSuccess('Cập nhật tiểu sử thành công.');
         setError('');
+        setEditProfile(false);
       } else {
         setError(response.data.message || 'Không thể cập nhật tiểu sử.');
         setSuccess('');
@@ -139,18 +185,11 @@ const AccountPage = () => {
     }
   };
 
-  // Xử lý cập nhật họ tên
-  const handleUpdateFullname = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const firstName = formData.get('firstName');
-    const lastName = formData.get('lastName');
-    const newFullname = `${firstName} ${lastName}`.trim();
+  const handleUpdateFullname = async () => {
     try {
-      const response = await AxiosInstance.patch('/users/fullname', { Fullname: newFullname });
+      const response = await AxiosInstance.patch('/users/fullname', { Fullname: fullname });
       if (response.data.isSuccess) {
-        setUser({ ...user, fullname: newFullname });
-        setFullname(newFullname);
+        setUser((prev) => ({ ...prev, fullname }));
         setSuccess('Cập nhật họ tên thành công.');
         setError('');
         setEditProfile(false);
@@ -164,14 +203,14 @@ const AccountPage = () => {
     }
   };
 
-  // Xử lý cập nhật giới tính
   const handleUpdateGender = async () => {
     try {
       const response = await AxiosInstance.patch('/users/gender', { Gender: parseInt(gender) });
       if (response.data.isSuccess) {
-        setUser({ ...user, gender: parseInt(gender) });
+        setUser((prev) => ({ ...prev, gender: parseInt(gender) }));
         setSuccess('Cập nhật giới tính thành công.');
         setError('');
+        setEditProfile(false);
       } else {
         setError(response.data.message || 'Không thể cập nhật giới tính.');
         setSuccess('');
@@ -182,14 +221,14 @@ const AccountPage = () => {
     }
   };
 
-  // Xử lý cập nhật số điện thoại
   const handleUpdatePhoneNumber = async () => {
     try {
       const response = await AxiosInstance.patch('/users/phone', { PhoneNumber: phoneNumber });
       if (response.data.isSuccess) {
-        setUser({ ...user, phoneNumber });
+        setUser((prev) => ({ ...prev, phoneNumber }));
         setSuccess('Cập nhật số điện thoại thành công.');
         setError('');
+        setEditProfile(false);
       } else {
         setError(response.data.message || 'Không thể cập nhật số điện thoại.');
         setSuccess('');
@@ -200,7 +239,6 @@ const AccountPage = () => {
     }
   };
 
-  // Xử lý đăng xuất
   const handleLogout = () => {
     logout();
     navigate('/signin');
@@ -226,6 +264,7 @@ const AccountPage = () => {
     );
   }
 
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fffaf3] text-brown-800">
       <Header />
@@ -233,24 +272,12 @@ const AccountPage = () => {
       <main className="w-full px-4 py-8 mx-auto space-y-6 max-w-7xl">
         <div className="p-6 bg-white border rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold text-amber-700">
-              Thông tin người dùng
-            </h1>
-            {!editProfile && (
-              <button
-                onClick={() => setEditProfile(true)}
-                className="px-4 py-2 text-white transition-colors rounded-md bg-amber-500 hover:bg-amber-600"
-              >
-                <FontAwesomeIcon icon={faEdit} className="mr-2" /> Chỉnh sửa
-              </button>
-            )}
+            
           </div>
 
-          {/* BIO + AVATAR */}
           <section className="p-6 mb-6 bg-white border shadow-md rounded-xl">
             <div className="flex flex-col items-center gap-6 md:flex-row">
-              <div className="relative cursor-pointer group w-28 h-28"
-                   onClick={() => document.getElementById('avatarInput')?.click()}>
+              <div className="relative cursor-pointer group w-28 h-28" onClick={() => document.getElementById('avatarInput')?.click()}>
                 <img
                   src={previewAvatar || avatar}
                   alt="avatar"
@@ -280,15 +307,9 @@ const AccountPage = () => {
                 <p className="text-sm text-gray-500">{user.address}</p>
                 <p className="mt-2 text-sm text-gray-700">{user.bio || 'Chưa có tiểu sử.'}</p>
                 <div className="flex justify-center gap-4 mt-2 text-xl md:justify-start text-amber-600">
-                  <a href="#" className="hover:text-amber-800">
-                    <FontAwesomeIcon icon={faFacebook} />
-                  </a>
-                  <a href="#" className="hover:text-amber-800">
-                    <FontAwesomeIcon icon={faInstagram} />
-                  </a>
-                  <a href="#" className="hover:text-amber-800">
-                    <FontAwesomeIcon icon={faTwitter} />
-                  </a>
+                  <FontAwesomeIcon icon={faFacebook} />
+                  <FontAwesomeIcon icon={faInstagram} />
+                  <FontAwesomeIcon icon={faTwitter} />
                 </div>
               </div>
             </div>
@@ -301,203 +322,226 @@ const AccountPage = () => {
             </button>
           </section>
 
-          {/* MAIN CONTENT */}
-          <section className="grid gap-6 md:grid-cols-3">
-            {/* SIDEBAR */}
-            <aside className="space-y-6">
-              <nav className="p-4 space-y-3 brief bg-white shadow rounded-xl">
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`flex items-center gap-2 w-full px-4 py-2 rounded-md text-left hover:bg-amber-50 transition-colors ${
-                    activeTab === 'profile' ? 'bg-amber-100 text-amber-700 font-semibold' : 'text-gray-700'
-                  }`}
-                >
-                  <FontAwesomeIcon icon={faUser} /> Thông tin cá nhân
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 w-full px-4 py-2 rounded-md text-left text-gray-700 hover:bg-amber-50 transition-colors"
-                >
-                  <FontAwesomeIcon icon={faSignOutAlt} /> Đăng xuất
-                </button>
-              </nav>
-            </aside>
+        <section className="space-y-6">
+  {/* Thanh điều hướng ngang */}
+  <nav className="flex flex-wrap justify-start gap-3 p-4 bg-white shadow rounded-xl mb-6">
+    <button
+      onClick={() => setActiveTab('profile')}
+      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm hover:bg-amber-50 transition-colors ${
+        activeTab === 'profile' ? 'bg-amber-100 text-amber-700 font-semibold' : 'text-gray-700'
+      }`}
+    >
+      <FontAwesomeIcon icon={faUser} /> Thông tin cá nhân
+    </button>
+      <button
+      onClick={() => setActiveTab('favorites')}
+      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm hover:bg-amber-50 transition-colors ${
+        activeTab === 'favorites' ? 'bg-amber-100 text-amber-700 font-semibold' : 'text-gray-700'
+      }`}
+    >
+      <i className="fa-solid fa-heart text-orange-300"></i>
+      Sản phẩm yêu thích
+    </button>
 
-            {/* TAB CONTENT */}
-            <section className="space-y-6 md:col-span-2">
-              {activeTab === 'profile' && !editProfile && (
-                <div className="p-6 space-y-4 bg-white shadow-md rounded-xl">
-                  <h2 className="text-2xl font-semibold text-amber-700">Thông Tin Cá Nhân</h2>
-                  {error && <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>}
-                  {success && <div className="bg-green-100 text-green-700 p-4 mb-4 rounded">{success}</div>}
-                  <div className="grid gap-4 text-sm text-gray-700 sm:grid-cols-2">
-                    <p>
-                      <FontAwesomeIcon icon={faUser} className="mr-2 text-amber-600" />
-                      <strong>Họ và tên:</strong> {user.fullname}
-                    </p>
-                    <p>
-                      <FontAwesomeIcon icon={faEnvelope} className="mr-2 text-amber-600" />
-                      <strong>Email:</strong> {user.email}
-                    </p>
-                    <p>
-                      <FontAwesomeIcon icon={faPhone} className="mr-2 text-amber-600" />
-                      <strong>Số điện thoại:</strong> {user.phoneNumber}
-                    </p>
-                    <p>
-                      <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-amber-600" />
-                      <strong>Địa chỉ:</strong> {user.address}
-                    </p>
-                    <p>
-                      <FontAwesomeIcon icon={faUser} className="mr-2 text-amber-600" />
-                      <strong>Giới tính:</strong> {user.gender === 1 ? 'Nam' : 'Nữ'}
-                    </p>
-                    <p>
-                      <FontAwesomeIcon icon={faUser} className="mr-2 text-amber-600" />
-                      <strong>Tiểu sử:</strong> {user.bio || 'Chưa có'}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </section>
-          </section>
+    <button
+      onClick={handleLogout}
+      className="flex items-center gap-2 px-4 py-2 rounded-md text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+    >
+      <FontAwesomeIcon icon={faSignOutAlt} /> Đăng xuất
+    </button>
+  </nav>
+
+  {/* 👤 THÔNG TIN CÁ NHÂN */}
+  {activeTab === 'profile' && (
+     <div className="grid gap-6 text-sm text-gray-800 sm:grid-cols-2">
+  {[
+    {
+      label: 'Họ và tên',
+      key: 'fullname',
+      icon: faUser,
+      value: fullname,
+      onChange: (e) => setFullname(e.target.value),
+      onSave: handleUpdateFullname,
+    },
+    {
+      label: 'Số điện thoại',
+      key: 'phone',
+      icon: faPhone,
+      value: phoneNumber,
+      onChange: (e) => setPhoneNumber(e.target.value),
+      onSave: handleUpdatePhoneNumber,
+    },
+    {
+      label: 'Địa chỉ',
+      key: 'address',
+      icon: faMapMarkerAlt,
+      value: address.address,
+      onChange: (e) => setAddress({ ...address, address: e.target.value }),
+      onSave: handleUpdateAddress,
+    },
+    {
+      label: 'Giới tính',
+      key: 'gender',
+      icon: faVenusMars,
+      isSelect: true,
+      value: gender,
+      onChange: (e) => setGender(e.target.value),
+      onSave: handleUpdateGender,
+    },
+  ].map(({ label, key, icon, value, onChange, onSave, isSelect }) => (
+    <div
+      key={key}
+      className="flex flex-col gap-1 p-4 border border-amber-400  rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200"
+    >
+      <label className="text-sm text-amber-700 font-semibold flex items-center gap-2">
+        <FontAwesomeIcon icon={icon} className="text-amber-400" />
+        {label}
+      </label>
+      {editProfile === key ? (
+        <div className="flex items-center gap-2 transition-all duration-200">
+          {isSelect ? (
+            <select
+              value={value}
+              onChange={onChange}
+              className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-amber-300 focus:outline-none"
+            >
+              <option value="1">Nam</option>
+              <option value="2">Nữ</option>
+            </select>
+          ) : (
+            <input
+              value={value}
+              onChange={onChange}
+              className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-amber-300 focus:outline-none"
+            />
+          )}
+          <button
+            onClick={onSave}
+            className="text-green-600 hover:text-green-800 p-2 rounded-full bg-white hover:bg-green-50 transition"
+          >
+            <FontAwesomeIcon icon={faCheck} />
+          </button>
+          <button
+            onClick={() => setEditProfile(false)}
+            className="text-gray-500 hover:text-gray-700 p-2 rounded-full bg-white hover:bg-gray-100 transition"
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
         </div>
-      </main>
-
-      {/* Overlay cho chỉnh sửa hồ sơ */}
-      {editProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-            <div className="flex items-center justify-between pb-2 mb-4 border-b">
-              <h2 className="text-lg font-semibold text-amber-700">
-                Chỉnh sửa thông tin cá nhân
-              </h2>
-              <button
-                onClick={() => setEditProfile(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <span>×</span>
-              </button>
-            </div>
-            <form onSubmit={handleUpdateFullname} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Họ
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    defaultValue={user.fullname?.split(' ')[0] || ''}
-                    className="w-full p-2 mt-1 border rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Tên
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    defaultValue={user.fullname?.split(' ').slice(1).join(' ') || ''}
-
-                    className="w-full p-2 mt-1 border rounded-md"
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Số điện thoại
-                  </label>
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full p-2 mt-1 border rounded-md"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={handleUpdatePhoneNumber}
-                    className="mt-2 w-full bg-amber-500 text-white p-2 rounded hover:bg-amber-600"
-                  >
-                    Cập nhật số điện thoại
-                  </button>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Địa chỉ giao hàng
-                  </label>
-                  <input
-                    type="text"
-                    value={address.address}
-                    onChange={(e) => setAddress({ ...address, address: e.target.value })}
-                    className="w-full p-2 mt-1 border rounded-md"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={handleUpdateAddress}
-                    className="mt-2 w-full bg-amber-500 text-white p-2 rounded hover:bg-amber-600"
-                  >
-                    Cập nhật địa chỉ
-                  </button>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Tiểu sử</label>
-                  <textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    className="w-full p-2 mt-1 border rounded-md"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleUpdateBio}
-                    className="mt-2 w-full bg-amber-500 text-white p-2 rounded hover:bg-amber-600"
-                  >
-                    Cập nhật tiểu sử
-                  </button>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Giới tính</label>
-                  <select
-                    value={gender}
-                    onChange={(e) => setGender(parseInt(e.target.value))}
-                    className="w-full p-2 mt-1 border rounded-md"
-                  >
-                    <option value="1">Nam</option>
-                    <option value="2">Nữ</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={handleUpdateGender}
-                    className="mt-2 w-full bg-amber-500 text-white p-2 rounded hover:bg-amber-600"
-                  >
-                    Cập nhật giới tính
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditProfile(false)}
-                  className="px-4 py-2 text-gray-700 transition-colors bg-gray-300 rounded-md hover:bg-gray-400"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-white transition-colors rounded-md bg-amber-600 hover:bg-amber-700"
-                >
-                  Lưu họ tên
-                </button>
-              </div>
-            </form>
-          </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <span>{key === 'gender' ? (value === '1' ? 'Nam' : 'Nữ') : value}</span>
+          <button
+            onClick={() => setEditProfile(key)}
+            className="text-amber-600 hover:text-amber-800 p-2 rounded-full bg-white hover:bg-amber-100 transition"
+          >
+            <FontAwesomeIcon icon={faEdit} />
+          </button>
         </div>
       )}
+    </div>
+  ))}
 
+  {/* Email (không chỉnh sửa)
+  <div className="flex flex-col gap-1 p-4 border border-amber-400 bg-amber-50 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+    <label className="text-sm text-amber-700 font-semibold flex items-center gap-2">
+      <FontAwesomeIcon icon={faEnvelope} className="text-amber-400" />
+      Email
+    </label>
+    <span>{user.email}</span>
+  </div> */}
+
+  {/* Bio (textarea full chiều rộng) */}
+  <div className="flex flex-col gap-1 p-4 border border-amber-400  rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 sm:col-span-2">
+    <label className="text-sm text-amber-700 font-semibold flex items-center gap-2">
+      <FontAwesomeIcon icon={faAlignLeft} className="text-amber-400" />
+      Tiểu sử
+    </label>
+    {editProfile === 'bio' ? (
+      <div className="flex items-start gap-2 transition-all duration-200">
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          rows={2}
+          className="w-full p-2 border rounded-md focus:ring-2 focus:ring-amber-300 focus:outline-none"
+        />
+        <div className="flex flex-col gap-1 pt-1">
+          <button
+            onClick={handleUpdateBio}
+            className="text-green-600 hover:text-green-800 p-2 rounded-full bg-white hover:bg-green-50 transition"
+          >
+            <FontAwesomeIcon icon={faCheck} />
+          </button>
+          <button
+            onClick={() => setEditProfile(false)}
+            className="text-gray-500 hover:text-gray-700 p-2 rounded-full bg-white hover:bg-gray-100 transition"
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+        </div>
+      </div>
+    ) : (
+      <div className="flex items-center justify-between">
+        <span>{bio || 'Chưa có'}</span>
+        <button
+          onClick={() => setEditProfile('bio')}
+          className="text-amber-600 hover:text-amber-800 p-2 rounded-full bg-white hover:bg-amber-100 transition"
+        >
+          <FontAwesomeIcon icon={faEdit} />
+        </button>
+      </div>
+    )}
+  </div>
+</div>
+  )}
+
+  {/* ❤️ SẢN PHẨM YÊU THÍCH */}
+  {activeTab === 'favorites' && (
+    <div className="p-6 space-y-4 bg-white shadow-md rounded-xl">
+      <h2 className="text-2xl font-semibold text-amber-700">
+        Sản phẩm yêu thích ({favoriteProducts.length})
+      </h2>
+      {favoritesLoading ? (
+        <p>Đang tải danh sách yêu thích...</p>
+      ) : favoritesError ? (
+        <p className="text-red-500">Lỗi khi tải sản phẩm yêu thích.</p>
+      ) : favoriteProducts.length === 0 ? (
+        <p>Bạn chưa có sản phẩm yêu thích nào.</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          {favoriteProducts.map((product) => (
+            <ProductCard
+              key={product.productId}
+              product={product}
+              isFavorite={true}
+              viewMode="grid"
+              onAddFavorite={() => handleRemoveFavorite(product.productId)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+</section> 
+</div>
+</main>
       <Footer />
+
+      {/* ✅ HIỂN THỊ TOAST MESSAGE */}
+      {success && (
+        <ToastMessage
+          type="success"
+          message={success}
+          onClose={() => setSuccess('')}
+        />
+      )}
+      {error && (
+        <ToastMessage
+          type="error"
+          message={error}
+          onClose={() => setError('')}
+        />
+      )}
     </div>
   );
 };

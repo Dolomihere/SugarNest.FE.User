@@ -501,17 +501,7 @@ const CheckoutPage = () => {
                     placeholder="Thêm ghi chú (tùy chọn)"
                   />
                 </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Mã voucher</label>
-                  <input
-                    type="text"
-                    name="userVoucher"
-                    value={form.userVoucher}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                    placeholder="Nhập mã voucher (tùy chọn)"
-                  />
-                </div>
+                
                 <div>
                   <label className="block mb-1 text-sm font-medium text-sub">Phương thức thanh toán</label>
                   <div className="flex space-x-4">

@@ -13,7 +13,14 @@ const OrderConfirmation = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { orderId, paymentStatus, orderData, showSuccessMessage, checkoutData } = location.state || {};
+  const {
+    orderId,
+    paymentStatus,
+    orderData,
+    showSuccessMessage,
+    checkoutData
+  } = location.state || {};
+
   const token = localStorage.getItem("accessToken");
   const isLoggedIn = !!token;
 
@@ -105,8 +112,9 @@ const OrderConfirmation = () => {
         cartItems,
       };
 
-      const { data } = await OrderService.createOrder(orderDataToSend, token, guestCartId);
-      const orderId = data.orderId; // Adjust based on actual API response structure
+      const response = await OrderService.createOrder(orderDataToSend, token, guestCartId);
+      const createdOrder = response.data;
+      const orderId = createdOrder.orderId;
 
       const paymentResponse = await OrderService.processPayment({
         orderId,
@@ -124,13 +132,8 @@ const OrderConfirmation = () => {
           email: form.email,
           orderId,
           orderData: {
-            ...orderDataToSend,
-            subtotal,
-            discount,
-            shippingFee,
-            total: total + shippingFee,
+            ...createdOrder,
             paymentMethod,
-            createdAt: new Date().toISOString(),
           },
         });
       } catch (emailError) {
@@ -146,13 +149,8 @@ const OrderConfirmation = () => {
           orderId,
           paymentStatus: paymentResponse.status,
           orderData: {
-            ...orderDataToSend,
-            subtotal,
-            discount,
-            shippingFee,
-            total: total + shippingFee,
+            ...createdOrder,
             paymentMethod,
-            createdAt: new Date().toISOString(),
           },
           showSuccessMessage: "Đơn hàng đã được đặt thành công!",
           checkoutData: restoredCheckoutData,
@@ -203,13 +201,13 @@ const OrderConfirmation = () => {
             <div className="mt-4">
               <h4 className="text-sm font-semibold text-sub">Chi tiết đơn hàng</h4>
               <ul className="mt-2 space-y-2 text-sm text-gray-600">
-                {orderData.cartItems.map((item, index) => (
+                {orderData.orderItems?.map((item, index) => (
                   <li key={index} className="flex justify-between">
                     <span>
-                      {item.productName}{" "}
-                      {item.cartItemOptions?.length > 0 && (
+                      {item.productName}
+                      {item.orderItemOptions?.length > 0 && (
                         <span>
-                          ({item.cartItemOptions.map((opt) => opt.optionValue).join(", ")})
+                          {" "}({item.orderItemOptions.map(opt => opt.optionValue).join(", ")})
                         </span>
                       )}
                     </span>
@@ -223,9 +221,9 @@ const OrderConfirmation = () => {
                 <strong>Phí vận chuyển:</strong>{" "}
                 {orderData.shippingFee > 0 ? formatCurrency(orderData.shippingFee) : "Miễn phí"}
               </p>
-              {orderData.discount > 0 && (
+              {orderData.voucherDiscountAmount > 0 && (
                 <p className="text-sm text-green-600">
-                  <strong>Giảm giá:</strong> -{formatCurrency(orderData.discount)}
+                  <strong>Giảm giá:</strong> -{formatCurrency(orderData.voucherDiscountAmount)}
                 </p>
               )}
               <p className="text-base font-bold text-amber-600">

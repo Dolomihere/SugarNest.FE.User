@@ -3,9 +3,19 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
-import ProductService from "../services/ProductService";
-import ProductOptionService from "../services/ProductOption";
+import { publicApi } from "../configs/AxiosConfig";
+
+const endpoint = "/products/sellable";
+
+const ProductService = {
+  getAllProducts: async () => await publicApi.get(endpoint),
+  getProductById: async (productId) => await publicApi.get(`${endpoint}/${productId}`),
+};
+
+export default ProductService;import ProductOptionService from "../services/ProductOption";
 import CartService from "../services/CartService";
+import FavoriteService from "../services/FavoriteService";
+import RatingService from "../services/RatingService";
 
 export function ProductDetailPage() {
   const { id } = useParams();
@@ -18,7 +28,6 @@ export function ProductDetailPage() {
   const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
   const isLoggedIn = token && token !== "undefined" && token !== "null";
 
-  // Lấy dữ liệu giỏ hàng (chỉ cho người dùng đã đăng nhập)
   const { data: cartData } = useQuery({
     queryKey: ["userCart", token],
     queryFn: async () => {
@@ -31,13 +40,11 @@ export function ProductDetailPage() {
     enabled: !!isLoggedIn,
   });
 
-  // Lấy dữ liệu sản phẩm
   const { data: product = {}, isLoading: isProductLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: () => ProductService.getProductById(id).then((res) => res.data.data),
   });
 
-  // Lấy dữ liệu tùy chọn sản phẩm
   const { data: optionGroups = [], isLoading: isOptionsLoading, error: optionsError } = useQuery({
     queryKey: ["options", id],
     queryFn: () => ProductOptionService.getOptionOfProductById(id),
@@ -46,10 +53,29 @@ export function ProductDetailPage() {
     },
   });
 
-  // Lấy danh sách sản phẩm gợi ý
   const { data: products = [] } = useQuery({
     queryKey: ["suggested"],
     queryFn: () => ProductService.getAllProducts().then((res) => res.data.data),
+  });
+
+  const { data: favorites = [] } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: () => FavoriteService.getFavorites().then((res) => res.data.data),
+    enabled: !!isLoggedIn,
+  });
+
+  const isFavorite = useMemo(
+    () => favorites.some((fav) => fav.productId === product.productId),
+    [favorites, product.productId]
+  );
+  const {
+    data: ratings = [],
+    isLoading: isRatingsLoading,
+    refetch: refetchRatings,
+  } = useQuery({
+    queryKey: ["ratings", id],
+    queryFn: () =>
+      RatingService.getRatingsByProductId(id).then((res) => res.data.data),
   });
 
   const suggestions = useMemo(() => {
@@ -83,6 +109,26 @@ export function ProductDetailPage() {
     }));
   };
 
+  const toggleFavorite = async () => {
+    if (!isLoggedIn) {
+      alert("Vui lòng đăng nhập để sử dụng chức năng yêu thích.");
+      navigate("/signin", { state: { from: `/products/${id}` } });
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        await FavoriteService.putFavorites([product.productId]);
+      } else {
+        await FavoriteService.addFavorites([product.productId]);
+      }
+      queryClient.invalidateQueries(["favorites"]);
+    } catch (err) {
+      console.error("Lỗi khi cập nhật yêu thích:", err.response?.data || err.message);
+      alert("Đã xảy ra lỗi khi cập nhật danh sách yêu thích.");
+    }
+  };
+
   const handleAddToCart = async () => {
     if (!isLoggedIn) {
       alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
@@ -108,18 +154,14 @@ export function ProductDetailPage() {
     };
 
     try {
-      // Normalize cart item options for comparison
       const normalizeOptions = (options) =>
-        options
-          ?.map((opt) => ({
-            optionGroupId: opt.optionGroupId || opt.option_group_id,
-            optionItemId: opt.optionItemId || opt.option_item_id,
-          }))
-          ?.sort((a, b) =>
-            a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
-          ) || [];
+        options?.map((opt) => ({
+          optionGroupId: opt.optionGroupId || opt.option_group_id,
+          optionItemId: opt.optionItemId || opt.option_item_id,
+        }))?.sort((a, b) =>
+          a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
+        ) || [];
 
-      // Check for existing item with identical productId and options
       const existingItem = cartData?.cartItems?.find(
         (cartItem) =>
           cartItem.productId === id &&
@@ -127,10 +169,8 @@ export function ProductDetailPage() {
       );
 
       if (existingItem) {
-        // Update quantity of existing item
         await CartService.updateQuantity(existingItem.cartItemId, existingItem.quantity + quantity, token);
       } else {
-        // Add new item to cart
         await CartService.addItemToCart(item, token);
       }
       queryClient.invalidateQueries(["userCart"]);
@@ -167,7 +207,6 @@ export function ProductDetailPage() {
           </p>
         ) : (
           <>
-            {/* Sản phẩm chính */}
             <div className="flex flex-col gap-10 p-6 bg-white shadow-lg rounded-2xl md:flex-row md:gap-12 lg:gap-16">
               <div className="flex items-center justify-center w-full overflow-hidden md:w-1/2 rounded-xl">
                 <img
@@ -182,14 +221,12 @@ export function ProductDetailPage() {
                 <p className="text-2xl font-semibold text-amber-600">
                   {Number(product.unitPrice).toLocaleString("vi-VN")}₫
                 </p>
-                {/* Thông tin bổ sung */}
                 <div className="space-y-1 text-sm text-gray-500">
                   <p><span className="font-medium text-gray-700">Trọng lượng:</span> 500g</p>
                   <p><span className="font-medium text-gray-700">Hạn sử dụng:</span> 7 ngày kể từ ngày sản xuất</p>
                   <p><span className="font-medium text-gray-700">Thành phần:</span> Bột mì, đường, trứng, bơ, sữa, dầu thực vật,...</p>
                   <p><span className="font-medium text-gray-700">Ngày sản xuất:</span> {new Date().toLocaleDateString("vi-VN")}</p>
                 </div>
-                {/* Tùy chọn sản phẩm */}
                 {optionGroups.length > 0 ? (
                   optionGroups.map((group) => (
                     <div key={group.optionGroupId} className="space-y-2">
@@ -237,7 +274,6 @@ export function ProductDetailPage() {
                 ) : (
                   <p className="text-sm text-gray-500">Không có tùy chọn nào cho sản phẩm này.</p>
                 )}
-                {/* Số lượng */}
                 <div className="flex items-center gap-4 mt-6">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -253,7 +289,6 @@ export function ProductDetailPage() {
                     +
                   </button>
                 </div>
-                {/* Nút hành động */}
                 <div className="flex items-center gap-4 mt-6">
                   <button
                     onClick={handleAddToCart}
@@ -261,8 +296,14 @@ export function ProductDetailPage() {
                   >
                     Thêm vào giỏ hàng
                   </button>
-                  <button className="text-2xl transition text-amber-500 hover:text-amber-600">
-                    <i className="fa-solid fa-heart"></i>
+                  <button
+                    onClick={toggleFavorite}
+                    className={`text-2xl transition hover:text-amber-600 ${
+                      isFavorite ? "text-amber-600" : "text-gray-400"
+                    }`}
+                    title={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+                  >
+                    <i className={`fa${isFavorite ? "-solid" : "-regular"} fa-heart`}></i>
                   </button>
                   <div className="relative">
                     <button
@@ -281,9 +322,54 @@ export function ProductDetailPage() {
                 </div>
               </div>
             </div>
-            {/* Sản phẩm gợi ý */}
+            <div className="space-y-8 mt-12">
+            <h3 className="text-2xl font-bold text-gray-800">Đánh giá từ người dùng</h3>
+              {isRatingsLoading ? (
+                <p className="text-gray-500">Đang tải đánh giá...</p>
+              ) : ratings.length === 0 ? (
+                <p className="text-gray-500">Chưa có đánh giá nào cho sản phẩm này.</p>
+              ) : (
+                <div className="space-y-6">
+                  {ratings.map((rating) => (
+                    <div
+                      key={rating.ratingId}
+                      className="p-4 bg-white rounded-xl shadow-sm border border-gray-100"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-amber-500 text-lg">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <i
+                              key={i}
+                              className={`fa-star ${i < rating.ratingPoint ? "fas" : "far"}`}
+                            ></i>
+                          ))}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {new Date(rating.createdAt).toLocaleDateString("vi-VN")}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-gray-800 whitespace-pre-line">{rating.comment}</p>
+                      {rating.imgs?.length > 0 && (
+                        <div className="flex gap-2 mt-3">
+                          {rating.imgs.map((url, idx) => (
+                            <img
+                              key={idx}
+                              src={url}
+                              alt={`Ảnh đánh giá ${idx + 1}`}
+                              className="w-24 h-24 object-cover rounded-md"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="space-y-8">
               <h3 className="text-2xl font-bold text-gray-800">Sản phẩm gợi ý</h3>
+ 
+
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
                 {suggestions.map((p) => (
                   <Link

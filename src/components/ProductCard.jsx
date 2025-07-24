@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 
-export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
+export function ProductCard({ product, viewMode, onAddFavorite, onToggleFavorite, isFavorite }) {
   const {
     productId,
     name,
     unitPrice,
+    finalUnitPrice,
     imgs = ["/placeholder.jpg"],
     description = "",
     rating = 4,
@@ -19,13 +20,13 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
       const viewed = JSON.parse(localStorage.getItem("viewedProducts") || "[]");
       const alreadyExists = viewed.find((p) => p.productId === productId);
       if (!alreadyExists) {
-        const updated = [...viewed.slice(-9), { productId, name, unitPrice, imgs, rating, reviews, createdDate }];
+        const updated = [...viewed.slice(-9), { productId, name, unitPrice, finalUnitPrice, imgs, rating, reviews, createdDate }];
         localStorage.setItem("viewedProducts", JSON.stringify(updated));
       }
     } catch (error) {
       console.error("Error updating viewedProducts:", error);
     }
-  }, [productId, name, unitPrice, imgs, rating, reviews, createdDate]);
+  }, [productId, name, unitPrice,finalUnitPrice, imgs, rating, reviews, createdDate]);
 
   const productImg = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : "/placeholder.jpg";
 
@@ -52,8 +53,9 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
             className="object-cover w-full h-full transition-transform duration-300 hover:scale-110"
           />
           <div className="absolute top-2 left-2 px-3 py-1.5 text-base font-semibold text-yellow-700 bg-white/80 backdrop-blur-sm rounded-md shadow-md">
-            {unitPrice.toFixed(0)}₫
+            {typeof finalUnitPrice === 'number' ? `${finalUnitPrice.toFixed(0)}₫` : '—'}
           </div>
+
           <button
             onClick={handleFavoriteClick}
             className="absolute top-2 right-2 p-0.5"
@@ -95,7 +97,7 @@ export function ProductCard({ product, viewMode, onAddFavorite, isFavorite }) {
           className="object-cover w-full h-full transition-transform duration-300 hover:scale-110"
         />
         <div className="absolute top-2 left-2 px-3 py-1.5 text-base font-semibold text-yellow-700 bg-white/80 backdrop-blur-sm rounded-md shadow-md">
-          {unitPrice.toFixed(0)}₫
+          {finalUnitPrice.toFixed(0)}₫
         </div>
         <button
           onClick={handleFavoriteClick}
