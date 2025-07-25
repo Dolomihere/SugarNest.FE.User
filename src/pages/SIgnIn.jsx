@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from '../core/services/AuthService';
@@ -10,6 +10,8 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [error, setError] = useState('');
+
+  const inputRef = useRef(null);
   
   const [form, setForm] = useState({ userNameOrEmail: JSON.parse(sessionStorage.getItem('email')) || '', password: '' });
 
@@ -59,6 +61,11 @@ export default function SignInPage() {
     }));
   };
 
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
   return (
     <div className="flex flex-col flex-1 bg-white dark:bg-gray-900 dark:text-[#f5deb3] min-h-screen relative">
       <div className="relative flex flex-col justify-center flex-1 w-full max-w-md mx-auto dark:text-white/90">
@@ -95,6 +102,7 @@ export default function SignInPage() {
           <div>
             <label className="block font-bold">Tên tài khoản <span className="text-red-600">*</span></label>
             <input
+              ref={inputRef}
               type="text"
               name="userNameOrEmail"
               value={form.userNameOrEmail}
