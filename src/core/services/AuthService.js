@@ -16,7 +16,7 @@ export const authService = {
     return res.data;
   },
   resendverifyemail: async (email) => {
-    const res = await serverApi.post(`${path}/verify/send`, { email });
+    const res = await serverApi.post(`${path}/verify/send`, { email: email });
     return res.data;
   },
   on2fa: async (enable2faData) => {
@@ -28,7 +28,7 @@ export const authService = {
     return res.data;
   },
   resendresetpassword: async (email) => {
-    const res = await serverApi.post(`${path}/reset-password/send`, { email });
+    const res = await serverApi.post(`${path}/reset-password/send`, { email: email });
     return res.data;
   }
 };

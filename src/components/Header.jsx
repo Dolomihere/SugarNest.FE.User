@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCartShopping } from '@fortawesome/free-solid-svg-icons';
+import { userService } from '../core/services/UserService';
 
 export function Header() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isLogon, setIsLogon] = useState(localStorage.getItem('accessToken') && true);
+  const guestUserIcon = "/src/assets/anonymous-user.png";
+
+  const token = localStorage.getItem('accessToken');
+  const isLogon = !!token;
 
   const navLinks = [
     { to: '/', label: 'Trang chủ', end: true },
@@ -17,30 +22,15 @@ export function Header() {
     { to: '/game', label: 'Giải trí' },
   ];
 
-  // useEffect(() => {
-  //   const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-  //   setIsLoggedIn(!!token);
-
-  //   if (token) {
-  //     const fetchUser = async () => {
-  //       try {
-  //         const response = await AxiosInstance.get('/users/personal');
-  //         console.log('API Response:', response.data); // Debug
-  //         if (response.data.isSuccess && response.data.data) {
-  //           const userData = response.data.data;
-  //           setAvatar(userData.avatar || 'https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg');
-  //         }
-  //       } catch (err) {
-  //         console.error('Lỗi khi tải dữ liệu người dùng:', err);
-  //       }
-  //     };
-  //     fetchUser();
-  //   }
-  // }, []);
+  const { data: userData, isLoading } = useQuery({
+    queryKey: ['userInfo'],
+    queryFn: () => userService.getUserInfo(token).then(res => res.data),
+    enabled: !!token,
+  });
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
-    setIsLogon(false);
+    localStorage.removeItem('refreshToken');
     navigate('/');
   };
 
@@ -70,8 +60,8 @@ export function Header() {
           </button>
 
           <img
-            // onClick={() => navigate('/account')}
-            src="asa"
+            onClick={() => navigate('/account')}
+            src={isLogon && !isLoading && userData?.avatar ? userData.avatar : guestUserIcon}
             alt="avatar"
             className="border rounded-full cursor-pointer w-9 h-9"
           />
@@ -121,27 +111,27 @@ export function Header() {
 
             <li>
 
-              {/* {isLoggedIn ? (
+              { isLogon ? (
                 <button
-                  // onClick={() => {
-                  //   setMenuOpen(false);
-                  //   handleLogout();
-                  // }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    handleLogout();
+                  }}
                   className="px-2 py-1 text-left transition border rounded text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white"
                 >
                   Đăng xuất
                 </button>
               ) : (
                 <button
-                  // onClick={() => {
-                  //   setMenuOpen(false);
-                  //   navigate("/signin");
-                  // }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/auth/signin");
+                  }}
                   className="px-2 py-1 text-left transition rounded border text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white"
                 >
                   Đăng nhập
                 </button>
-              )} */}
+              )}
 
             </li>
 

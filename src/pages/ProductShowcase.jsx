@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { productService } from '../core/services/ProductService';
 import { categoryService } from '../core/services/CategoryService';
 import { CustomCard } from '../components/cards/CustomCard';
 

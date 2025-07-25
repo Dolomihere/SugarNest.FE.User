@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../core/services/AuthService';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const inputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     userName: "",
@@ -61,6 +62,11 @@ export default function SignUpPage() {
     });
   };
 
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
   return (
     <div className="flex flex-col flex-1 bg-white dark:bg-gray-900 dark:text-[#f5deb3] min-h-screen relative">
       <div className="relative w-full max-w-md pt-10 mx-auto mb-8">
@@ -80,6 +86,7 @@ export default function SignUpPage() {
           <div>
             <label className="block font-bold">Tên tài khoản <span className="text-red-600">*</span></label>
             <input
+              ref={inputRef}
               name="userName"
               value={formData.userName}
               onChange={handleChange}
