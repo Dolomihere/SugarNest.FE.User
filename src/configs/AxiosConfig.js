@@ -1,23 +1,23 @@
 // axiosSetup.js
-import axios from 'axios';
+import axios from "axios";
 
 export const publicApi = axios.create({
-  baseURL: 'http://14.225.218.217:5000/',
+  baseURL: "http://14.225.218.217:5000/",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 export const privateApi = axios.create({
-  baseURL: 'https://localhost:5001/api',
-  headers: { 'Content-Type': 'application/json' },
+  baseURL: "http://14.225.218.217:5000/",
+  headers: { "Content-Type": "application/json" },
 });
 
 let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -29,20 +29,20 @@ const processQueue = (error, token = null) => {
 };
 
 // Attach access token to each request
-privateApi.interceptors.request.use(config => {
+privateApi.interceptors.request.use((config) => {
   if (config.skipAuth) return config;
 
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken");
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+    config.headers["Authorization"] = `Bearer ${token}`;
   }
   return config;
 });
 
 // Handle token expiration and refresh
 privateApi.interceptors.response.use(
-  response => response,
-  async error => {
+  (response) => response,
+  async (error) => {
     const originalRequest = error.config;
 
     // If 401 and not already retried
@@ -53,38 +53,40 @@ privateApi.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-        .then(token => {
-          originalRequest.headers['Authorization'] = `Bearer ${token}`;
-          return privateApi(originalRequest);
-        })
-        .catch(err => Promise.reject(err));
+          .then((token) => {
+            originalRequest.headers["Authorization"] = `Bearer ${token}`;
+            return privateApi(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
       }
 
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const response = await publicApi.post('/auth/refresh-token', {
+        const refreshToken = localStorage.getItem("refreshToken");
+        const response = await publicApi.post("/auth/refresh-token", {
           refreshToken,
         });
 
         const newAccessToken = response.data.accessToken; // Adjust if needed
-        localStorage.setItem('accessToken', newAccessToken);
+        localStorage.setItem("accessToken", newAccessToken);
 
         // Update default headers for future requests
-        privateApi.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+        privateApi.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${newAccessToken}`;
 
         processQueue(null, newAccessToken);
 
         // Retry original request with new token
-        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         return privateApi(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
 
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

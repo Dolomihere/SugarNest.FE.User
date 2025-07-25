@@ -6,7 +6,6 @@ import useFetchList from "../core/hooks/useFetchList";
 import { useDebouncedSearch } from "../core/hooks/useDebouncedSearch";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
-import ChatPage from '../pages/ChatPage';
 
 export function ProductPage() {
   const [categories, setCategories] = useState([]);
@@ -19,27 +18,37 @@ export function ProductPage() {
       return [];
     }
   });
-  
+
   // Categories
-  const { data: allCategories = [] } = useQuery({
+  const {
+    data: allCategories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useQuery({
     queryKey: ["categories"],
-    queryFn: () =>
-      CategoryService.getAllCategories().then((res) =>
-        res.data.data.map((cat) => ({
+    queryFn: async () => {
+      try {
+        const res = await CategoryService.getAllCategories();
+        console.log("Category API response:", res); // Debug raw response
+        if (!res.data?.data) {
+          console.warn("Unexpected category response structure:", res);
+          return [];
+        }
+        return res.data.data.map((cat) => ({
           value: cat.categoryId,
           label: cat.name,
-        }))
-      ),
+        }));
+      } catch (err) {
+        console.error("Category API error:", err.message, err.response?.data);
+        throw err; // Let useQuery handle the error
+      }
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   useEffect(() => {
-    if (!allCategories) return;
-    setCategories(
-      allCategories.map((cat) => ({
-        value: cat.categoryId,
-        label: cat.name,
-      }))
-    );
+    console.log("allCategories:", allCategories); // Debug transformed data
+    setCategories(allCategories);
   }, [allCategories]);
 
   // Query state
@@ -84,7 +93,7 @@ export function ProductPage() {
   );
 
   const meta = apiResponse?.meta ?? {};
-  const totalPages = Math.ceil((meta.totalCount ?? 0) / (meta.pageSize ?? 12));
+  const totalPages = Math.ceil((meta.totalCount ?? 0) / (meta.pageSize ?? 16));
   const currentPage = productQuery.PageIndex;
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
@@ -171,48 +180,39 @@ export function ProductPage() {
     }));
   };
 
-  // Fetch seasonal products using useQuery
+  // Fetch seasonal products
+  const fetchSeasonalProducts = (season) =>
+    useFetchList("products/sellable", {
+      ...DEFAULT_QUERY,
+      Filter: { ...DEFAULT_QUERY.Filter, Season: season },
+      PageSize: 16,
+    }).then((res) => res.response);
+
   const springQuery = useQuery({
     queryKey: ["products", "seasonal", "Spring", reloadTrigger],
-    queryFn: () =>
-      useFetchList("products/sellable", {
-        ...DEFAULT_QUERY,
-        Filter: { ...DEFAULT_QUERY.Filter, Season: "Spring" },
-        PageSize: 16,
-      }).then((res) => res.response),
+    queryFn: () => fetchSeasonalProducts("Spring"),
+    staleTime: 5 * 60 * 1000,
   });
 
   const summerQuery = useQuery({
     queryKey: ["products", "seasonal", "Summer", reloadTrigger],
-    queryFn: () =>
-      useFetchList("products/sellable", {
-        ...DEFAULT_QUERY,
-        Filter: { ...DEFAULT_QUERY.Filter, Season: "Summer" },
-        PageSize: 16,
-      }).then((res) => res.response),
+    queryFn: () => fetchSeasonalProducts("Summer"),
+    staleTime: 5 * 60 * 1000,
   });
 
   const fallQuery = useQuery({
     queryKey: ["products", "seasonal", "Fall", reloadTrigger],
-    queryFn: () =>
-      useFetchList("products/sellable", {
-        ...DEFAULT_QUERY,
-        Filter: { ...DEFAULT_QUERY.Filter, Season: "Fall" },
-        PageSize: 16,
-      }).then((res) => res.response),
+    queryFn: () => fetchSeasonalProducts("Fall"),
+    staleTime: 5 * 60 * 1000,
   });
 
   const winterQuery = useQuery({
     queryKey: ["products", "seasonal", "Winter", reloadTrigger],
-    queryFn: () =>
-      useFetchList("products/sellable", {
-        ...DEFAULT_QUERY,
-        Filter: { ...DEFAULT_QUERY.Filter, Season: "Winter" },
-        PageSize: 16,
-      }).then((res) => res.response),
+    queryFn: () => fetchSeasonalProducts("Winter"),
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Tạo seasonalProducts cố định
+  // Seasonal products
   const seasonalProducts = useMemo(() => {
     return [
       {
@@ -244,18 +244,18 @@ export function ProductPage() {
 
   // Favorites
   const addToFavorites = (product) => {
-  setFavorites((prev) => {
-    const exists = prev.some((p) => p.productId === product.productId);
-    if (exists) return prev;
-    const updated = [...prev, product];
-    try {
-      localStorage.setItem("favoriteProducts", JSON.stringify(updated));
-    } catch (e) {
-      console.error("Error saving to localStorage:", e);
-    }
-    return updated;
-  });
-};
+    setFavorites((prev) => {
+      const exists = prev.some((p) => p.productId === product.productId);
+      if (exists) return prev;
+      const updated = [...prev, product];
+      try {
+        localStorage.setItem("favoriteProducts", JSON.stringify(updated));
+      } catch (e) {
+        console.error("Error saving to localStorage:", e);
+      }
+      return updated;
+    });
+  };
 
   const removeFromFavorites = (productId) => {
     setFavorites((prev) => {
@@ -270,34 +270,43 @@ export function ProductPage() {
   };
 
   return (
-    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] bg-[#fffaf3] text-gray-700">
+    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] bg-gradient-to-b from-amber-50 to-amber-100 text-gray-800">
       <Header />
-      <main className="w-full px-8 py-6 mx-auto max-w-7xl">
-        <h2 className="mb-6 text-3xl font-bold text-center text-amber-600">Sản Phẩm Của Chúng Tôi</h2>
+      <main className="w-full px-4 py-8 mx-auto max-w-7xl md:px-8">
+        <h2 className="mb-8 text-3xl font-extrabold tracking-tight text-center text-amber-700 drop-shadow-md md:text-4xl">
+          Sản Phẩm Của Chúng Tôi
+        </h2>
 
         {/* Filters */}
-        <div className="grid grid-cols-12 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-4">
           <input
             type="text"
-            placeholder="Tìm kiếm..."
+            placeholder="Tìm kiếm sản phẩm..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="col-span-12 p-2 border rounded lg:col-span-3"
+            className="p-3 transition-all duration-300 bg-white border-2 rounded-lg shadow-sm border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
           />
           <select
-            className="col-span-12 p-2 border rounded lg:col-span-3"
+            className="p-3 transition-all duration-300 bg-white border-2 rounded-lg shadow-sm border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
             value={selectedCategory}
             onChange={(e) => handleCategoryChange(e.target.value)}
+            disabled={categoriesLoading || categoriesError}
           >
             <option value="">Tất cả danh mục</option>
-            {categories.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
+            {categoriesLoading ? (
+              <option disabled>Đang tải danh mục...</option>
+            ) : categoriesError || categories.length === 0 ? (
+              <option disabled>Không có danh mục</option>
+            ) : (
+              categories.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))
+            )}
           </select>
           <select
-            className="col-span-12 p-2 border rounded lg:col-span-3"
+            className="p-3 transition-all duration-300 bg-white border-2 rounded-lg shadow-sm border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
             value={selectedSeason}
             onChange={(e) => handleSeasonChange(e.target.value)}
           >
@@ -308,7 +317,7 @@ export function ProductPage() {
             ))}
           </select>
           <select
-            className="col-span-12 p-2 border rounded lg:col-span-3"
+            className="p-3 transition-all duration-300 bg-white border-2 rounded-lg shadow-sm border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
             value={selectedSort}
             onChange={(e) => handleSortChange(e.target.value)}
           >
@@ -321,31 +330,38 @@ export function ProductPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-wrap justify-between gap-2 mb-6">
-          <div className="flex gap-2">
-            <button onClick={handleClearFilters} className="px-3 py-2 border rounded-md hover:bg-amber-100">
+        <div className="flex flex-wrap justify-between gap-3 mb-8">
+          <div className="flex gap-3">
+            <button
+              onClick={handleClearFilters}
+              className="px-4 py-2 font-medium transition-all duration-300 bg-white border-2 rounded-lg shadow-sm border-amber-300 hover:bg-amber-50 hover:border-amber-400 text-amber-700"
+            >
               Bỏ lọc
             </button>
             <button
               onClick={() => setReloadTrigger((prev) => !prev)}
-              className="px-3 py-2 border rounded-md hover:bg-amber-100"
+              className="px-4 py-2 font-medium text-white transition-all duration-300 border-2 rounded-lg shadow-sm bg-amber-500 border-amber-600 hover:bg-amber-600 hover:border-amber-700"
             >
               Lọc và sắp xếp
             </button>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={() => setViewMode("grid")}
-              className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
-                viewMode === "grid" ? "bg-amber-200" : ""
+              className={`px-4 py-2 border-2 rounded-lg shadow-sm transition-all duration-300 ${
+                viewMode === "grid"
+                  ? "bg-amber-500 border-amber-600 text-white"
+                  : "bg-white border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400"
               }`}
             >
               Dạng lưới
             </button>
             <button
               onClick={() => setViewMode("blog")}
-              className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
-                viewMode === "blog" ? "bg-amber-200" : ""
+              className={`px-4 py-2 border-2 rounded-lg shadow-sm transition-all duration-300 ${
+                viewMode === "blog"
+                  ? "bg-amber-500 border-amber-600 text-white"
+                  : "bg-white border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400"
               }`}
             >
               Dạng blog
@@ -355,42 +371,44 @@ export function ProductPage() {
 
         {/* Product List */}
         {loading ? (
-          <p>Đang tải sản phẩm...</p>
+          <p className="text-center text-amber-600">Đang tải sản phẩm...</p>
         ) : error ? (
-          <p className="text-red-500">Lỗi: {error.message}</p>
+          <p className="text-center text-red-500">Lỗi: {error.message}</p>
         ) : apiResponse?.data?.length > 0 ? (
           <div
             className={
               viewMode === "grid"
-                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8"
-                : "flex flex-col gap-6 mb-8"
+                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-10"
+                : "flex flex-col gap-6 mb-10"
             }
           >
             {apiResponse.data.map((p) => (
-              <ProductCard
-                key={p.productId}
-                product={p}
-                viewMode={viewMode}
-                isFavorite={favorites.some((fav) => fav.productId === p.productId)}
-                onAddFavorite={() =>
-                  favorites.some((fav) => fav.productId === p.productId)
-                    ? removeFromFavorites(p.productId)
-                    : addToFavorites(p)
-                }
-              />
+              <div key={p.productId} className="relative group">
+                <ProductCard
+                  product={p}
+                  viewMode={viewMode}
+                  isFavorite={favorites.some((fav) => fav.productId === p.productId)}
+                  onAddFavorite={() =>
+                    favorites.some((fav) => fav.productId === p.productId)
+                      ? removeFromFavorites(p.productId)
+                      : addToFavorites(p)
+                  }
+                  className="transition-transform duration-300 transform group-hover:scale-105 group-hover:shadow-lg group-hover:border-amber-400"
+                />
+              </div>
             ))}
           </div>
         ) : (
-          <p>Không có sản phẩm nào.</p>
+          <p className="text-center text-amber-600">Không có sản phẩm nào.</p>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mb-10">
+          <div className="flex justify-center gap-3 mb-10">
             <button
               disabled={isFirstPage}
               onClick={() => handlePageChange(currentPage - 1)}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-4 py-2 transition-all duration-300 bg-white border-2 rounded-lg shadow-sm border-amber-300 disabled:opacity-50 hover:bg-amber-50 hover:border-amber-400 text-amber-700"
             >
               ← Trước
             </button>
@@ -398,8 +416,10 @@ export function ProductPage() {
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 border rounded ${
-                  page === currentPage ? "bg-amber-600 text-white" : "hover:bg-amber-100"
+                className={`px-4 py-2 border-2 rounded-lg shadow-sm transition-all duration-300 ${
+                  page === currentPage
+                    ? "bg-amber-600 border-amber-700 text-white"
+                    : "bg-white border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400"
                 }`}
               >
                 {page}
@@ -408,41 +428,14 @@ export function ProductPage() {
             <button
               disabled={isLastPage}
               onClick={() => handlePageChange(currentPage + 1)}
-              className="px-3 py-1 border rounded disabled:opacity-50"
+              className="px-4 py-2 transition-all duration-300 bg-white border-2 rounded-lg shadow-sm border-amber-300 disabled:opacity-50 hover:bg-amber-50 hover:border-amber-400 text-amber-700"
             >
               Tiếp →
             </button>
           </div>
         )}
 
-        {/* Favorite Products */}
-        <section>
-          <h3 className="mb-4 text-2xl font-semibold text-amber-600">❤️ Sản phẩm yêu thích</h3>
-          {favorites.length === 0 ? (
-            <p>Bạn chưa có sản phẩm yêu thích nào.</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {favorites.map((p) => (
-                <div key={p.productId} className="relative">
-                  <ProductCard
-                    product={p}
-                    viewMode="grid"
-                    isFavorite={true}
-                    onAddFavorite={() => removeFromFavorites(p.productId)}
-                  />
-                  <button
-                    onClick={() => removeFromFavorites(p.productId)}
-                    className="absolute px-2 py-1 text-white bg-red-500 rounded top-2 right-2 hover:bg-red-600"
-                    title="Xóa khỏi yêu thích"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-       
+        {/* Seasonal Products */}
       </main>
       <Footer />
     </div>
