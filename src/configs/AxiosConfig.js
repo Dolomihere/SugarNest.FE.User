@@ -1,22 +1,23 @@
 import axios from 'axios';
 
+
 export const publicApi = axios.create({
-  baseURL: 'http://14.225.218.217:5000/',
+  baseURL: "http://14.225.218.217:5000/",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 export const privateApi = axios.create({
   baseURL: 'http://14.225.218.217:5000/',
   headers: { 'Content-Type': 'application/json' },
-});
+
 
 let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -29,11 +30,12 @@ const processQueue = (error, token = null) => {
 
 privateApi.interceptors.request.use(config => {
   // If explicitly set to skip auth, don't add the token
+
   if (config.skipAuth) return config;
 
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken");
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+    config.headers["Authorization"] = `Bearer ${token}`;
   }
   return config;
 });
@@ -41,6 +43,7 @@ privateApi.interceptors.request.use(config => {
 privateApi.interceptors.response.use(
   res => res,
   async error => {
+
     const originalRequest = error.config;
 
     // If it's a 401 error and not already retried
@@ -54,6 +57,7 @@ privateApi.interceptors.response.use(
         }).catch(err => {
           return Promise.reject(err);
         });
+
       }
 
       originalRequest._retry = true;
@@ -69,6 +73,7 @@ privateApi.interceptors.response.use(
         localStorage.setItem('accessToken', newAccessToken);
         api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
 
+
         processQueue(null, newAccessToken);
         return api(originalRequest);
       } catch (err) {
@@ -79,6 +84,7 @@ privateApi.interceptors.response.use(
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';
         return Promise.reject(err);
+
       } finally {
         isRefreshing = false;
       }

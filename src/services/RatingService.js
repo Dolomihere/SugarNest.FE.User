@@ -26,3 +26,4 @@ const RatingService = {
 };
 
 export default RatingService;
+
