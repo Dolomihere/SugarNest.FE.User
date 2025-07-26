@@ -9,6 +9,7 @@ import Enable2fa from './pages/Enable2fa';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import GamePage from './pages/Game';
+import CartPage from './pages/Cart';
 
 import HomeLayoutPage from './pages/layout/HomeLayout';
 import AuthLayout from './pages/layout/AuthLayout';
@@ -24,6 +25,7 @@ function App() {
           <Route path="about" element={<AboutPage />} />
           <Route path="account" element={<AccountPage />} />
           <Route path="game" element={<GamePage />} />
+          <Route path="cart" element={<CartPage />} />
         </Route>
 
         <Route path="/auth" element={<AuthLayout />}>
