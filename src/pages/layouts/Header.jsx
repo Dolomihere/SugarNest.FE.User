@@ -1,39 +1,45 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCartShopping } from '@fortawesome/free-solid-svg-icons';
-import AxiosInstance from '../../core/services/AxiosInstance';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
+import AxiosInstance from "../../core/services/AxiosInstance";
 
 export function Header() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [avatar, setAvatar] = useState('/public/images/owner.png');
+  const [avatar, setAvatar] = useState("/public/images/owner.png");
 
   const navLinks = [
-    { to: '/', label: 'Trang chủ', end: true },
-    { to: '/products', label: 'Sản phẩm' },
-    { to: '/about', label: 'Về chúng tôi' },
-    { to: '/contact', label: 'Liên hệ' },
-    { to: '/discounts', label: 'Chương trình giảm giá' },
-    { to: '/unity-game', label: 'Giải trí' },
+    { to: "/", label: "Trang chủ", end: true },
+    { to: "/products", label: "Sản phẩm" },
+    { to: "/about", label: "Về chúng tôi" },
+    { to: "/contact", label: "Liên hệ" },
+    { to: "/discounts", label: "Chương trình giảm giá" },
+    { to: "/unity-game", label: "Giải trí" },
+    { to: "/order-history", label: "Lịch sử đơn hàng" },
   ];
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    const token =
+      localStorage.getItem("accessToken") ||
+      sessionStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
 
     if (token) {
       const fetchUser = async () => {
         try {
-          const response = await AxiosInstance.get('/users/personal');
-          console.log('API Response:', response.data); // Debug
+          const response = await AxiosInstance.get("/users/personal");
+          console.log("API Response:", response.data); // Debug
           if (response.data.isSuccess && response.data.data) {
             const userData = response.data.data;
-            setAvatar(userData.avatar || 'https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg');
+            setAvatar(
+              userData.avatar ||
+                "https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg"
+            );
           }
         } catch (err) {
-          console.error('Lỗi khi tải dữ liệu người dùng:', err);
+          console.error("Lỗi khi tải dữ liệu người dùng:", err);
         }
       };
       fetchUser();
@@ -41,11 +47,13 @@ export function Header() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    sessionStorage.removeItem('accessToken');
+    localStorage.removeItem("accessToken");
+    sessionStorage.removeItem("accessToken");
     setIsLoggedIn(false);
-    setAvatar('https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg');
-    navigate('/');
+    setAvatar(
+      "https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg"
+    );
+    navigate("/");
   };
 
   return (
@@ -55,7 +63,10 @@ export function Header() {
         <ul className="hidden gap-6 font-medium text-gray-600 md:flex">
           {navLinks.map((link, i) => (
             <li key={i}>
-              <Link to={link.to} className="transition hover:text-gray-700 hover:underline">
+              <Link
+                to={link.to}
+                className="transition hover:text-gray-700 hover:underline"
+              >
                 {link.label}
               </Link>
             </li>
@@ -69,7 +80,7 @@ export function Header() {
             <FontAwesomeIcon icon={faCartShopping} />
           </button>
           <img
-            onClick={() => navigate('/account')}
+            onClick={() => navigate("/account")}
             src={avatar}
             alt="avatar"
             className="border rounded-full cursor-pointer w-9 h-9"
@@ -145,15 +156,13 @@ export function Header() {
                 >
                   Đăng xuất
                 </button>
-              )
-
- : (
+              ) : (
                 <button
                   onClick={() => {
                     setMenuOpen(false);
                     navigate("/signin");
                   }}
-                  className="px-2 py-1 text-left transition rounded border text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white"
+                  className="px-2 py-1 text-left transition border rounded text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white"
                 >
                   Đăng nhập
                 </button>

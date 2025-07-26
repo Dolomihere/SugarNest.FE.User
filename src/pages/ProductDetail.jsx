@@ -350,7 +350,7 @@ export function ProductDetailPage() {
                     <span className="font-medium text-gray-700">
                       Ngày sản xuất:
                     </span>{" "}
-                    {new Date().toLocaleDateString("en-US")}
+                    {new Date().toLocaleDateString("vi-VN")}
                   </p>
                 </div>
                 {optionGroups.length > 0 ? (
@@ -383,6 +383,8 @@ export function ProductDetailPage() {
                                     {Number(
                                       item.additionalPrice
                                     ).toLocaleString("vi-VN")}
+
+                                    ₫)
                                   </span>
                                 </span>
                               </label>
@@ -406,6 +408,7 @@ export function ProductDetailPage() {
                                     {Number(
                                       item.additionalPrice
                                     ).toLocaleString("vi-VN")}
+                                    ₫)
                                   </span>
                                 </span>
                               </label>
@@ -415,7 +418,7 @@ export function ProductDetailPage() {
                   ))
                 ) : (
                   <p className="text-sm text-gray-500">
-                    Không có tùy chỉnh nào cho sản phẩm này.
+                    Không có tùy chọn nào cho sản phẩm này.
                   </p>
                 )}
                 <div className="flex items-center gap-4 mt-6">
