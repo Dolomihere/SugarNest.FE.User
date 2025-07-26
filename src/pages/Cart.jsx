@@ -1,44 +1,42 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import { FaTrashCan } from 'react-icons/fa6'
+import { cartService } from '../core/services/CartService';
+import { productService } from '../core/services/ProductService';
 
 export default function CartPage() {
-  
-
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
   const isLoggedIn = !!token;
 
-  const { data: cartData, refetch: refetchCart } = useQuery({
-    queryKey: ['userCart', token],
-    queryFn: () => CartService.getUserCart(),
-    enabled: isLoggedIn,
-    select: res => res.data.data,
+  const [error, setError] = useState('');
+  const [localCart, setLocalCart] = useState();
+
+  const { data: userCart } = useQuery({
+    queryKey: ['cart'],
+    queryFn: (token) => cartService.getUserCart(token).then(res => res.data),
+    select: (res) => setLocalCart(res),
+    enabled: isLoggedIn
   });
 
-  // const { data: products } = useQuery({
-  //   queryKey: ['allProducts'],
-  //   queryFn: ProductService.getAllProducts,
-  //   select: res => res.data.data,
-  // });
+  const { data: products } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => productService.getAll().then(res => res.data),
+    staleTime: 5 * 60 * 1000 // 5 mins
+  });
 
-  // const updateQuantityMutation = useMutation({
-  //   mutationFn: ({ cartItemId, quantity }) =>
-  //     CartService.updateQuantity(cartItemId, quantity),
-  //   onSuccess: () => refetchCart(),
-  //   onError: () => setError('Không thể cập nhật số lượng.'),
-  // });
+  const addItemToCart = useMutation({
+    mutationKey: ['addItem'],
+    mutationFn: (item, cartId) => cartService.addItemToCart(item, cartId),
+    onError: () => setError('Không thể cập nhật số lượng.'),
+  });
 
-  // const deleteItemMutation = useMutation({
-  //   mutationFn: (cartItemId) => CartService.deleteItem(cartItemId),
-  //   onSuccess: () => refetchCart(),
-  //   onError: () => setError('Không thể xóa sản phẩm khỏi giỏ hàng.'),
-  // });
-
-  // const handleQuantityChange = (cartItemId, quantity) => {
-  //   if (quantity < 1) return;
-  //   updateQuantityMutation.mutate({ cartItemId, quantity });
-  // };
+  const removeItemFromCart = useMutation({
+    mutationKey: ['removeItem'],
+    mutationFn: (cartItemId, cartId) => cartService.removeItemFromCart(cartItemId, cartId),
+    onError: () => setError('Không thể xóa sản phẩm khỏi giỏ hàng.'),
+  });
 
   // const handleDelete = (cartItemId) => {
   //   deleteItemMutation.mutate(cartItemId);
@@ -61,12 +59,12 @@ export default function CartPage() {
   return (
     <div className="h-full flex flex-col font-[Montserrat] bg-[#FFFDF9]">
 
-      {cartData?.cartItems?.length ? (
-        <>
+      {localCart.length ? (
+        <div>
           <h2 className="text-2xl font-bold text-[#5C4033] px-4 pt-6 border-b border-[#E8D3BD]">Giỏ hàng của bạn</h2>
           <div className="flex flex-col flex-1 gap-4 px-4 py-4 overflow-y-auto">
 
-            {cartData.cartItems.map((item) => (
+            {localCart.cartItems.map((item) => (
               <div
                 key={item.cartItemId}
                 className="flex gap-4 bg-white p-4 rounded-lg shadow-sm border border-[#E8D3BD]"
@@ -127,7 +125,7 @@ export default function CartPage() {
             </button>
 
           </div>
-        </>
+        </div>
       ) : (
         <div className="self-center my-auto text-3xl">Giỏ hàng trống</div>
       )}

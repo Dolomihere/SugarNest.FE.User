@@ -10,6 +10,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import GamePage from './pages/Game';
 import CartPage from './pages/Cart';
+import ProductPage from './pages/Product';
 
 import HomeLayoutPage from './pages/layout/HomeLayout';
 import AuthLayout from './pages/layout/AuthLayout';
@@ -26,6 +27,7 @@ function App() {
           <Route path="account" element={<AccountPage />} />
           <Route path="game" element={<GamePage />} />
           <Route path="cart" element={<CartPage />} />
+          <Route path="products" element={<ProductPage />} />
         </Route>
 
         <Route path="/auth" element={<AuthLayout />}>
