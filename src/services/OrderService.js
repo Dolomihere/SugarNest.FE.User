@@ -55,29 +55,35 @@ const OrderService = {
   },
 
   calculateShippingFee: async ({ lat, lng }) => {
-    try {
-      const response = await publicApi.post("/shipping/calculate", {
-        lat,
-        lng,
-      });
-      console.log("Calculate shipping fee response:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error(
-        "OrderService.calculateShippingFee error:",
-        error.response?.data || error.message
-      );
-      const storeLocation = { lat: 10.853826, lng: 106.627398 };
-      const distance = getDistanceFromLatLonInKm(
-        storeLocation.lat,
-        storeLocation.lng,
-        lat,
-        lng
-      );
-      const shippingFee = distance > 5 ? 40000 : 0;
-      return { shippingFee };
-    }
-  },
+  try {
+    const response = await publicApi.get(
+      `orders/shippingfee?longitude=${lng}&latitude=${lat}`,
+      {
+        params: {
+          latitude: lat,
+          longitude: lng,
+        },
+      }
+    );
+    console.log(
+      "Phản hồi phí vận chuyển:",
+      JSON.stringify(response.data, null, 2)
+    );
+    return { shippingFee: response.data.data }; // Truy cập trường data
+  } catch (error) {
+    console.error("Lỗi OrderService.calculateShippingFee:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      params: error.config?.params,
+    });
+    throw new Error(
+      "Không thể tính phí vận chuyển: " +
+        (error.response?.data?.message || error.message)
+    );
+  }
+},
 
   processPayment: async ({ orderId, amount }) => {
     try {
