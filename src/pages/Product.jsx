@@ -115,12 +115,11 @@ const isFavorite = (productId) =>
   };
 
   const sortOptions = [
-    { value: "0", label: "Ngày tạo (mới - cũ)" },
-    { value: "1", label: "Ngày tạo (cũ - mới)" },
-    { value: "2", label: "Tên (a - z)" },
-    { value: "3", label: "Tên (z - a)" },
-    { value: "4", label: "Giá (thấp - cao)" },
-    { value: "5", label: "Giá (cao - thấp)" },
+    { value: "1", label: "Giá (thấp - cao)" },
+    { value: "2", label: "Giá (cao - thấp)" },
+    { value: "3", label: "Tên (a - z)" },
+    { value: "4", label: "Tên (z - a)" },
+   
   ];
 
   const handleSortChange = (value) => {
@@ -128,25 +127,23 @@ const isFavorite = (productId) =>
     let sortBy = "CreatedAt";
     let sortDescending = true;
     switch (value) {
-      case "1":
+        case "1":
+        sortBy = "UnitPrice";
         sortDescending = false;
         break;
       case "2":
-        sortBy = "Name";
-        sortDescending = false;
+        sortBy = "UnitPrice";
+        sortDescending = true;
         break;
       case "3":
         sortBy = "Name";
-        sortDescending = true;
-        break;
-      case "4":
-        sortBy = "UnitPrice";
         sortDescending = false;
         break;
-      case "5":
-        sortBy = "UnitPrice";
+      case "4":
+        sortBy = "Name";
         sortDescending = true;
         break;
+    
       default:
         break;
     }
