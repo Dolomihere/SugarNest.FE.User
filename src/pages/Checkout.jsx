@@ -84,61 +84,79 @@ const CheckoutPage = () => {
   });
 
   useEffect(() => {
-    if (addressFromMap) {
-      const coordsMatch = addressFromMap.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
-      if (coordsMatch) {
-        const lat = parseFloat(coordsMatch[1]);
-        const lng = parseFloat(coordsMatch[2]);
-        setCoordinates({ lat, lng });
-        OrderService.calculateShippingFee({ lat, lng })
-          .then(({ shippingFee }) => setShippingFee(shippingFee))
-          .catch((err) => {
-            console.error("Lỗi tính phí vận chuyển:", err);
-            setShippingFee(0);
-          });
-      } else {
-        fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            addressFromMap
-          )}`
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            if (data && data.length > 0) {
-              const { lat, lon } = data[0];
-              setCoordinates({ lat: parseFloat(lat), lng: parseFloat(lon) });
-              OrderService.calculateShippingFee({
-                lat: parseFloat(lat),
-                lng: parseFloat(lon),
-              })
-                .then(({ shippingFee }) => setShippingFee(shippingFee))
-                .catch((err) => {
-                  console.error("Lỗi tính phí vận chuyển:", err);
-                  setShippingFee(0);
-                });
-            } else {
-              setShippingFee(0);
-            }
-          })
-          .catch((err) => {
-            console.error("Lỗi lấy tọa độ từ địa chỉ:", err);
-            setShippingFee(0);
-          });
+    const fetchCoordinatesAndShippingFee = async () => {
+      if (!addressFromMap) {
+        setShippingFee(0);
+        return;
       }
-    }
+
+      try {
+        // Kiểm tra nếu addressFromMap đã chứa tọa độ dạng "lat, lng"
+        const coordsMatch = addressFromMap.match(
+          /^(-?\d+\.\d+),\s*(-?\d+\.\d+)/
+        );
+        let lat, lng;
+
+        if (coordsMatch) {
+          lat = parseFloat(coordsMatch[1]);
+          lng = parseFloat(coordsMatch[2]);
+        } else {
+          // Lấy tọa độ từ Nominatim API
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              addressFromMap
+            )}`
+          );
+          const data = await response.json();
+          if (data && data.length > 0) {
+            lat = parseFloat(data[0].lat);
+            lng = parseFloat(data[0].lon);
+          } else {
+            throw new Error("Không thể tìm thấy tọa độ cho địa chỉ này");
+          }
+        }
+
+        // Cập nhật tọa độ
+        setCoordinates({ lat, lng });
+
+        // Tính phí vận chuyển
+        if (lat && lng) {
+          const response = await OrderService.calculateShippingFee({
+            lat,
+            lng,
+          });
+          setShippingFee(response.shippingFee || 0);
+        } else {
+          setShippingFee(0);
+          setError("Không thể xác định tọa độ hợp lệ");
+        }
+      } catch (err) {
+        console.error("Lỗi tính phí vận chuyển:", err);
+        setShippingFee(0);
+        setError("Không thể tính phí vận chuyển: " + err.message);
+      }
+    };
+
+    fetchCoordinatesAndShippingFee();
   }, [addressFromMap]);
 
   const subtotal =
     cartItems.reduce((sum, item) => sum + item.total, 0) ||
     initialSubtotal ||
     0;
+  const tempTotal = subtotal + shippingFee;
+  // alert(
+  //   `Tổng tạm tính: ${formatCurrency(
+  //     tempTotal
+  //   )}\nPhí vận chuyển: ${formatCurrency(shippingFee)}`
+  // );
   const discountAmount =
     discount > 0 && selectedVoucher
       ? selectedVoucher.hardValue
-        ? Math.min(selectedVoucher.hardValue, subtotal)
-        : subtotal * discount
+        ? Math.min(selectedVoucher.hardValue, tempTotal)
+        : tempTotal * discount
       : 0;
-  const total = subtotal - discountAmount;
+  const total = tempTotal - discountAmount;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -307,6 +325,7 @@ const CheckoutPage = () => {
               discount={discount}
               subtotal={subtotal}
               total={total}
+              discountAmount={discountAmount}
               shippingFee={shippingFee}
               formatCurrency={formatCurrency}
               handleSubmit={handleSubmit}
