@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import OrderService from "../services/OrderService";
 import CartService from "../services/CartService";
 import { Header } from "./layouts/Header";
@@ -21,32 +21,74 @@ const OrderConfirmation = () => {
     checkoutData
   } = location.state || {};
 
+
   const token = localStorage.getItem("accessToken");
   const isLoggedIn = !!token;
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Location State:", location.state);
+    console.log("Token:", token);
+    console.log("Is Logged In:", isLoggedIn);
+  }, [location.state, token, isLoggedIn]);
+
+  // Fetch order details if initialOrderData is missing and orderId exists
+  const { data: fetchedOrderData, isLoading: isFetching } = useQuery({
+    queryKey: ["orderDetails", orderId, token],
+    queryFn: () => OrderService.getOrderDetails(orderId, token),
+    enabled: isLoggedIn && !!orderId && !initialOrderData,
+    onError: (err) => {
+      console.error("Lỗi tải chi tiết đơn hàng:", err);
+      setError("Không thể tải chi tiết đơn hàng: " + (err.message || "Không xác định"));
+    },
+  });
+
+  // Merge data with fallback values
+  const orderData = {
+    ...initialOrderData,
+    ...fetchedOrderData?.data,
+    cartItems: initialOrderData?.cartItems || fetchedOrderData?.data?.cartItems || [],
+    address: initialOrderData?.address || fetchedOrderData?.data?.address || "Chưa nhập",
+    customerName: initialOrderData?.customerName || fetchedOrderData?.data?.customerName || "Chưa nhập",
+    email: initialOrderData?.email || fetchedOrderData?.data?.email || "Chưa nhập",
+    phoneNumber: initialOrderData?.phoneNumber || fetchedOrderData?.data?.phoneNumber || "Chưa nhập",
+    paymentMethod: initialOrderData?.paymentMethod || fetchedOrderData?.data?.paymentMethod || "cash",
+    shippingFee: initialOrderData?.shippingFee || fetchedOrderData?.data?.shippingFee || 0,
+    discount: initialOrderData?.discount || fetchedOrderData?.data?.discount || 0,
+    total: initialOrderData?.total || fetchedOrderData?.data?.total || 0,
+    createdAt: initialOrderData?.createdAt || fetchedOrderData?.data?.createdAt || new Date().toISOString(),
+  };
 
   const restoredCheckoutData = checkoutData || JSON.parse(localStorage.getItem("checkoutData")) || {};
   const {
     cartData,
     selectedVoucher,
-    discount,
+    discount: checkoutDiscount,
     subtotal,
-    total,
+    total: checkoutTotal,
     guestCartId,
     form,
-    paymentMethod,
-    shippingFee,
+    paymentMethod: checkoutPaymentMethod,
+    shippingFee: checkoutShippingFee,
     coordinates,
   } = restoredCheckoutData;
 
-  const cartItems = cartData?.cartItems || [];
+  const cartItems = orderData.cartItems.length > 0 ? orderData.cartItems : cartData?.cartItems || [];
+
+  useEffect(() => {
+    if (!isLoggedIn && !orderId) {
+      navigate("/signin", { state: { from: "/order-confirmation" } });
+    }
+  }, [isLoggedIn, orderId, navigate]);
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("vi-VN", {
       style: "decimal",
       minimumFractionDigits: 0,
-    }).format(value) + " VND";
+    }).format(value || 0) + " VND";
 
   const formatDate = (dateString) => {
+    if (!dateString) return "Chưa xác định";
     const date = new Date(dateString);
     return date.toLocaleDateString("vi-VN", {
       day: "2-digit",
@@ -97,18 +139,18 @@ const OrderConfirmation = () => {
 
     try {
       const orderDataToSend = {
-        address: form.address,
-        longitude: coordinates?.lng,
-        latitude: coordinates?.lat,
-        deliveryTime: form.deliveryTime,
-        customerName: form.name,
-        email: form.email,
-        phoneNumber: form.phoneNumber,
-        recipientName: form.name,
-        recipientEmail: form.email,
-        recipientPhone: form.phoneNumber,
-        note: form.note,
-        userVoucher: form.userVoucher,
+        address: form.address || orderData.address,
+        longitude: coordinates?.lng || orderData.longitude,
+        latitude: coordinates?.lat || orderData.latitude,
+        deliveryTime: form.deliveryTime || orderData.deliveryTime,
+        customerName: form.name || orderData.customerName,
+        email: form.email || orderData.email,
+        phoneNumber: form.phoneNumber || orderData.phoneNumber,
+        recipientName: form.name || orderData.customerName,
+        recipientEmail: form.email || orderData.email,
+        recipientPhone: form.phoneNumber || orderData.phoneNumber,
+        note: form.note || orderData.note,
+        userVoucher: selectedVoucher?.voucherId || orderData.userVoucher,
         cartItems,
       };
 
@@ -116,9 +158,10 @@ const OrderConfirmation = () => {
       const createdOrder = response.data;
       const orderId = createdOrder.orderId;
 
+
       const paymentResponse = await OrderService.processPayment({
         orderId,
-        amount: total + shippingFee,
+        amount: (orderData.total || checkoutTotal) + (orderData.shippingFee || checkoutShippingFee || 0),
       });
 
       if (paymentResponse.status !== "success") {
@@ -129,11 +172,12 @@ const OrderConfirmation = () => {
 
       try {
         await OrderService.sendOrderConfirmationEmail({
-          email: form.email,
+          email: form.email || orderData.email,
           orderId,
           orderData: {
             ...createdOrder,
             paymentMethod,
+
           },
         });
       } catch (emailError) {
@@ -151,6 +195,7 @@ const OrderConfirmation = () => {
           orderData: {
             ...createdOrder,
             paymentMethod,
+
           },
           showSuccessMessage: "Đơn hàng đã được đặt thành công!",
           checkoutData: restoredCheckoutData,
@@ -174,17 +219,18 @@ const OrderConfirmation = () => {
           <p className="mb-4 text-sm text-green-600">{showSuccessMessage}</p>
         )}
         {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
+        {isFetching && <p className="text-sm text-gray-600">Đang tải chi tiết đơn hàng...</p>}
 
         {orderId ? (
           <div className="p-6 bg-white shadow-md rounded-2xl">
             <div className="flex justify-between mb-4">
-              <h3 className="text-lg font-semibold text-heading">Đơn hàng #{orderId}</h3>
+              <h3 className="text-lg font-semibold text-heading">Đơn hàng #{orderId || "N/A"}</h3>
               <span
                 className={`text-sm ${
                   paymentStatus === "success" ? "text-green-600" : "text-yellow-600"
                 }`}
               >
-                {paymentStatus === "success" ? "Thanh toán thành công" : "Đang xử lý"}
+                {paymentStatus === "success" ? "Thanh toán thành công" : "Đang xử lý" || "N/A"}
               </span>
             </div>
             <div className="text-sm text-gray-600">
@@ -214,6 +260,7 @@ const OrderConfirmation = () => {
                     <span>{formatCurrency(item.total)}</span>
                   </li>
                 ))}
+
               </ul>
             </div>
             <div className="mt-4">
@@ -257,32 +304,32 @@ const OrderConfirmation = () => {
                   <ul className="mt-2 space-y-2 text-sm text-gray-600">
                     {cartItems.map((item, index) => (
                       <li key={index} className="flex justify-between">
-                        <span>{item.productName}</span>
-                        <span>{formatCurrency(item.total)}</span>
+                        <span>{item.productName || `Sản phẩm ${index + 1}`}</span>
+                        <span>{formatCurrency(item.total || 0)}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div className="mt-4 text-sm text-gray-600">
-                  <p><strong>Tên khách hàng:</strong> {form?.name || "Chưa nhập"}</p>
-                  <p><strong>Email:</strong> {form?.email || "Chưa nhập"}</p>
-                  <p><strong>Số điện thoại:</strong> {form?.phoneNumber || "Chưa nhập"}</p>
-                  <p><strong>Địa chỉ:</strong> {form?.address || "Chưa nhập"}</p>
+                  <p><strong>Tên khách hàng:</strong> {form?.name || orderData.customerName || "Chưa nhập"}</p>
+                  <p><strong>Email:</strong> {form?.email || orderData.email || "Chưa nhập"}</p>
+                  <p><strong>Số điện thoại:</strong> {form?.phoneNumber || orderData.phoneNumber || "Chưa nhập"}</p>
+                  <p><strong>Địa chỉ:</strong> {form?.address || orderData.address || "Chưa nhập"}</p>
                   <p>
                     <strong>Phương thức thanh toán:</strong>{" "}
-                    {paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản"}
+                    {checkoutPaymentMethod || (orderData.paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản")}
                   </p>
                   <p>
                     <strong>Phí vận chuyển:</strong>{" "}
-                    {shippingFee > 0 ? formatCurrency(shippingFee) : "Miễn phí"}
+                    {(checkoutShippingFee > 0 || orderData.shippingFee > 0) ? formatCurrency(checkoutShippingFee || orderData.shippingFee) : "Miễn phí"}
                   </p>
-                  {discount > 0 && (
+                  {(checkoutDiscount > 0 || orderData.discount > 0) && (
                     <p className="text-green-600">
-                      <strong>Giảm giá:</strong> -{formatCurrency(discount)}
+                      <strong>Giảm giá:</strong> -{formatCurrency(checkoutDiscount || orderData.discount)}
                     </p>
                   )}
                   <p className="text-base font-bold text-amber-600">
-                    <strong>Tổng thanh toán:</strong> {formatCurrency(total + (shippingFee || 0))}
+                    <strong>Tổng thanh toán:</strong> {formatCurrency((orderData.total || checkoutTotal) + (orderData.shippingFee || checkoutShippingFee || 0))}
                   </p>
                 </div>
                 <div className="mt-4 space-x-4">

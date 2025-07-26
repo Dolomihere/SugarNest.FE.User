@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
 import { useNavigate, useLocation } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CartService from "../services/CartService";
 import OrderService from "../services/OrderService";
 import { Header } from "./layouts/Header";
@@ -73,6 +74,7 @@ const LeafletMap = ({ onAddressSelect }) => {
   );
 };
 
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -87,15 +89,33 @@ const CheckoutPage = () => {
     email: "",
     deliveryTime: "",
     note: "",
-    userVoucher: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [discount, setDiscount] = useState(0);
+  const [promoMessage, setPromoMessage] = useState("");
+  const [voucherInput, setVoucherInput] = useState("");
 
-  const { cartData, selectedVoucher, discount, subtotal, total, guestCartId } = location.state || {};
+  const {
+    cartData,
+    subtotal: initialSubtotal,
+    total: initialTotal,
+    guestCartId,
+  } = location.state || {};
   const cartItems = cartData?.cartItems || [];
   const accessToken = localStorage.getItem("accessToken");
   const isLoggedIn = !!accessToken;
+
+  // Fetch user-specific vouchers
+  const { data: userVouchers = [] } = useQuery({
+    queryKey: ["userVouchers", accessToken],
+    queryFn: () =>
+      VoucherService.getUserVouchers(accessToken).then(
+        (res) => res.data.data || []
+      ),
+    enabled: isLoggedIn,
+  });
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("vi-VN", {
@@ -122,7 +142,9 @@ const CheckoutPage = () => {
       }
     },
     onError: (err) => {
-      setError(`Không thể xóa giỏ hàng: ${err.message}. Đơn hàng vẫn được tạo thành công.`);
+      setError(
+        `Không thể xóa giỏ hàng: ${err.message}. Đơn hàng vẫn được tạo thành công.`
+      );
     },
   });
 
@@ -141,14 +163,19 @@ const CheckoutPage = () => {
           });
       } else {
         fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressFromMap)}`
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            addressFromMap
+          )}`
         )
           .then((res) => res.json())
           .then((data) => {
             if (data && data.length > 0) {
               const { lat, lon } = data[0];
               setCoordinates({ lat: parseFloat(lat), lng: parseFloat(lon) });
-              OrderService.calculateShippingFee({ lat: parseFloat(lat), lng: parseFloat(lon) })
+              OrderService.calculateShippingFee({
+                lat: parseFloat(lat),
+                lng: parseFloat(lon),
+              })
                 .then(({ shippingFee }) => setShippingFee(shippingFee))
                 .catch((err) => {
                   console.error("Lỗi tính phí vận chuyển:", err);
@@ -166,14 +193,17 @@ const CheckoutPage = () => {
     }
   }, [addressFromMap]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handlePaymentMethodChange = (e) => {
-    setPaymentMethod(e.target.value);
-  };
+  const subtotal =
+    cartItems.reduce((sum, item) => sum + item.total, 0) ||
+    initialSubtotal ||
+    0;
+  const discountAmount =
+    discount > 0 && selectedVoucher
+      ? selectedVoucher.hardValue
+        ? Math.min(selectedVoucher.hardValue, subtotal)
+        : subtotal * discount
+      : 0;
+  const total = subtotal - discountAmount;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -232,7 +262,7 @@ const CheckoutPage = () => {
         address: addressFromMap,
         longitude: coordinates.lng,
         latitude: coordinates.lat,
-        deliveryTime: form.deliveryTime || "2025-07-19T22:25:00Z", // Default to 10:25 PM +07, 19/07/2025
+        deliveryTime: form.deliveryTime || "2025-07-19T22:25:00Z",
         customerName: form.name,
         email: form.email,
         phoneNumber: form.phoneNumber,
@@ -240,25 +270,24 @@ const CheckoutPage = () => {
         recipientEmail: form.email,
         recipientPhone: form.phoneNumber,
         note: form.note || null,
-        userVoucher: form.userVoucher || null,
+        userVoucher: selectedVoucher?.voucherId || null,
         cartItems: cartItems.map((item) => ({
           productId: item.productId.toString(),
           quantity: item.quantity,
         })),
       };
 
-      console.log("Access Token:", accessToken);
-      console.log("Guest Cart ID:", guestCartId);
-      console.log("Order Data (Stringified):", JSON.stringify(orderData, null, 2));
-
-      const response = await OrderService.createOrder(orderData, accessToken, guestCartId);
+      const response = await OrderService.createOrder(
+        orderData,
+        accessToken,
+        guestCartId
+      );
       let orderId = null;
 
-      // Handle different response structures
       if (response && response.data && response.data.orderId) {
         orderId = response.data.orderId;
       } else if (response && (response.orderId || response.id)) {
-        orderId = response.orderId || response.id; // Fallback to root-level orderId or id
+        orderId = response.orderId || response.id;
       } else {
         throw new Error("Không thể xác định ID đơn hàng từ phản hồi server");
       }
@@ -337,43 +366,18 @@ const CheckoutPage = () => {
       <main className="max-w-6xl px-4 py-8 mx-auto">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="sticky order-1 space-y-6 lg:col-span-1 lg:order-none top-8 h-fit">
-            <div className="p-6 space-y-4 bg-white shadow-md rounded-2xl">
-              <h2 className="text-xl font-semibold text-heading">Đơn hàng của bạn</h2>
-              {cartItems.length === 0 ? (
-                <p className="text-sm text-gray-600">Giỏ hàng trống</p>
-              ) : (
-                cartItems.map((item, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <span>{item.productName}</span>
-                    <span>{formatCurrency(item.total)}</span>
-                  </div>
-                ))
-              )}
-              <div className="flex justify-between mt-2 text-sm">
-                <span>Phí vận chuyển:</span>
-                <span>{shippingFee > 0 ? formatCurrency(shippingFee) : "Miễn phí"}</span>
-              </div>
-              {discount > 0 || (selectedVoucher?.hardValue && selectedVoucher) ? (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Giảm giá ({selectedVoucher?.name || "Voucher"}):</span>
-                  <span>-{formatCurrency(subtotal - total)}</span>
-                </div>
-              ) : null}
-              <div className="flex justify-between pt-2 text-base font-bold border-t text-amber-600">
-                <span>Tổng thanh toán:</span>
-                <span>{formatCurrency(total + shippingFee)}</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="w-full text-center btn-primary"
-                disabled={loading || cartItems.length === 0}
-              >
-                {loading ? "Đang xử lý..." : "Đặt mua ngay"}
-              </button>
-              {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-            </div>
-
+            <OrderSummary
+              cartItems={cartItems}
+              selectedVoucher={selectedVoucher}
+              discount={discount}
+              subtotal={subtotal}
+              total={total}
+              shippingFee={shippingFee}
+              formatCurrency={formatCurrency}
+              handleSubmit={handleSubmit}
+              error={error}
+              loading={loading}
+            />
             <div className="p-6 space-y-4 text-sm bg-white shadow-md rounded-2xl text-main">
               <div className="grid grid-cols-1 gap-2 font-semibold text-center text-yellow-700">
                 <div>✔ Miễn phí vận chuyển đơn từ 300k hoặc dưới 5km</div>
@@ -382,38 +386,51 @@ const CheckoutPage = () => {
                 <div>✔ Thanh toán khi nhận hoặc chuyển khoản</div>
               </div>
               <div className="pt-4 border-t">
-                <h3 className="mb-2 text-base font-bold text-heading">Hướng dẫn đặt hàng</h3>
+                <h3 className="mb-2 text-base font-bold text-heading">
+                  Hướng dẫn đặt hàng
+                </h3>
                 <ul className="pl-5 space-y-1 list-disc text-sub">
                   <li>Chọn sản phẩm và thêm vào giỏ</li>
                   <li>Điền đầy đủ thông tin giao hàng</li>
                   <li>
-                    Nhấn <strong className="text-heading">Đặt mua ngay</strong> để hoàn tất
+                    Nhấn <strong className="text-heading">Đặt mua ngay</strong>{" "}
+                    để hoàn tất
                   </li>
                 </ul>
               </div>
             </div>
           </div>
-
           <div className="space-y-6 lg:col-span-2">
             <div className="p-6 space-y-6 bg-white shadow-md rounded-2xl">
-              <h2 className="text-xl font-semibold text-heading">Sản phẩm đã chọn</h2>
+              <h2 className="text-xl font-semibold text-heading">
+                Sản phẩm đã chọn
+              </h2>
               <div className="overflow-x-auto">
                 {cartItems.length === 0 ? (
-                  <p className="text-sm text-gray-600">Không có sản phẩm nào trong giỏ hàng</p>
+                  <p className="text-sm text-gray-600">
+                    Không có sản phẩm nào trong giỏ hàng
+                  </p>
                 ) : (
                   cartItems.map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-6 mb-6 md:flex-row">
+                    <div
+                      key={idx}
+                      className="flex items-start gap-6 mb-6 md:flex-row"
+                    >
                       <img
                         src={item.productImage || "/images/placeholder.png"}
                         alt={item.productName}
                         className="object-cover w-32 h-32 border rounded-lg"
                       />
                       <div>
-                        <h3 className="text-lg font-semibold text-heading">{item.productName}</h3>
+                        <h3 className="text-lg font-semibold text-heading">
+                          {item.productName}
+                        </h3>
                         {item.cartItemOptions?.length > 0 && (
                           <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
                             {item.cartItemOptions.map((opt) => (
-                              <li key={opt.cartItemOptionId}>{opt.optionValue || "Tùy chọn"}</li>
+                              <li key={opt.cartItemOptionId}>
+                                {opt.optionValue || "Tùy chọn"}
+                              </li>
                             ))}
                           </ul>
                         )}
@@ -531,6 +548,7 @@ const CheckoutPage = () => {
                 </div>
               </form>
             </div>
+
           </div>
         </div>
       </main>

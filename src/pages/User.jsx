@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import CartService from "../services/CartService";
 import ProductService from "../services/ProductService";
-import VoucherService from "../services/VoucherService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 
@@ -13,13 +12,11 @@ export default function UserPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const [selectedVoucher, setSelectedVoucher] = useState(null);
-  const [discount, setDiscount] = useState(0);
-  const [promoMessage, setPromoMessage] = useState("");
-  const [voucherInput, setVoucherInput] = useState("");
 
   // Get token and check login status
-  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+  const token =
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken");
   const isLoggedIn = token && token !== "undefined" && token !== "null";
   const guestCartId = localStorage.getItem("guestCartId");
 
@@ -28,7 +25,12 @@ export default function UserPage() {
   const fromPath = location.state?.from || "/";
 
   // Fetch cart data (user or guest)
-  const { data: cartData, isLoading, error, refetch } = useQuery({
+  const {
+    data: cartData,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: isLoggedIn ? ["userCart", token] : ["guestCart", guestCartId],
     queryFn: async () => {
       try {
@@ -36,7 +38,11 @@ export default function UserPage() {
           const response = await CartService.getUserCart(token);
           return response.data.data || { cartItems: [] };
         } else {
-          if (!guestCartId || typeof guestCartId !== "string" || guestCartId.length === 0) {
+          if (
+            !guestCartId ||
+            typeof guestCartId !== "string" ||
+            guestCartId.length === 0
+          ) {
             return { cartItems: [] };
           }
           const response = await CartService.getGuestCart(guestCartId);
@@ -53,34 +59,18 @@ export default function UserPage() {
         return { cartItems: [] };
       }
     },
-    enabled: isLoggedIn || (typeof guestCartId === "string" && guestCartId.length > 0),
-  });
-
-  // Mutation to fetch voucher by ID
-  const fetchVoucherMutation = useMutation({
-    mutationFn: (voucherId) => VoucherService.getVoucherById(voucherId, token),
-    onSuccess: (response) => {
-      const voucher = response.data.data;
-      if (voucher && voucher.isActive && (!voucher.endTime || new Date(voucher.endTime) > new Date())) {
-        setSelectedVoucher(voucher);
-        setPromoMessage("");
-      } else {
-        setSelectedVoucher(null);
-        setDiscount(0);
-        setPromoMessage("Mã voucher không hợp lệ hoặc đã hết hạn.");
-      }
-    },
-    onError: (err) => {
-      setSelectedVoucher(null);
-      setDiscount(0);
-      setPromoMessage(`Không tìm thấy voucher: ${err.message}`);
-    },
+    enabled:
+      isLoggedIn || (typeof guestCartId === "string" && guestCartId.length > 0),
   });
 
   // Merge guest cart with user cart after login
   const mergeCartMutation = useMutation({
     mutationFn: async () => {
-      if (!guestCartId || typeof guestCartId !== "string" || guestCartId.length === 0) {
+      if (
+        !guestCartId ||
+        typeof guestCartId !== "string" ||
+        guestCartId.length === 0
+      ) {
         return null;
       }
       const response = await CartService.mergeGuestCart(guestCartId, token);
@@ -101,7 +91,13 @@ export default function UserPage() {
   });
 
   useEffect(() => {
-    if (isLoggedIn && fromLogin && guestCartId && typeof guestCartId === "string" && guestCartId.length > 0) {
+    if (
+      isLoggedIn &&
+      fromLogin &&
+      guestCartId &&
+      typeof guestCartId === "string" &&
+      guestCartId.length > 0
+    ) {
       mergeCartMutation.mutate();
     }
   }, [isLoggedIn, fromLogin, guestCartId, mergeCartMutation]);
@@ -125,7 +121,9 @@ export default function UserPage() {
   const deleteItemMutation = useMutation({
     mutationFn: (cartItemId) => CartService.deleteItem(cartItemId, token),
     onSuccess: () => {
-      queryClient.invalidateQueries(isLoggedIn ? ["userCart", token] : ["guestCart", guestCartId]);
+      queryClient.invalidateQueries(
+        isLoggedIn ? ["userCart", token] : ["guestCart", guestCartId]
+      );
       refetch();
       if (cartData?.cartItems?.length === 1) {
         window.location.reload();
@@ -143,7 +141,9 @@ export default function UserPage() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(isLoggedIn ? ["userCart", token] : ["guestCart", guestCartId]);
+      queryClient.invalidateQueries(
+        isLoggedIn ? ["userCart", token] : ["guestCart", guestCartId]
+      );
       refetch();
       window.location.reload();
     },
@@ -184,63 +184,29 @@ export default function UserPage() {
     clearCartMutation.mutate();
   };
 
-  // Handle apply voucher
-  const handleApplyVoucher = () => {
-    if (!isLoggedIn) {
-      setDiscount(0);
-      setPromoMessage("Vui lòng đăng nhập để sử dụng voucher!");
-      return;
-    }
-
-    if (!voucherInput.trim()) {
-      setDiscount(0);
-      setPromoMessage("Vui lòng nhập mã voucher!");
-      return;
-    }
-
-    const subtotal = cartData?.cartItems?.reduce((sum, item) => sum + item.total, 0) ?? 0;
-    fetchVoucherMutation.mutate(voucherInput.trim());
+  // Redirect to login with state to return to current page
+  const handleLoginRedirect = () => {
+    navigate("/signin", { state: { from: location.pathname } });
   };
 
-  // Apply voucher after fetching
-  useEffect(() => {
-    if (!selectedVoucher) {
-      setDiscount(0);
+  // Navigate to checkout with cart data
+  const handleCheckout = () => {
+    if (!isLoggedIn) {
+      navigate("/signin", { state: { from: "/checkout" } });
       return;
     }
-
-    const subtotal = cartData?.cartItems?.reduce((sum, item) => sum + item.total, 0) ?? 0;
-    if (selectedVoucher.minPriceCondition && subtotal < selectedVoucher.minPriceCondition) {
-      setSelectedVoucher(null);
-      setDiscount(0);
-      setPromoMessage(`Tổng đơn hàng phải đạt tối thiểu ${formatCurrency(selectedVoucher.minPriceCondition)} để sử dụng voucher này.`);
-      return;
-    }
-
-    if (!selectedVoucher.isActive || (selectedVoucher.endTime && new Date(selectedVoucher.endTime) < new Date())) {
-      setSelectedVoucher(null);
-      setDiscount(0);
-      setPromoMessage("Voucher đã hết hạn hoặc không hoạt động.");
-      return;
-    }
-
-    let discountValue = 0;
-    if (selectedVoucher.percentValue) {
-      discountValue = selectedVoucher.percentValue / 100;
-      setPromoMessage(`Áp dụng voucher ${selectedVoucher.name} thành công! Giảm ${selectedVoucher.percentValue}%.`);
-    } else if (selectedVoucher.hardValue) {
-      discountValue = selectedVoucher.hardValue / subtotal;
-      setPromoMessage(`Áp dụng voucher ${selectedVoucher.name} thành công! Giảm ${formatCurrency(selectedVoucher.hardValue)}.`);
-    }
-    setDiscount(discountValue);
-  }, [selectedVoucher, cartData]);
-
-  // Calculate totals
-  const subtotal = cartData?.cartItems?.reduce((sum, item) => sum + item.total, 0) ?? 0;
-  const discountAmount = discount > 0 && selectedVoucher ? 
-    (selectedVoucher.hardValue ? Math.min(selectedVoucher.hardValue, subtotal) : subtotal * discount) 
-    : 0;
-  const total = subtotal - discountAmount;
+    const subtotal =
+      cartData?.cartItems?.reduce((sum, item) => sum + item.total, 0) ?? 0;
+    const total = subtotal; // No discount applied here
+    navigate("/checkout", {
+      state: {
+        cartData,
+        subtotal,
+        total,
+        guestCartId: isLoggedIn ? null : guestCartId,
+      },
+    });
+  };
 
   // Format currency
   const formatCurrency = (value) =>
@@ -249,122 +215,99 @@ export default function UserPage() {
       minimumFractionDigits: 0,
     }).format(value) + " VND";
 
-  // Redirect to login with state to return to current page
-  const handleLoginRedirect = () => {
-    navigate("/signin", { state: { from: location.pathname } });
-  };
-
-  // Navigate to checkout with cart data and voucher
-  const handleCheckout = () => {
-    if (!isLoggedIn) {
-      navigate("/signin", { state: { from: "/checkout" } });
-      return;
-    }
-    navigate("/checkout", {
-      state: {
-        cartData,
-        selectedVoucher,
-        discount,
-        subtotal,
-        total,
-        guestCartId: isLoggedIn ? null : guestCartId,
-      },
-    });
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FFF9F4] text-gray-800">
+    <div className="flex flex-col min-h-screen text-gray-900 bg-gradient-to-b from-amber-50 to-white">
       <Header />
-      <main className="w-full max-w-7xl mx-auto px-4 pt-12 pb-24 min-h-[90vh] space-y-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Giỏ hàng</h1>
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 min-h-[90vh] space-y-8">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-800">Giỏ Hàng Của Bạn</h1>
           {cartData?.cartItems?.length > 0 && isLoggedIn && (
             <button
               onClick={handleClearCart}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded hover:bg-red-600"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all duration-300 ease-in-out transform bg-red-600 rounded-lg shadow hover:bg-red-700 hover:scale-105"
             >
               <FontAwesomeIcon icon={faTrashAlt} />
-              Xóa tất cả
+              Xóa Tất Cả
             </button>
           )}
         </div>
 
         {isLoading && (
-          <div className="py-12 text-center">
-            <div className="w-12 h-12 mx-auto border-t-2 border-b-2 rounded-full infinity-spin border-amber-600"></div>
-            <p className="mt-4 text-lg text-gray-600">Đang tải giỏ hàng...</p>
+          <div className="py-16 text-center">
+            <div className="w-16 h-16 mx-auto border-4 rounded-full border-t-amber-600 border-b-amber-600 animate-spin"></div>
+            <p className="mt-6 text-lg font-medium text-gray-600">Đang tải giỏ hàng...</p>
           </div>
         )}
         {error && error.message.includes("Phiên đăng nhập hết hạn") && (
-          <p className="text-center text-red-500">
+          <p className="font-medium text-center text-red-600">
             Lỗi khi tải giỏ hàng: {error.message}.{" "}
             <button
-              className="underline text-amber-600"
+              className="underline transition-colors duration-200 text-amber-600 hover:text-amber-700"
               onClick={handleLoginRedirect}
             >
               Đăng nhập lại
             </button>
           </p>
         )}
-        <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+        <div className="overflow-x-auto bg-white border border-gray-100 shadow-lg rounded-xl">
           {cartData?.cartItems?.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16">
+            <div className="flex flex-col items-center justify-center py-20">
               <img
                 src="/images/Cart.png"
                 alt="Giỏ hàng trống"
-                className="w-40 mb-4 h-35"
+                className="w-48 mb-6 transition-transform duration-300 transform hover:scale-105"
               />
-              <p className="mb-4 text-lg text-gray-600">
-                Bạn chưa mua hàng, hãy mua hàng!
-              </p>
+              <p className="mb-6 text-xl font-medium text-gray-600">Giỏ hàng của bạn đang trống!</p>
               <button
-                className="px-6 py-2 font-semibold text-white rounded bg-amber-600 hover:bg-amber-700"
+                className="px-8 py-3 font-semibold text-white transition-all duration-300 ease-in-out transform rounded-lg shadow-md bg-amber-600 hover:bg-amber-700 hover:scale-105"
                 onClick={() => navigate("/products")}
               >
-                MUA NGAY
+                Khám Phá Sản Phẩm
               </button>
               {!isLoggedIn && (
                 <button
-                  className="px-6 py-2 mt-4 font-semibold text-white rounded bg-amber-600 hover:bg-amber-700"
+                  className="px-8 py-3 mt-4 font-semibold text-white transition-all duration-300 ease-in-out transform bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:scale-105"
                   onClick={handleLoginRedirect}
                 >
-                  Đăng nhập
+                  Đăng Nhập
                 </button>
               )}
             </div>
           ) : (
-            <table className="min-w-full border border-orange-400">
-              <thead className="bg-orange-50">
-                <tr className="text-sm font-medium text-left text-gray-600">
-                  <th className="w-12 px-6 py-3">
-                    <input type="checkbox" className="accent-amber-500" />
+            <table className="min-w-full border-separate border-spacing-0">
+              <thead className="bg-amber-50">
+                <tr className="text-sm font-semibold text-gray-700">
+                  <th className="w-12 px-6 py-4 rounded-tl-xl">
+                    <input type="checkbox" className="accent-amber-600" />
                   </th>
-                  <th className="px-6 py-3">Sản phẩm</th>
-                  <th className="px-6 py-3">Giá</th>
-                  <th className="px-6 py-3">Số lượng</th>
-                  <th className="px-6 py-3">Tổng</th>
-                  <th className="px-6 py-3 text-center">Thao tác</th>
+                  <th className="px-6 py-4 text-left">Sản Phẩm</th>
+                  <th className="px-6 py-4 text-left">Giá</th>
+                  <th className="px-6 py-4 text-left">Số Lượng</th>
+                  <th className="px-6 py-4 text-left">Tổng</th>
+                  <th className="px-6 py-4 text-center rounded-tr-xl">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {cartData?.cartItems?.map((item) => (
                   <tr
                     key={item.cartItemId}
-                    className="transition duration-200 hover:bg-orange-50"
+                    className="transition duration-300 hover:bg-amber-50"
                   >
                     <td className="px-6 py-4">
-                      <input type="checkbox" className="accent-amber-500" />
+                      <input type="checkbox" className="accent-amber-600" />
                     </td>
                     <td className="flex items-center gap-4 px-6 py-4">
-                      <img
-                        src={getProductImage(item.productId)}
-                        alt={getProductName(item.productId)}
-                        className="object-cover w-16 h-16 rounded"
-                      />
+                      <div className="overflow-hidden rounded-lg shadow-sm">
+                        <img
+                          src={getProductImage(item.productId)}
+                          alt={getProductName(item.productId)}
+                          className="object-cover w-20 h-20 transition-transform duration-300 transform hover:scale-110"
+                        />
+                      </div>
                       <div>
-                        <span className="font-medium">{item.productName}</span>
+                        <span className="font-semibold text-gray-800">{item.productName}</span>
                         {item.cartItemOptions?.length > 0 && (
-                          <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
+                          <ul className="mt-2 text-sm text-gray-600 list-disc list-inside">
                             {item.cartItemOptions.map((opt) => (
                               <li key={opt.cartItemOptionId}>
                                 {opt.optionValue || "Tùy chọn"}
@@ -374,26 +317,32 @@ export default function UserPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-amber-600">
+                    <td className="px-6 py-4 font-medium text-amber-600">
                       {formatCurrency(item.total / item.quantity)}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg w-fit">
                         <button
                           onClick={() =>
-                            handleQuantityChange(item.cartItemId, item.quantity - 1)
+                            handleQuantityChange(
+                              item.cartItemId,
+                              item.quantity - 1
+                            )
                           }
-                          className="px-2 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                          className="px-3 py-1 text-gray-700 transition-colors duration-200 bg-white rounded-lg shadow-sm hover:bg-gray-200"
                           disabled={!isLoggedIn}
                         >
                           -
                         </button>
-                        <span className="px-2">{item.quantity}</span>
+                        <span className="px-4 font-medium">{item.quantity}</span>
                         <button
                           onClick={() =>
-                            handleQuantityChange(item.cartItemId, item.quantity + 1)
+                            handleQuantityChange(
+                              item.cartItemId,
+                              item.quantity + 1
+                            )
                           }
-                          className="px-2 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                          className="px-3 py-1 text-gray-700 transition-colors duration-200 bg-white rounded-lg shadow-sm hover:bg-gray-200"
                           disabled={!isLoggedIn}
                         >
                           +
@@ -406,7 +355,7 @@ export default function UserPage() {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleDelete(item.cartItemId)}
-                        className="text-red-500 hover:text-red-600"
+                        className="text-red-500 transition-colors duration-200 hover:text-red-600"
                         disabled={!isLoggedIn}
                       >
                         <FontAwesomeIcon icon={faTrash} />
@@ -420,77 +369,49 @@ export default function UserPage() {
         </div>
 
         {cartData?.cartItems?.length > 0 && (
-          <div className="p-6 space-y-4 bg-white rounded-lg shadow-md">
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Nhập mã voucher
-              </label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-amber-200"
-                  value={voucherInput}
-                  onChange={(e) => setVoucherInput(e.target.value)}
-                  placeholder="Nhập ID voucher"
-                  disabled={!isLoggedIn}
-                />
-                <button
-                  onClick={handleApplyVoucher}
-                  className="px-3 py-1.5 text-xs font-semibold text-white rounded bg-amber-600 hover:bg-amber-700 h-10"
-                  disabled={!isLoggedIn || !voucherInput.trim()}
-                >
-                  Áp dụng
-                </button>
-              </div>
-              {promoMessage && (
-                <p
-                  className={`text-sm mt-1 ${
-                    discount > 0 || selectedVoucher?.hardValue ? "text-green-600" : "text-red-500"
-                  }`}
-                >
-                  {promoMessage}
-                </p>
-              )}
-            </div>
-
-            <div className="pt-4 space-y-2 text-sm text-gray-700 border-t">
+          <div className="p-6 space-y-6 bg-white border border-gray-100 shadow-lg rounded-xl">
+            <div className="pt-4 space-y-3 text-sm text-gray-700 border-t border-gray-200">
               <div className="flex justify-between">
-                <span>Tạm tính:</span>
-                <span>{formatCurrency(subtotal)}</span>
-              </div>
-              {discount > 0 || (selectedVoucher?.hardValue && selectedVoucher) ? (
-                <div className="flex justify-between text-green-600">
-                  <span>Giảm giá:</span>
-                  <span>-{formatCurrency(discountAmount)}</span>
-                </div>
-              ) : null}
-              <div className="flex justify-between">
-                <span>Phí vận chuyển:</span>
-                <span>Miễn phí</span>
+                <span className="font-medium">Tạm tính:</span>
+                <span>
+                  {formatCurrency(
+                    cartData?.cartItems?.reduce(
+                      (sum, item) => sum + item.total,
+                      0
+                    ) ?? 0
+                  )}
+                </span>
               </div>
               <div className="flex justify-between text-base font-bold text-gray-800">
                 <span>Tổng thanh toán:</span>
-                <span>{formatCurrency(total)}</span>
+                <span className="text-amber-600">
+                  {formatCurrency(
+                    cartData?.cartItems?.reduce(
+                      (sum, item) => sum + item.total,
+                      0
+                    ) ?? 0
+                  )}
+                </span>
               </div>
             </div>
 
-            <div className="text-sm text-right text-gray-600">
+            <div className="text-sm font-medium text-right text-gray-600">
               Tổng cộng ({cartData?.cartItems?.length || 0} sản phẩm)
             </div>
 
             {isLoggedIn ? (
               <button
                 onClick={handleCheckout}
-                className="flex items-center justify-center w-full mt-2 text-sm font-semibold text-white rounded bg-amber-600 hover:bg-amber-700 h-11"
+                className="w-full py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out transform rounded-lg shadow-md bg-amber-600 hover:bg-amber-700 hover:scale-105"
               >
-                Mua Hàng
+                Thanh Toán Ngay
               </button>
             ) : (
               <button
                 onClick={handleLoginRedirect}
-                className="flex items-center justify-center w-full mt-2 text-sm font-semibold text-white rounded bg-amber-600 hover:bg-amber-700 h-11"
+                className="w-full py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out transform bg-gray-600 rounded-lg shadow-md hover:bg-gray-700 hover:scale-105"
               >
-                Đăng nhập để tiếp tục
+                Đăng Nhập Để Tiếp Tục
               </button>
             )}
           </div>
