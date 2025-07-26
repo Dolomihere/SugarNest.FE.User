@@ -128,12 +128,11 @@ const isFavorite = (productId) =>
     let sortDescending = true;
     switch (value) {
         case "1":
-        sortBy = "finalUnitPrice";
+        sortBy = "UnitPrice";
         sortDescending = false;
         break;
       case "2":
-        sortBy = "finalUnitPrice";
-
+        sortBy = "UnitPrice";
         sortDescending = true;
         break;
       case "3":
@@ -183,7 +182,7 @@ const isFavorite = (productId) =>
   };
 
   return (
-<div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-section text-main">
+    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
       <Header />
       <main className="w-full px-8 py-6 mx-auto max-w-7xl">
         <h2 className="mb-6 text-3xl font-bold text-center text-amber-600">

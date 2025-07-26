@@ -11,8 +11,10 @@ import { StarRating } from "./StarRating";
 import { RatingModal } from "./RatingModal";
 import { RatingForm } from "./RatingForm";
 import { SuggestedProducts } from "./SuggestedProducts";
+import ToastMessage from ".././components/ToastMessage";
 
 export function ProductDetailPage() {
+  const [toast, setToast] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -98,11 +100,10 @@ export function ProductDetailPage() {
         "Failed to fetch product options:",
         error.response?.data || error.message
       );
-      setErrorMessage(
-        `Lỗi khi tải tùy chọn sản phẩm: ${
-          error.response?.data?.message || error.message
-        }`
-      );
+      setToast({
+      type: 'error',
+      message: `Lỗi khi tải tùy chọn sản phẩm: ${error.response?.data?.message || error.message}`,
+    });
     },
   });
 
@@ -121,9 +122,10 @@ export function ProductDetailPage() {
     const totalStars = ratingsData.data.reduce((sum, r) => {
       if (typeof r.ratingPoint !== "number" || isNaN(r.ratingPoint)) {
         console.error("Invalid ratingPoint found in ratings data:", r);
-        setErrorMessage(
-          "Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá."
-        );
+        setToast({
+          type: 'error',
+          message: 'Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá.',
+        });
         return sum;
       }
       return sum + r.ratingPoint;
@@ -154,7 +156,7 @@ export function ProductDetailPage() {
       setComment("");
       setImages([]);
       setErrorMessage("");
-      alert("Đánh giá đã được gửi!");
+      setToast({ type: 'success', message: 'Đánh giá đã được gửi!' });
       if (inputRef.current) {
         inputRef.current.value = null;
       }
@@ -164,11 +166,11 @@ export function ProductDetailPage() {
       const detailedMsg = error.response?.data?.errors
         ? JSON.stringify(error.response.data.errors)
         : "";
-      setErrorMessage(
-        `Lỗi khi gửi đánh giá: ${errorMsg} ${
-          detailedMsg ? ` - Chi tiết: ${detailedMsg}` : ""
-        }`
-      );
+      setToast({
+        type: 'error',
+        message: `Lỗi khi gửi đánh giá: ${errorMsg}${detailedMsg ? ` - ${detailedMsg}` : ""}`,
+      });
+      
       if (error.message.includes("Phiên đăng nhập hết hạn")) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
@@ -205,7 +207,10 @@ export function ProductDetailPage() {
 
   const handleAddToCart = async () => {
     if (!isLoggedIn) {
-      setErrorMessage("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+      setToast({
+        type: 'warning',
+        message: 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.',
+      });      
       navigate("/signin", { state: { from: `/products/${id}` } });
       return;
     }
@@ -265,11 +270,11 @@ export function ProductDetailPage() {
       }
       queryClient.invalidateQueries(["userCart"]);
       setErrorMessage("");
-      alert("Đã thêm vào giỏ hàng!");
+      setToast({ type: 'success', message: 'Đã thêm vào giỏ hàng!' });
       setQuantity(1);
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message;
-      setErrorMessage(`Lỗi khi thêm vào giỏ hàng: ${errorMsg}`);
+      setToast({ type: 'error', message: `Lỗi khi thêm vào giỏ hàng: ${errorMsg}` });
       if (error.message.includes("Phiên đăng nhập hết hạn")) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
@@ -288,8 +293,28 @@ export function ProductDetailPage() {
     setErrorMessage("");
     setCurrentImageIndex(0); // Reset image index on product change
   }, [id]);
+  const getTotalAdditionalPrice = () => {
+  let total = 0;
+  optionGroups.forEach((group) => {
+    const selected = selectedOptions[group.optionGroupId];
+    if (!selected) return;
 
-  return (
+    const items = Array.isArray(selected) ? selected : [selected];
+    items.forEach((id) => {
+      const item = group.optionItems.find(
+        (i) => i.optionItemId === id || i.optionItemId === Number(id)
+      );
+    if (item) total += quantity * Number(item.additionalPrice || 0);
+    });
+  });
+  return total;
+};
+
+// ⬇️ Tính tổng giá ở đây
+const finalTotalPrice =
+  Number(product.finalUnitPrice || 0) * quantity + getTotalAdditionalPrice();
+
+ return (
     <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
       <Header />
       <div className="px-4 mx-auto my-12 space-y-16 max-w-7xl">
@@ -300,164 +325,186 @@ export function ProductDetailPage() {
         ) : (
           <>
             {/* Product Details */}
-            <div className="relative flex flex-col gap-10 p-6 transition-shadow duration-300 bg-white border shadow-md border-amber-200 rounded-2xl hover:shadow-lg md:flex-row md:gap-12 lg:gap-16">
-              <button className="absolute text-xl transition-colors duration-200 top-4 right-4 text-amber-500 hover:text-red-500">
-                <i className="fa-solid fa-heart"></i>
-              </button>
-              <div className="flex items-center justify-center w-full overflow-hidden rounded-2xl md:w-1/2">
-                <img
-                  src={product.imgs?.[0] || "/images/placeholder.png"}
-                  alt={product.name || "Sản phẩm"}
-                  className="object-cover w-full transition-transform duration-300 rounded shadow h-96 Elf-2xl hover:scale-105"
-                />
-              </div>
-              <div className="w-full space-y-6 md:w-1/2">
-                <h2 className="text-3xl font-bold text-gray-800 transition-colors duration-200 md:text-4xl hover:text-amber-600">
-                  {product.name}
-                </h2>
-                <div className="flex items-center gap-2">
-                  <StarRating rating={averageRating} />
-                  <span className="text-sm text-gray-500">
-                    ({ratingsData.data.length} đánh giá)
-                  </span>
-                </div>
-                <p className="text-xl leading-relaxed text-gray-600">
-                  {product.description}
-                </p>
-                <p className="text-2xl font-semibold text-amber-600">
-                  {Number(product.finalUnitPrice).toLocaleString("vi-VN")}₫
-                </p>
-                <div className="space-y-1 text-sm text-gray-500">
-                  <p>
-                    <span className="font-medium text-gray-700">
-                      Trọng lượng:
-                    </span>{" "}
-                    500g
-                  </p>
-                  <p>
-                    <span className="font-medium text-gray-700">
-                      Hạn sử dụng:
-                    </span>{" "}
-                    7 ngày kể từ ngày sản xuất
-                  </p>
-                  <p>
-                    <span className="font-medium text-gray-700">
-                      Thành phần:
-                    </span>{" "}
-                    Bột mì, đường, trứng, bơ, sữa, dầu thực vật,...
-                  </p>
-                  <p>
-                    <span className="font-medium text-gray-700">
-                      Ngày sản xuất:
-                    </span>{" "}
-                    {new Date().toLocaleDateString("vi-VN")}
-                  </p>
-                </div>
-                {optionGroups.length > 0 ? (
-                  optionGroups.map((group) => (
-                    <div key={group.optionGroupId} className="space-y-2">
-                      <p className="text-2xl font-medium text-gray-700">
-                        {group.name}
-                      </p>
-                      <p className="text-sm text-amber-600">
-                        {group.description}
-                      </p>
-                      <div className="mt-2 space-y-2">
-                        {group.isMultipleChoice
-                          ? group.optionItems?.map((item) => (
-                              <label
-                                key={item.optionItemId}
-                                className="flex items-center gap-2 text-sm"
-                              >
-                                <input
-                                  type="checkbox"
-                                  name={group.optionGroupId}
-                                  value={item.optionItemId}
-                                  onChange={handleCheckboxChange}
-                                  className="accent-amber-600"
-                                />
-                                <span>
-                                  {item.optionValue}{" "}
-                                  <span className="text-gray-400">
-                                    (+
-                                    {Number(
-                                      item.additionalPrice
-                                    ).toLocaleString("vi-VN")}
-                                    ₫)
-                                  </span>
-                                </span>
-                              </label>
-                            ))
-                          : group.optionItems?.map((item) => (
-                              <label
-                                key={item.optionItemId}
-                                className="flex items-center gap-2 text-sm"
-                              >
-                                <input
-                                  type="radio"
-                                  name={group.optionGroupId}
-                                  value={item.optionItemId}
+            <div className="relative flex flex-col gap-8 p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-3xl hover:shadow-lg md:flex-row md:gap-12 lg:gap-20">
+  {/* Image Section */}
+  <div className="flex items-center justify-center w-full md:w-1/2">
+    <img
+      src={product.imgs?.[0] || "/images/placeholder.png"}
+      alt={product.name || "Sản phẩm"}
+      className="object-cover w-full h-[380px] rounded-2xl shadow-sm transition-transform duration-300 hover:scale-[1.02]"
+    />
+  </div>
 
-                                  onChange={handleRadioChange}
-                                  className="accent-amber-600"
-                                />
-                                <span>
-                                  {item.optionValue}{" "}
-                                  <span className="text-gray-400">
-                                    (+
-                                    {Number(
-                                      item.additionalPrice
-                                    ).toLocaleString("vi-VN")}
-                                    ₫)
-                                  </span>
-                                </span>
-                              </label>
-                            ))}
-                      </div>
+  {/* Details Section */}
+  <div className="w-full space-y-6 md:w-1/2">
+    <h2 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+      {product.name}
+    </h2>
+
+    <div className="flex items-center gap-2">
+      <StarRating rating={averageRating} />
+      <span className="text-sm text-gray-500">
+        ({ratingsData.data.length} đánh giá)
+      </span>
+    </div>
+
+    <p className="text-base leading-relaxed text-gray-600">
+      {product.description}
+    </p>
+
+    <p className="text-2xl font-semibold text-amber-600">
+      {Number(product.finalUnitPrice).toLocaleString("vi-VN")}₫
+    </p>
+
+    <div className="space-y-1 text-sm text-gray-500">
+      <p>
+        <span className="font-medium text-gray-700">Trọng lượng:</span> 500g
+      </p>
+      <p>
+        <span className="font-medium text-gray-700">Hạn sử dụng:</span> 7 ngày kể từ ngày sản xuất
+      </p>
+      <p>
+        <span className="font-medium text-gray-700">Thành phần:</span> Bột mì, đường, trứng, bơ, sữa, dầu thực vật,...
+      </p>
+      <p>
+        <span className="font-medium text-gray-700">Ngày sản xuất:</span> {new Date().toLocaleDateString("vi-VN")}
+      </p>
+    </div>
+
+   
+  </div>
+</div>
+<div className="p-6 mt-10 bg-white border border-amber-200 rounded-2xl shadow-sm">
+  <h4 className="mb-6 text-2xl font-semibold text-gray-800 border-b border-amber-100 pb-3">
+    Tùy chọn sản phẩm
+  </h4>
+
+  {optionGroups.length > 0 ? (
+    <div className="grid gap-6 md:grid-cols-2">
+      {optionGroups.map((group) => (
+        <div
+          key={group.optionGroupId}
+          className="p-4 bg-gray-50 border border-gray-100 rounded-xl shadow-sm space-y-4"
+        >
+          <div>
+            <p className="text-base font-medium text-gray-800">{group.name}</p>
+            {group.description && (
+              <p className="mt-1 text-sm text-gray-500 italic">{group.description}</p>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {group.isMultipleChoice
+              ? group.optionItems?.map((item) => (
+                  <label
+                    key={item.optionItemId}
+                    className="flex items-center p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm transition"
+                  >
+                    <input
+                      type="checkbox"
+                      name={group.optionGroupId}
+                      value={item.optionItemId}
+                      onChange={handleCheckboxChange}
+                      className="w-4 h-4 mr-3 accent-amber-500"
+                    />
+                    <div className="text-sm text-gray-700">
+                      <span className="font-medium">{item.optionValue}</span>{" "}
+                      <span className="ml-1 text-gray-400">
+                        (+{Number(item.additionalPrice).toLocaleString("vi-VN")}₫)
+                      </span>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    Không có tùy chọn nào cho sản phẩm này.
-                  </p>
-                )}
-                <div className="flex items-center gap-4 mt-6">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 text-xl font-bold text-gray-700 transition-colors duration-200 bg-gray-100 rounded-full hover:bg-amber-100"
+                  </label>
+                ))
+              : group.optionItems?.map((item) => (
+                  <label
+                    key={item.optionItemId}
+                    className="flex items-center p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm transition"
                   >
-                    -
-                  </button>
-                  <span className="text-xl font-medium">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-10 h-10 text-xl font-bold text-gray-700 transition-colors duration-200 bg-gray-100 rounded-full hover:bg-amber-100"
-                  >
-                    +
-                  </button>
-                </div>
-                <div className="flex items-center gap-4 mt-6">
-                  <button
-                    onClick={handleAddToCart}
-                    className="px-6 py-3 text-white transition rounded-lg bg-amber-600 hover:bg-amber-700"
-                  >
-                    Thêm vào giỏ hàng
-                  </button>
-                  <button
-                    className="text-2xl transition text-amber-500 hover:text-blue-500"
-                    title="Sao chép liên kết"
-                    onClick={handleCopy}
-                  >
-                    <i className="fa-regular fa-copy fa-lg"></i>
-                  </button>
-                  {copied && (
-                    <div className="absolute px-2 py-1 text-xs text-white -translate-x-1/2 rounded shadow bg-amber-600 -top-8 left-1/2">
-                      Đã sao chép!
+                    <input
+                      type="radio"
+                      name={group.optionGroupId}
+                      value={item.optionItemId}
+                      onChange={handleRadioChange}
+                      className="w-4 h-4 mr-3 accent-amber-500"
+                    />
+                    <div className="text-sm text-gray-700">
+                      <span className="font-medium">{item.optionValue}</span>{" "}
+                      <span className="ml-1 text-gray-400">
+                        (+{Number(item.additionalPrice).toLocaleString("vi-VN")}₫)
+                      </span>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
+                  </label>
+                ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-sm text-gray-500">Không có tùy chọn nào cho sản phẩm này.</p>
+  )}
+
+ <div className="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-6 mt-10 w-full">
+  {/* Quantity Control */}
+  <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
+    <button
+      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+      className="w-10 h-10 text-lg font-bold text-gray-700 bg-gray-50 rounded-full hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none border-none active:border-none"
+    >
+      −
+    </button>
+    <span className="text-xl font-medium">{quantity}</span>
+    <button
+      onClick={() => setQuantity(quantity + 1)}
+      className="w-10 h-10 text-lg font-bold text-gray-700 bg-gray-50 rounded-full hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none border-none active:border-none"
+    >
+      +
+    </button>
+
+  
+
+  </div>
+  <div className="text-lg font-semibold text-amber-600 whitespace-nowrap">
+    Tổng: {finalTotalPrice.toLocaleString("vi-VN")}₫
+  </div>
+</div>
+
+  {/* CTA Buttons */}
+  <div className="flex justify-end pt-8">
+    <div className="relative flex items-center gap-4">
+      <button
+        onClick={handleAddToCart}
+        className="px-5 py-3 text-white bg-amber-500 hover:bg-amber-600 rounded-xl transition font-medium"
+      >
+        Thêm vào giỏ hàng
+      </button>
+
+      <button
+        className="px-4 py-2 text-sm font-medium border border-amber-300 text-amber-600 rounded-lg hover:border-amber-500 hover:bg-amber-50 transition"
+        title="Sao chép hoặc chia sẻ"
+        onClick={() => {
+          const url = window.location.href;
+          if (navigator.share) {
+            navigator.share({ title: document.title, url });
+          } else {
+            navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }
+        }}
+      >
+        <i className="fa-regular fa-share-from-square mr-2 text-amber-500"></i>
+        Chia sẻ
+      </button>
+
+      {copied && (
+        <div className="absolute px-2 py-1 text-xs text-white bg-amber-600 rounded shadow left-1/2 -top-8 -translate-x-1/2">
+          Đã sao chép!
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
             {/* Ratings Section */}
             <div className="space-y-8">
               <div className="flex items-center justify-between">
@@ -469,60 +516,11 @@ export function ProductDetailPage() {
                   className="px-4 py-2 text-white rounded-lg bg-amber-600 hover:bg-amber-700"
                 >
                   {showRatings ? "Ẩn đánh giá" : "Hiện đánh giá"}
-                </Link>
+                </button>
               </div>
               {showRatings && ratingsData.data.length > 0 ? (
                 <div className="space-y-6">
-                  <div className="flex items-center gap-2">
-                    <StarRating rating={averageRating} />
-                    <span className="text-sm text-gray-500">
-                      {averageRating.toFixed(1)} ({ratingsData.data.length} đánh
-                      giá)
-                    </span>
-                  </div>
-                  <div className="space-y-4">
-                    {ratingsData.data.map((r) => {
-                      if (
-                        typeof r.ratingPoint !== "number" ||
-                        isNaN(r.ratingPoint)
-                      ) {
-                        console.error("Invalid ratingPoint for rating:", r);
-                        return null;
-                      }
-                      return (
-                        <div
-                          key={r.ratingId}
-                          className="p-4 transition-shadow duration-300 bg-white border rounded-lg shadow cursor-pointer border-amber-200 hover:shadow-md"
-                          onClick={() => setSelectedRating(r)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <StarRating rating={r.ratingPoint} />
-                            <span className="text-sm text-gray-500">
-                              bởi {r.userName || "Người dùng ẩn danh"}
-                            </span>
-                          </div>
-                          <p className="mt-2 text-sm text-gray-600">
-                            {r.comment || "Không có nhận xét"}
-                          </p>
-                          {r.imgs && r.imgs.length > 0 && (
-                            <div className="flex gap-2 mt-2 overflow-x-auto">
-                              {r.imgs.map((img, idx) => (
-                                <img
-                                  key={idx}
-                                  src={img}
-                                  alt={`Hình ảnh đánh giá ${idx + 1}`}
-                                  className="object-cover w-24 h-24 rounded"
-                                  onError={(e) =>
-                                    (e.target.src = "/images/placeholder.png")
-                                  }
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {/* Average + List of Ratings */}
                 </div>
               ) : showRatings ? (
                 <p className="text-sm text-gray-500">
@@ -561,10 +559,19 @@ export function ProductDetailPage() {
                 navigate={navigate}
               />
             </div>
+
             <SuggestedProducts suggestions={suggestions} />
           </>
         )}
       </div>
+
+      {toast && (
+        <ToastMessage
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
       <Footer />
     </div>
   );

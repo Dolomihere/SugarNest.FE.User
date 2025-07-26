@@ -56,7 +56,7 @@ const OrderService = {
 
   calculateShippingFee: async ({ lat, lng }) => {
     try {
-      const response = await publicApi.post("http://localhost:5204/shipping/calculate", {
+      const response = await publicApi.post("/shipping/calculate", {
         lat,
         lng,
       });

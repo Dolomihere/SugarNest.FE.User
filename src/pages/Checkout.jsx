@@ -1,79 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CartService from "../services/CartService";
 import OrderService from "../services/OrderService";
+import VoucherService from "../services/VoucherService";
+import OrderSummary from "./cart/OrderSummary";
+import VoucherSection from "./cart/VoucherSection";
+import DeliveryForm from "./cart/DeliveryForm";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
-
-const LeafletMap = ({ onAddressSelect }) => {
-  const mapRef = useRef(null);
-  const markerRef = useRef(null);
-
-  useEffect(() => {
-    const map = L.map(mapRef.current).setView([10.762622, 106.660172], 13);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
-    }).addTo(map);
-
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-
-    const marker = L.marker([10.762622, 106.660172], { draggable: true }).addTo(map);
-    markerRef.current = marker;
-    fetchAddress(10.762622, 106.660172);
-
-    marker.on("dragend", (e) => {
-      const { lat, lng } = e.target.getLatLng();
-      fetchAddress(lat, lng);
-    });
-
-    map.on("click", (e) => {
-      const { lat, lng } = e.latlng;
-      if (markerRef.current) {
-        markerRef.current.setLatLng([lat, lng]);
-      } else {
-        const newMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
-        markerRef.current = newMarker;
-        newMarker.on("dragend", (e) => {
-          const { lat, lng } = e.target.getLatLng();
-          fetchAddress(lat, lng);
-        });
-      }
-      fetchAddress(lat, lng);
-    });
-
-    async function fetchAddress(lat, lng) {
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
-        );
-        const data = await res.json();
-        onAddressSelect(data.display_name || `${lat}, ${lng}`);
-      } catch (err) {
-        console.error("Lỗi lấy địa chỉ:", err);
-        onAddressSelect(`${lat}, ${lng}`);
-      }
-    }
-
-    return () => map.remove();
-  }, [onAddressSelect]);
-
-  return (
-    <>
-      <div ref={mapRef} className="w-full h-64 border rounded-lg" />
-      <p className="mt-2 text-sm text-gray-500">
-        🔍 Bấm vào bản đồ hoặc kéo marker để chọn vị trí giao hàng.
-      </p>
-    </>
-  );
-};
-
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -445,110 +380,29 @@ const CheckoutPage = () => {
                 )}
               </div>
             </div>
-
-            <div className="p-6 space-y-6 bg-white shadow-md rounded-2xl">
-              <h2 className="text-xl font-semibold text-heading">Thông tin giao hàng</h2>
-              <form className="space-y-5 text-main" onSubmit={handleSubmit}>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Tên của bạn</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                    placeholder="Nhập tên của bạn"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Điện thoại</label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={form.phoneNumber}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                    placeholder="Nhập số điện thoại"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                    placeholder="Nhập email của bạn"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Chọn vị trí trên bản đồ</label>
-                  <LeafletMap onAddressSelect={setAddressFromMap} />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Địa chỉ chi tiết</label>
-                  <textarea
-                    value={addressFromMap}
-                    readOnly
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                    rows="3"
-                    placeholder="Địa chỉ tự động từ bản đồ"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Thời gian giao hàng</label>
-                  <input
-                    type="datetime-local"
-                    name="deliveryTime"
-                    value={form.deliveryTime}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                    placeholder="Chọn thời gian giao hàng"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Ghi chú</label>
-                  <textarea
-                    name="note"
-                    value={form.note}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                    rows="2"
-                    placeholder="Thêm ghi chú (tùy chọn)"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-sub">Phương thức thanh toán</label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="cash"
-                        checked={paymentMethod === "cash"}
-                        onChange={handlePaymentMethodChange}
-                        className="mr-2"
-                      />
-                      Tiền mặt
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="bank_transfer"
-                        checked={paymentMethod === "bank_transfer"}
-                        onChange={handlePaymentMethodChange}
-                        className="mr-2"
-                      />
-                      Chuyển khoản
-                    </label>
-                  </div>
-                </div>
-              </form>
-            </div>
-
+            <DeliveryForm
+              form={form}
+              setForm={setForm}
+              addressFromMap={addressFromMap}
+              setAddressFromMap={setAddressFromMap}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              handleSubmit={handleSubmit}
+            />
+            <VoucherSection
+              isLoggedIn={isLoggedIn}
+              userVouchers={userVouchers}
+              selectedVoucher={selectedVoucher}
+              setSelectedVoucher={setSelectedVoucher}
+              discount={discount}
+              setDiscount={setDiscount}
+              promoMessage={promoMessage}
+              setPromoMessage={setPromoMessage}
+              voucherInput={voucherInput}
+              setVoucherInput={setVoucherInput}
+              formatCurrency={formatCurrency}
+              subtotal={subtotal}
+            />
           </div>
         </div>
       </main>

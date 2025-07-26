@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const ToastMessage = ({ type = 'success', message, onClose }) => {
   const styles = {
@@ -19,6 +19,14 @@ const ToastMessage = ({ type = 'success', message, onClose }) => {
   };
 
   const { bg, border, text, emoji, title } = styles[type] || styles.success;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose?.(); // Gọi onClose nếu có
+    }, 2000); // 2 giây
+
+    return () => clearTimeout(timer); // Dọn dẹp khi component unmount
+  }, [onClose]);
 
   return (
     <div className="fixed bottom-4 right-4 z-50 animate-fade-in-up">
