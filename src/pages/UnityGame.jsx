@@ -42,7 +42,7 @@ const UnityGame = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen text-gray-800 bg-gradient-to-b from-yellow-50 to-white">
+<div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-section text-main">
       <Header />
 
       <main className="container flex-1 px-4 py-12 mx-auto max-w-7xl sm:px-6 lg:px-8">

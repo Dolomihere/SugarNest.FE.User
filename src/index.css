@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
 @import "tailwindcss";
 
 :root {
@@ -928,5 +930,35 @@ h5,
 h6 {
   color: #d97706;
 }
+.discount-badge {
+  background: #e3342f;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 0.4rem 0.7rem;
+  clip-path: polygon(
+    10% 0%, 90% 0%,
+    100% 20%, 100% 40%,
+    90% 50%, 100% 60%,
+    100% 80%, 90% 100%,
+    10% 100%, 0% 80%,
+    0% 60%, 10% 50%,
+    0% 40%, 0% 20%
+  );
+  font-family: 'Arial Black', sans-serif;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  text-align: center;
+}
+
+
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(2deg); }
+  50% { transform: rotate(-2deg); }
+  75% { transform: rotate(1deg); }
+  100% { transform: rotate(0deg); }
+}
+
 /* Map */
 @import "leaflet/dist/leaflet.css";

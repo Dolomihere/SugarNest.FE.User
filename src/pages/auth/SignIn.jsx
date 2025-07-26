@@ -36,7 +36,7 @@ export default function SignInForm() {
       {/* 🧁 Modal thông báo đăng nhập thành công */}
       {showSuccess && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="relative bg-gradient-to-br from-[#fff1e6] to-[#fdebd3] border border-[#f9c89b] text-[#5c4033] rounded-2xl px-8 py-6 shadow-2xl text-center max-w-sm w-full animate-fade-in-down">
+<div className="relative bg-gradient-to-br from-[#fff8f1] to-[#fcead9] border border-[#f9c89b] text-[#5c4033] rounded-2xl px-8 py-6 shadow-2xl text-center max-w-sm w-full animate-fade-in-down">
         <div className="text-2xl font-semibold mb-2">🎉 Đăng nhập thành công!</div>
         <p className="text-sm text-[#8B5E3C] leading-relaxed">
           Chào mừng bạn đến với <strong>SugarNest</strong> 🍰 – nơi ngập tràn bánh ngọt và niềm vui!<br />
@@ -133,12 +133,13 @@ export default function SignInForm() {
             </Link>
           </div>
 
-          <button
-            onClick={handleLogin}
-            className="w-full py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-          >
-            Đăng nhập
-          </button>
+         <button
+          onClick={handleLogin}
+          className="w-full py-3 font-semibold text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors duration-300"
+        >
+          Đăng nhập
+        </button>
+
 
           <p className="text-center text-sm text-[#5C4033]">
             Chưa có tài khoản?{" "}

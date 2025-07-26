@@ -216,7 +216,7 @@ export default function UserPage() {
     }).format(value) + " VND";
 
   return (
-    <div className="flex flex-col min-h-screen text-gray-900 bg-gradient-to-b from-amber-50 to-white">
+<div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-section text-main">
       <Header />
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 min-h-[90vh] space-y-8">
         <div className="flex items-center justify-between mb-8">

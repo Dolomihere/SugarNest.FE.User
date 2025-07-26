@@ -6,7 +6,6 @@ export const publicApi = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 export const privateApi = axios.create({
   baseURL: 'http://14.225.218.217:5000/',
   headers: { 'Content-Type': 'application/json' },
