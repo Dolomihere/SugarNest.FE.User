@@ -5,12 +5,7 @@ import { faGamepad, faStar, faGift, faTrophy } from '@fortawesome/free-solid-svg
 
 export default function GamePage() {
   const [reloadTrigger, setReloadTrigger] = useState(true);
-  const { response: apiResponse, loading } = useFetchList(
-    `games/mine`,
-    "",
-    {},
-    reloadTrigger
-  );
+  const { response: apiResponse, loading } = useFetchList(`games/mine`, "", {}, reloadTrigger);
 
   useEffect(() => {
     const sendDataToUnity = () => {

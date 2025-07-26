@@ -74,6 +74,10 @@ serverApi.interceptors.response.use(
           // 🧹 Clear tokens and redirect to login
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
+
+          const attemptedPath = window.location.pathname + window.location.search;
+          localStorage.setItem('lastAccessPath', attemptedPath);
+
           window.location.href = '/auth/signin'; // Or use router.push('/login') in React
         }
 
