@@ -375,7 +375,7 @@ export function ProductDetailPage() {
                                 <input
                                   type="radio"
                                   name={group.optionGroupId}
-                                  value={itemId"
+                                  value={itemId}
                                   onChange={handleRadioChange}
                                   className="accent-amber-600"
                                 />
@@ -519,7 +519,7 @@ export function ProductDetailPage() {
 
                 >
                   {showRatings ? "Ẩn đánh giá" : "Hiện đánh giá"}
-                </button>
+                </Link>
               </div>
               {showRatings && ratingsData.data.length > 0 ? (
                 <div className="space-y-6">

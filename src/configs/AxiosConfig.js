@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-
 export const publicApi = axios.create({
   baseURL: "http://14.225.218.217:5000/",
   headers: {
@@ -11,7 +10,7 @@ export const publicApi = axios.create({
 export const privateApi = axios.create({
   baseURL: 'http://14.225.218.217:5000/',
   headers: { 'Content-Type': 'application/json' },
-
+});
 
 let isRefreshing = false;
 let failedQueue = [];

@@ -16,7 +16,6 @@ const OrderConfirmation = () => {
   const {
     orderId,
     paymentStatus,
-    orderData,
     showSuccessMessage,
     checkoutData
   } = location.state || {};
