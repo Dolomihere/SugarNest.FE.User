@@ -11,13 +11,14 @@ export function Header() {
   const [avatar, setAvatar] = useState("/public/images/owner.png");
 
   const navLinks = [
-    { to: "/", label: "Trang chủ", end: true },
-    { to: "/products", label: "Sản phẩm" },
-    { to: "/about", label: "Về chúng tôi" },
-    { to: "/contact", label: "Liên hệ" },
-    { to: "/discounts", label: "Chương trình giảm giá" },
-    { to: "/unity-game", label: "Giải trí" },
-    { to: "/order-history", label: "Lịch sử đơn hàng" },
+    { to: '/', label: 'Trang chủ', end: true },
+    { to: '/products', label: 'Sản phẩm' },
+    
+    { to: '/about', label: 'Về chúng tôi' },
+    { to: '/contact', label: 'Liên hệ' },
+    { to: '/discounts', label: 'Chương trình giảm giá' },
+    { to: '/unity-game', label: 'Giải trí' },
+
   ];
 
   useEffect(() => {
@@ -33,10 +34,8 @@ export function Header() {
           console.log("API Response:", response.data); // Debug
           if (response.data.isSuccess && response.data.data) {
             const userData = response.data.data;
-            setAvatar(
-              userData.avatar ||
-                "https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg"
-            );
+            setAvatar(userData.avatar || '/public/images/owner.png');
+
           }
         } catch (err) {
           console.error("Lỗi khi tải dữ liệu người dùng:", err);
@@ -50,10 +49,9 @@ export function Header() {
     localStorage.removeItem("accessToken");
     sessionStorage.removeItem("accessToken");
     setIsLoggedIn(false);
-    setAvatar(
-      "https://png.pngtree.com/png-clipart/20191120/original/pngtree-outline-user-icon-png-image_5045523.jpg"
-    );
-    navigate("/");
+    setAvatar('/public/images/owner.png');
+    navigate('/');
+
   };
 
   return (

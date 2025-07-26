@@ -3,14 +3,21 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
-import ProductService from "../services/ProductService";
-import ProductOptionService from "../services/ProductOptionService";
+import { publicApi } from "../configs/AxiosConfig";
+
+const endpoint = "/products/sellable";
+
+const ProductService = {
+  getAllProducts: async () => await publicApi.get(endpoint),
+  getProductById: async (productId) => await publicApi.get(`${endpoint}/${productId}`),
+};
+
+export default ProductService;import ProductOptionService from "../services/ProductOption";
+
 import CartService from "../services/CartService";
+import FavoriteService from "../services/FavoriteService";
 import RatingService from "../services/RatingService";
-import { StarRating } from "./StarRating";
-import { RatingModal } from "./RatingModal";
-import { RatingForm } from "./RatingForm";
-import { SuggestedProducts } from "./SuggestedProducts";
+
 
 export function ProductDetailPage() {
   const { id } = useParams();
@@ -34,38 +41,7 @@ export function ProductDetailPage() {
     sessionStorage.getItem("accessToken");
   const isLoggedIn = token && token !== "undefined" && token !== "null";
 
-  // Handle click outside to close modal
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        setSelectedRating(null);
-        setCurrentImageIndex(0); // Reset image index when closing modal
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
-  // Fetch user data if logged in
-  const [userName, setUserName] = useState("");
-  useEffect(() => {
-    if (isLoggedIn) {
-      const decodeToken = () => {
-        try {
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          setUserName(payload.name || "Người dùng");
-        } catch (e) {
-          console.error("Error decoding token:", e);
-          setUserName("Người dùng");
-        }
-      };
-      decodeToken();
-    }
-  }, [token, isLoggedIn]);
-
-  // Fetch cart data
   const { data: cartData } = useQuery({
     queryKey: ["userCart", token],
     queryFn: async () => {
@@ -78,19 +54,15 @@ export function ProductDetailPage() {
     enabled: !!isLoggedIn,
   });
 
-  // Fetch product data
+
   const { data: product = {}, isLoading: isProductLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: () =>
       ProductService.getProductById(id).then((res) => res.data.data),
   });
 
-  // Fetch product options
-  const {
-    data: optionGroups = [],
-    isLoading: isOptionsLoading,
-    error: optionsError,
-  } = useQuery({
+  const { data: optionGroups = [], isLoading: isOptionsLoading, error: optionsError } = useQuery({
+
     queryKey: ["options", id],
     queryFn: () => ProductOptionService.getOptionOfProductById(id),
     onError: (error) => {
@@ -106,35 +78,30 @@ export function ProductDetailPage() {
     },
   });
 
-  // Fetch ratings for the product
-  const { data: ratingsData = { data: [] }, isLoading: isRatingsLoading } =
-    useQuery({
-      queryKey: ["ratings", id],
-      queryFn: () =>
-        RatingService.getRatingsByProduct(id, token).then((res) => res.data),
-      enabled: !!id,
-    });
 
-  // Calculate average rating
-  const averageRating = useMemo(() => {
-    if (ratingsData.data.length === 0) return 0;
-    const totalStars = ratingsData.data.reduce((sum, r) => {
-      if (typeof r.ratingPoint !== "number" || isNaN(r.ratingPoint)) {
-        console.error("Invalid ratingPoint found in ratings data:", r);
-        setErrorMessage(
-          "Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá."
-        );
-        return sum;
-      }
-      return sum + r.ratingPoint;
-    }, 0);
-    return totalStars / ratingsData.data.length;
-  }, [ratingsData]);
-
-  // Fetch suggested products
   const { data: products = [] } = useQuery({
     queryKey: ["suggested"],
     queryFn: () => ProductService.getAllProducts().then((res) => res.data.data),
+  });
+
+  const { data: favorites = [] } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: () => FavoriteService.getFavorites().then((res) => res.data.data),
+    enabled: !!isLoggedIn,
+  });
+
+  const isFavorite = useMemo(
+    () => favorites.some((fav) => fav.productId === product.productId),
+    [favorites, product.productId]
+  );
+  const {
+    data: ratings = [],
+    isLoading: isRatingsLoading,
+    refetch: refetchRatings,
+  } = useQuery({
+    queryKey: ["ratings", id],
+    queryFn: () =>
+      RatingService.getRatingsByProductId(id).then((res) => res.data.data),
   });
 
   const suggestions = useMemo(() => {
@@ -203,6 +170,26 @@ export function ProductDetailPage() {
     }));
   };
 
+  const toggleFavorite = async () => {
+    if (!isLoggedIn) {
+      alert("Vui lòng đăng nhập để sử dụng chức năng yêu thích.");
+      navigate("/signin", { state: { from: `/products/${id}` } });
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        await FavoriteService.putFavorites([product.productId]);
+      } else {
+        await FavoriteService.addFavorites([product.productId]);
+      }
+      queryClient.invalidateQueries(["favorites"]);
+    } catch (err) {
+      console.error("Lỗi khi cập nhật yêu thích:", err.response?.data || err.message);
+      alert("Đã xảy ra lỗi khi cập nhật danh sách yêu thích.");
+    }
+  };
+
   const handleAddToCart = async () => {
     if (!isLoggedIn) {
       setErrorMessage("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
@@ -236,16 +223,13 @@ export function ProductDetailPage() {
 
     try {
       const normalizeOptions = (options) =>
-        options
-          ?.map((opt) => ({
-            optionGroupId: opt.optionGroupId || opt.option_group_id,
-            optionItemId: opt.optionItemId || opt.option_item_id,
-          }))
-          ?.sort(
-            (a, b) =>
-              a.optionGroupId.localeCompare(b.optionGroupId) ||
-              a.optionItemId.localeCompare(b.optionItemId)
-          ) || [];
+        options?.map((opt) => ({
+          optionGroupId: opt.optionGroupId || opt.option_group_id,
+          optionItemId: opt.optionItemId || opt.option_item_id,
+        }))?.sort((a, b) =>
+          a.optionGroupId.localeCompare(b.optionGroupId) || a.optionItemId.localeCompare(b.optionItemId)
+        ) || [];
+
 
       const existingItem = cartData?.cartItems?.find(
         (cartItem) =>
@@ -255,11 +239,8 @@ export function ProductDetailPage() {
       );
 
       if (existingItem) {
-        await CartService.updateQuantity(
-          existingItem.cartItemId,
-          existingItem.quantity + quantity,
-          token
-        );
+        await CartService.updateQuantity(existingItem.cartItemId, existingItem.quantity + quantity, token);
+
       } else {
         await CartService.addItemToCart(item, token);
       }
@@ -299,12 +280,9 @@ export function ProductDetailPage() {
           <p className="text-center text-red-500">{errorMessage}</p>
         ) : (
           <>
-            {/* Product Details */}
-            <div className="relative flex flex-col gap-10 p-6 transition-shadow duration-300 bg-white border shadow-md border-amber-200 rounded-2xl hover:shadow-lg md:flex-row md:gap-12 lg:gap-16">
-              <button className="absolute text-xl transition-colors duration-200 top-4 right-4 text-amber-500 hover:text-red-500">
-                <i className="fa-solid fa-heart"></i>
-              </button>
-              <div className="flex items-center justify-center w-full overflow-hidden rounded-2xl md:w-1/2">
+            <div className="flex flex-col gap-10 p-6 bg-white shadow-lg rounded-2xl md:flex-row md:gap-12 lg:gap-16">
+              <div className="flex items-center justify-center w-full overflow-hidden md:w-1/2 rounded-xl">
+
                 <img
                   src={product.imgs?.[0] || "/images/placeholder.png"}
                   alt={product.name || "Sản phẩm"}
@@ -444,11 +422,14 @@ export function ProductDetailPage() {
                     Thêm vào giỏ hàng
                   </button>
                   <button
-                    className="text-2xl transition text-amber-500 hover:text-blue-500"
-                    title="Sao chép liên kết"
-                    onClick={handleCopy}
+                    onClick={toggleFavorite}
+                    className={`text-2xl transition hover:text-amber-600 ${
+                      isFavorite ? "text-amber-600" : "text-gray-400"
+                    }`}
+                    title={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
                   >
-                    <i className="fa-regular fa-copy fa-lg"></i>
+                    <i className={`fa${isFavorite ? "-solid" : "-regular"} fa-heart`}></i>
+
                   </button>
                   {copied && (
                     <div className="absolute px-2 py-1 text-xs text-white -translate-x-1/2 rounded shadow bg-amber-600 -top-8 left-1/2">
@@ -458,15 +439,84 @@ export function ProductDetailPage() {
                 </div>
               </div>
             </div>
-            {/* Ratings Section */}
+            <div className="space-y-8 mt-12">
+            <h3 className="text-2xl font-bold text-gray-800">Đánh giá từ người dùng</h3>
+              {isRatingsLoading ? (
+                <p className="text-gray-500">Đang tải đánh giá...</p>
+              ) : ratings.length === 0 ? (
+                <p className="text-gray-500">Chưa có đánh giá nào cho sản phẩm này.</p>
+              ) : (
+                <div className="space-y-6">
+                  {ratings.map((rating) => (
+                    <div
+                      key={rating.ratingId}
+                      className="p-4 bg-white rounded-xl shadow-sm border border-gray-100"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-amber-500 text-lg">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <i
+                              key={i}
+                              className={`fa-star ${i < rating.ratingPoint ? "fas" : "far"}`}
+                            ></i>
+                          ))}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {new Date(rating.createdAt).toLocaleDateString("vi-VN")}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-gray-800 whitespace-pre-line">{rating.comment}</p>
+                      {rating.imgs?.length > 0 && (
+                        <div className="flex gap-2 mt-3">
+                          {rating.imgs.map((url, idx) => (
+                            <img
+                              key={idx}
+                              src={url}
+                              alt={`Ảnh đánh giá ${idx + 1}`}
+                              className="w-24 h-24 object-cover rounded-md"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="space-y-8">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-gray-800">
-                  Đánh giá sản phẩm
-                </h3>
-                <button
-                  onClick={() => setShowRatings(!showRatings)}
-                  className="px-4 py-2 text-white rounded-lg bg-amber-600 hover:bg-amber-700"
+              <h3 className="text-2xl font-bold text-gray-800">Sản phẩm gợi ý</h3>
+ 
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
+                {suggestions.map((p) => (
+                  <Link
+                    key={p.productId}
+                    to={`/products/${p.productId}`}
+                    className="block transition-transform duration-300 hover:scale-105"
+                  >
+                    <div className="overflow-hidden bg-white shadow-md rounded-xl">
+                      <img
+                        src={p.imgs?.[0] || "/images/placeholder.png"}
+                        alt={p.name}
+                        className="object-cover w-full h-40"
+                      />
+                      <div className="p-4 text-center">
+                        <h4 className="text-lg font-semibold text-gray-800 transition hover:text-amber-600">
+                          {p.name}
+                        </h4>
+                        <p className="mt-1 font-medium text-amber-600">
+                          {Number(p.unitPrice).toLocaleString("vi-VN")}₫
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <div className="text-center">
+                <Link
+                  to="/products"
+                  className="inline-block px-6 py-3 text-white transition rounded-lg bg-amber-600 hover:bg-amber-700"
+
                 >
                   {showRatings ? "Ẩn đánh giá" : "Hiện đánh giá"}
                 </button>

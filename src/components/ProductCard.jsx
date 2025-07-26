@@ -3,17 +3,13 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import RatingService from "../services/RatingService";
 
-export function ProductCard({
-  product,
-  viewMode,
-  onAddFavorite,
-  isFavorite,
-  className,
-}) {
+
+export function ProductCard({ product, viewMode, onAddFavorite, onToggleFavorite, isFavorite }) {
   const {
     productId,
     name,
     unitPrice,
+    finalUnitPrice,
     imgs = ["/placeholder.jpg"],
     description = "",
     createdDate = "Feb 12, 2020",
@@ -53,32 +49,15 @@ export function ProductCard({
       const viewed = JSON.parse(localStorage.getItem("viewedProducts") || "[]");
       const alreadyExists = viewed.find((p) => p.productId === productId);
       if (!alreadyExists) {
-        const updated = [
-          ...viewed.slice(-9),
-          {
-            productId,
-            name,
-            unitPrice,
-            imgs,
-            averageRating,
-            reviewCount,
-            createdDate,
-          },
-        ];
+
+        const updated = [...viewed.slice(-9), { productId, name, unitPrice, finalUnitPrice, imgs, rating, reviews, createdDate }];
+
         localStorage.setItem("viewedProducts", JSON.stringify(updated));
       }
     } catch (error) {
       console.error("Error updating viewedProducts:", error);
     }
-  }, [
-    productId,
-    name,
-    unitPrice,
-    imgs,
-    averageRating,
-    reviewCount,
-    createdDate,
-  ]);
+  }, [productId, name, unitPrice,finalUnitPrice, imgs, rating, reviews, createdDate]);
 
   const productImg =
     Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : "/placeholder.jpg";
@@ -107,9 +86,11 @@ export function ProductCard({
             alt={name}
             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
           />
-          <div className="absolute top-3 left-3 px-3 py-1.5 text-base font-semibold text-amber-700 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-amber-300">
-            {unitPrice.toFixed(0)}₫
+          <div className="absolute top-2 left-2 px-3 py-1.5 text-base font-semibold text-yellow-700 bg-white/80 backdrop-blur-sm rounded-md shadow-md">
+            {typeof finalUnitPrice === 'number' ? `${finalUnitPrice.toFixed(0)}₫` : '—'}
+
           </div>
+
           <button
             onClick={handleFavoriteClick}
             className="absolute p-2 transition-all rounded-full top-3 right-3 hover:bg-amber-100 "
@@ -124,19 +105,11 @@ export function ProductCard({
           <h3 className="text-lg font-bold transition-all duration-300 text-amber-600 line-clamp-1 group-hover:line-clamp-none">
             {name}
           </h3>
-          <div className="flex items-center justify-between mt-3">
-            {ratingLoading ? (
-              <span className="text-base text-gray-500">Đang tải...</span>
-            ) : ratingError ? (
-              <span className="text-base text-red-500">Lỗi tải rating</span>
-            ) : (
-              <span className="text-base font-semibold text-amber-500">
-                {"★".repeat(Math.round(averageRating)) +
-                  "☆".repeat(5 - Math.round(averageRating))}
-              </span>
-            )}
-            <span className="text-sm text-gray-500">
-              {ratingLoading ? "Đang tải..." : `${reviewCount} đánh giá`}
+          
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-base font-semibold text-amber-500">
+              {"★".repeat(rating) + "☆".repeat(5 - rating)}
+
             </span>
           </div>
           <Link
@@ -164,8 +137,9 @@ export function ProductCard({
           alt={name}
           className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="absolute top-3 left-3 px-3 py-1.5 text-base font-semibold text-amber-700 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-amber-300">
-          {unitPrice.toFixed(0)}₫
+        <div className="absolute top-2 left-2 px-3 py-1.5 text-base font-semibold text-yellow-700 bg-white/80 backdrop-blur-sm rounded-md shadow-md">
+          {finalUnitPrice.toFixed(0)}₫
+
         </div>
          <button
             onClick={handleFavoriteClick}
@@ -178,14 +152,19 @@ export function ProductCard({
           </button>
       </Link>
       <div className="flex flex-col w-1/2 p-6">
-        <h3 className="mb-3 text-2xl font-bold tracking-tight text-amber-600">
-          {name}
-        </h3>
-        {description && (
-          <p className="mt-2 text-sm text-gray-600 line-clamp-3">
-            {description}
-          </p>
-        )}
+        <h3 className="mb-2 text-2xl font-bold text-amber-600">{name}</h3>
+        {description && <p className="mt-2 text-gray-600 line-clamp-3">{description}</p>}
+        <div className="flex items-center mt-6">
+          <img src={author.img} alt={author.name} className="w-12 h-12 rounded-full" />
+          <div className="ml-3">
+            <p className="text-base font-semibold text-gray-600 hover:underline">{author.name}</p>
+            <time className="text-sm text-gray-500" dateTime={createdDate}>
+              {createdDate}
+            </time>
+          </div>
+        </div>
+
+   
         <div className="flex items-center justify-between mt-4">
           {ratingLoading ? (
             <span className="text-lg text-gray-500">Đang tải...</span>

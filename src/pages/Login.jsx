@@ -4,36 +4,45 @@ import { useMutation } from '@tanstack/react-query'
 import { FcGoogle } from 'react-icons/fc'
 import { FaXTwitter } from 'react-icons/fa6'
 import { HiArrowLeft } from 'react-icons/hi'
+import { flushSync } from 'react-dom';
 
 import { AuthService } from '../services/AuthService'
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ userNameOrEmail: JSON.parse(sessionStorage.getItem('email')) || '', password: '' });
+  const [form, setForm] = useState({
+    userNameOrEmail: JSON.parse(sessionStorage.getItem('email')) || '',
+    password: '',
+  });
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const loginMutation = useMutation({
-    mutationFn: (formData) => AuthService.login(formData),
-    onSuccess: (res) => {
-      let token = res.data;
-
-      if (remember) {
-        localStorage.setItem('accessToken', token.accessToken);
-        localStorage.setItem('refreshToken', token.refreshToken);
-      }
-      else {
-        localStorage.setItem('accessToken', token.accessToken);
-      }
-      
-      let path = localStorage.getItem('lastAccessPath');
-
-      if (path) navigate(path);
-      else navigate("/");
+    mutationFn: async (formData) => {
+      const result = await AuthService.login(formData);
+      if (!result.success) throw new Error(result.message);
+      return result.data;
     },
+   onSuccess: (token) => {
+  if (remember) {
+    localStorage.setItem('accessToken', token.accessToken);
+    localStorage.setItem('refreshToken', token.refreshToken);
+  } else {
+    localStorage.setItem('accessToken', token.accessToken);
+  }
+
+  // Buộc React render ngay modal trước khi navigate
+  flushSync(() => setShowSuccess(true));
+
+  setTimeout(() => {
+    const path = localStorage.getItem('lastAccessPath');
+    navigate(path || '/');
+  }, 2000);
+},
+
     onError: (err) => {
-      setError('Đăng nhập thất bại. Vui lòng thử lại.');
-      console.error(err);
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
     },
   });
 
@@ -60,11 +69,21 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-dvh md:h-screen flex font-[Montserrat] bg-[#FFF9F4]">
-      <div className="flex flex-col flex-1 justify-center px-5 md:px-10 my-10">
+    <div className="min-h-dvh md:h-screen flex font-[Montserrat] bg-[#FFF9F4] relative">
+      
+      {/* Modal đăng nhập thành công */}
+     {showSuccess && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+          Đăng nhập thành công!
+        </div>
+      </div>
+    )}
 
+
+      {/* Form */}
+      <div className={`flex flex-col flex-1 justify-center px-5 md:px-10 my-10 transition-all duration-300 ${showSuccess ? 'blur-sm pointer-events-none' : ''}`}>
         <div className="flex flex-col gap-5 min-w-2/3 mx-auto bg-white rounded-xl shadow-md border border-[#F1D9C0] p-8">
-
           <Link to="/" className="flex text-[#5C4033] hover:underline text-sm">
             <HiArrowLeft className="mr-1 text-lg" />
             Quay về trang chủ
@@ -82,7 +101,6 @@ export function LoginPage() {
           )}
 
           <div className="flex gap-4">
-
             <button className="w-full py-2 px-3 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition text-[#5C4033] text-[15px] font-medium">
               <FcGoogle className="mr-2 text-xl" />
               Sign in with Google
@@ -92,7 +110,6 @@ export function LoginPage() {
               <FaXTwitter className="mr-2 text-xl" />
               Sign in with X
             </button>
-
           </div>
 
           <div className="text-center text-[#A67C52] text-sm">hoặc</div>
@@ -126,12 +143,13 @@ export function LoginPage() {
 
             <div className="flex justify-between text-sm">
               <label className="flex gap-2 text-[#5C4033]">
-                <input type="checkbox"
-                    id="remember"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                    className="accent-[#D9A16C]"
-                 />
+                <input
+                  type="checkbox"
+                  id="remember"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="accent-[#D9A16C]"
+                />
                 <span>Ghi nhớ đăng nhập</span>
               </label>
               <a href="#" className="text-[#A0522D] hover:underline">Quên mật khẩu?</a>
@@ -156,24 +174,21 @@ export function LoginPage() {
               Đăng ký ngay
             </Link>
           </p>
-
         </div>
       </div>
 
-      <div className="hidden md:block w-1/2">
-
+      {/* Hình ảnh bên phải */}
+      <div className={`hidden md:block w-1/2 transition-all duration-300 ${showSuccess ? 'blur-sm pointer-events-none' : ''}`}>
         <img
           src="/images/SignIn.png"
           alt="Bakery Promo"
           className="w-full h-full object-cover"
         />
-
         <div className="absolute bottom-5 right-5">
           <button className="bg-white/80 text-[#5C4033] px-6 py-2 rounded-full font-semibold shadow-md hover:bg-white">
             ORDER NOW
           </button>
         </div>
-
       </div>
     </div>
   )
