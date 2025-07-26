@@ -46,5 +46,5 @@ export function CustomCard () {
         
       </div>
     </div>
-  )
+  );
 }
