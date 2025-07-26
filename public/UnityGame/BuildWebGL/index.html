@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | Personal_1</title>
+    <title>Unity Web Player | SUGARNEST</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     
@@ -21,7 +21,7 @@
       <div id="unity-footer">
         <div id="unity-logo-title-footer"></div>
         <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">Personal_1</div>
+        <div id="unity-build-title">SUGARNEST</div>
       </div>
     </div>
     <script>
@@ -61,8 +61,8 @@
         codeUrl: buildUrl + "/Personal_1.wasm.br",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
-        productName: "Personal_1",
-        productVersion: "1.0",
+        productName: "SUGARNEST",
+        productVersion: "1.0.0",
         showBanner: unityShowBanner,
       };
 
@@ -122,16 +122,6 @@
             };
 
       document.body.appendChild(script);
-  // Khi người chơi hoàn tất, Unity gọi hàm này:
-  function sendScoreToParent(score, userName = "Người chơi") {
-    window.parent.postMessage({
-      type: "submitScore",
-      payload: {
-        score: score,
-        userName: userName
-      }
-    }, "*");
-  }
 
     </script>
   </body>

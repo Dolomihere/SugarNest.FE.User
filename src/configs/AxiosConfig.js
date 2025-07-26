@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-
 export const publicApi = axios.create({
   baseURL: "http://14.225.218.217:5000/",
   headers: {

@@ -397,6 +397,7 @@ export function ProductDetailPage() {
                                   type="radio"
                                   name={group.optionGroupId}
                                   value={item.optionItemId}
+
                                   onChange={handleRadioChange}
                                   className="accent-amber-600"
                                 />
@@ -468,7 +469,7 @@ export function ProductDetailPage() {
                   className="px-4 py-2 text-white rounded-lg bg-amber-600 hover:bg-amber-700"
                 >
                   {showRatings ? "Ẩn đánh giá" : "Hiện đánh giá"}
-                </button>
+                </Link>
               </div>
               {showRatings && ratingsData.data.length > 0 ? (
                 <div className="space-y-6">

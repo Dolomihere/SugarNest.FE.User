@@ -133,6 +133,7 @@ const isFavorite = (productId) =>
         break;
       case "2":
         sortBy = "finalUnitPrice";
+
         sortDescending = true;
         break;
       case "3":
