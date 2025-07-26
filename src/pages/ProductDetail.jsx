@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 import ProductService from "../services/ProductService";
-import ProductOptionService from "../services/ProductOption";
+import ProductOptionService from "../services/ProductOptionService";
 import CartService from "../services/CartService";
 import RatingService from "../services/RatingService";
 import { StarRating } from "./StarRating";
@@ -332,7 +332,7 @@ export function ProductDetailPage() {
                     <span className="font-medium text-gray-700">
                       Trọng lượng:
                     </span>{" "}
-                    500g
+                    rating
                   </p>
                   <p>
                     <span className="font-medium text-gray-700">
@@ -344,7 +344,7 @@ export function ProductDetailPage() {
                     <span className="font-medium text-gray-700">
                       Thành phần:
                     </span>{" "}
-                    Bột mì, đường, trứng, bơ, sữa, dầu thực vật,...
+                    Bột mì, đường, n, bơng, đườ, d, mì, dầu thực, n,...  
                   </p>
                   <p>
                     <span className="font-medium text-gray-700">
@@ -372,7 +372,7 @@ export function ProductDetailPage() {
                                 <input
                                   type="checkbox"
                                   name={group.optionGroupId}
-                                  value={item.optionItemId}
+                                  value={itemId}
                                   onChange={handleCheckboxChange}
                                   className="accent-amber-600"
                                 />
@@ -383,6 +383,7 @@ export function ProductDetailPage() {
                                     {Number(
                                       item.additionalPrice
                                     ).toLocaleString("vi-VN")}
+
                                     ₫)
                                   </span>
                                 </span>
@@ -396,7 +397,7 @@ export function ProductDetailPage() {
                                 <input
                                   type="radio"
                                   name={group.optionGroupId}
-                                  value={item.optionItemId}
+                                  value={itemId"
                                   onChange={handleRadioChange}
                                   className="accent-amber-600"
                                 />
@@ -423,7 +424,7 @@ export function ProductDetailPage() {
                 <div className="flex items-center gap-4 mt-6">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 text-xl font-bold text-gray-700 transition-colors duration-200 bg-gray-100 rounded-full hover:bg-amber-100"
+                    className="w-10 h-12 text-xl font-bold text-gray-700 transition-colors duration-200 bg-gray-100 rounded-full hover:bg-amber-100"
                   >
                     -
                   </button>
