@@ -14,8 +14,9 @@ export default {
         xl: '1rem',
         '2xl': '1.5rem',
       },
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+     fontFamily: {
+  sans: ['Inter', 'sans-serif'],
+
       },
     },
   },

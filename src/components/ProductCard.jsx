@@ -3,8 +3,13 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import RatingService from "../services/RatingService";
 
-
-export function ProductCard({ product, viewMode, onAddFavorite, onToggleFavorite, isFavorite }) {
+export function ProductCard({
+  product,
+  viewMode,
+  onAddFavorite,
+  isFavorite,
+  className,
+}) {
   const {
     productId,
     name,
@@ -14,6 +19,10 @@ export function ProductCard({ product, viewMode, onAddFavorite, onToggleFavorite
     description = "",
     createdDate = "Feb 12, 2020",
   } = product;
+
+  const discountPercent = unitPrice > finalUnitPrice
+  ? Math.round(((unitPrice - finalUnitPrice) / unitPrice) * 100)
+  : 0;
 
   // Giả sử token được lấy từ context hoặc state
   const token = "your-auth-token"; // TODO: Thay bằng logic lấy token thực tế
@@ -49,15 +58,35 @@ export function ProductCard({ product, viewMode, onAddFavorite, onToggleFavorite
       const viewed = JSON.parse(localStorage.getItem("viewedProducts") || "[]");
       const alreadyExists = viewed.find((p) => p.productId === productId);
       if (!alreadyExists) {
-
-        const updated = [...viewed.slice(-9), { productId, name, unitPrice, finalUnitPrice, imgs, rating, reviews, createdDate }];
-
+        const updated = [
+          ...viewed.slice(-9),
+          {
+            productId,
+            name,
+            unitPrice,
+            finalUnitPrice,
+            imgs,
+            averageRating,
+            reviewCount,
+            createdDate,
+          },
+        ];
         localStorage.setItem("viewedProducts", JSON.stringify(updated));
       }
     } catch (error) {
       console.error("Error updating viewedProducts:", error);
     }
-  }, [productId, name, unitPrice,finalUnitPrice, imgs, rating, reviews, createdDate]);
+  }, [
+    productId,
+    name,
+    unitPrice,
+    finalUnitPrice,
+
+    imgs,
+    averageRating,
+    reviewCount,
+    createdDate,
+  ]);
 
   const productImg =
     Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : "/placeholder.jpg";
@@ -68,9 +97,9 @@ export function ProductCard({ product, viewMode, onAddFavorite, onToggleFavorite
     if (onAddFavorite) onAddFavorite();
   };
 
-  const heartClassName = `text-2xl ${
-    isFavorite ? "text-amber-500" : "text-gray-400 hover:text-amber-500"
-  } transition-colors duration-300`;
+  const heartClassName = `${
+  isFavorite ? "text-amber-500" : "text-gray-400"
+} text-xl transition-colors duration-300`;
 
   if (viewMode === "grid") {
     return (
@@ -86,30 +115,49 @@ export function ProductCard({ product, viewMode, onAddFavorite, onToggleFavorite
             alt={name}
             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
           />
-          <div className="absolute top-2 left-2 px-3 py-1.5 text-base font-semibold text-yellow-700 bg-white/80 backdrop-blur-sm rounded-md shadow-md">
-            {typeof finalUnitPrice === 'number' ? `${finalUnitPrice.toFixed(0)}₫` : '—'}
-
+          <div className="absolute top-3 left-3 px-3 py-1.5 text-base font-semibold text-amber-700 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-amber-300">
+{typeof finalUnitPrice === "number" ? `${finalUnitPrice.toFixed(0)}₫` : ""}
           </div>
+         <button
+  onClick={handleFavoriteClick}
+  className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-all duration-200
+    ${isFavorite
+      ? "bg-amber-500 border-amber-500"
+      : "bg-white border-gray-300 hover:border-amber-500 hover:shadow-md"
+    }`}
+  aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+></button>
 
-          <button
-            onClick={handleFavoriteClick}
-            className="absolute p-2 transition-all rounded-full top-3 right-3 hover:bg-amber-100 "
-            aria-label={
-              isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"
-            }
-          >
-            <i className={`fa-regular fa-circle ${heartClassName}`}></i>
-          </button>
+
+
         </Link>
         <div className="flex flex-col flex-1 p-5">
-          <h3 className="text-lg font-bold transition-all duration-300 text-amber-600 line-clamp-1 group-hover:line-clamp-none">
+         <h3 className="flex items-center justify-between text-lg font-bold text-amber-600 truncate">
+          <span className="truncate block">
             {name}
-          </h3>
-          
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-base font-semibold text-amber-500">
-              {"★".repeat(rating) + "☆".repeat(5 - rating)}
+          </span>
+          {discountPercent > 0 && (
+            <span className="discount-badge ml-2">
+              -{discountPercent}%
+            </span>
+          )}
+        </h3>
 
+
+
+          <div className="flex items-center justify-between mt-3">
+            {ratingLoading ? (
+              <span className="text-base text-gray-500">Đang tải...</span>
+            ) : ratingError ? (
+              <span className="text-base text-red-500">Lỗi tải rating</span>
+            ) : (
+              <span className="text-base font-semibold text-amber-500">
+                {"★".repeat(Math.round(averageRating)) +
+                  "☆".repeat(5 - Math.round(averageRating))}
+              </span>
+            )}
+            <span className="text-sm text-gray-500">
+              {ratingLoading ? "Đang tải..." : `${reviewCount} đánh giá`}
             </span>
           </div>
           <Link
@@ -137,34 +185,37 @@ export function ProductCard({ product, viewMode, onAddFavorite, onToggleFavorite
           alt={name}
           className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="absolute top-2 left-2 px-3 py-1.5 text-base font-semibold text-yellow-700 bg-white/80 backdrop-blur-sm rounded-md shadow-md">
-          {finalUnitPrice.toFixed(0)}₫
-
+        <div className="absolute top-3 left-3 px-3 py-1.5 text-base font-semibold text-amber-700 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-amber-300">
+{typeof finalUnitPrice === "number" ? `${finalUnitPrice.toFixed(0)}₫` : ""}
         </div>
-         <button
-            onClick={handleFavoriteClick}
-            className="absolute p-2 transition-all rounded-full top-3 right-3 hover:bg-amber-100 "
-            aria-label={
-              isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"
-            }
-          >
-            <i className={`fa-regular fa-circle ${heartClassName}`}></i>
-          </button>
+          <button
+  onClick={handleFavoriteClick}
+  className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-all duration-200
+    ${isFavorite
+      ? "bg-amber-500 border-amber-500"
+      : "bg-white border-gray-300 hover:border-amber-500 hover:shadow-md"
+    }`}
+  aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+></button>
       </Link>
       <div className="flex flex-col w-1/2 p-6">
-        <h3 className="mb-2 text-2xl font-bold text-amber-600">{name}</h3>
-        {description && <p className="mt-2 text-gray-600 line-clamp-3">{description}</p>}
-        <div className="flex items-center mt-6">
-          <img src={author.img} alt={author.name} className="w-12 h-12 rounded-full" />
-          <div className="ml-3">
-            <p className="text-base font-semibold text-gray-600 hover:underline">{author.name}</p>
-            <time className="text-sm text-gray-500" dateTime={createdDate}>
-              {createdDate}
-            </time>
-          </div>
-        </div>
+        <h3 className="flex items-center gap-2 text-lg font-bold text-amber-600 truncate">
+        <span className="truncate block max-w-[calc(100%-60px)]">
+          {name}
+        </span>
+        {discountPercent > 0 && (
+          <span className="discount-badge flex-shrink-0">
+            -{discountPercent}%
+          </span>
+        )}
+      </h3>
 
-   
+
+        {description && (
+          <p className="mt-2 text-sm text-gray-600 line-clamp-3">
+            {description}
+          </p>
+        )}
         <div className="flex items-center justify-between mt-4">
           {ratingLoading ? (
             <span className="text-lg text-gray-500">Đang tải...</span>

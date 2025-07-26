@@ -13,13 +13,6 @@ const OrderConfirmation = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const {
-    orderId,
-    paymentStatus,
-    orderData,
-    showSuccessMessage,
-    checkoutData
-  } = location.state || {};
 
 
   const token = localStorage.getItem("accessToken");

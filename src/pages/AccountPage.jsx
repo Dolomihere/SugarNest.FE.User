@@ -266,7 +266,7 @@ const AccountPage = () => {
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fffaf3] text-brown-800">
+<div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-section text-main">
       <Header />
 
       <main className="w-full px-4 py-8 mx-auto space-y-6 max-w-7xl">
