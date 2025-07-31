@@ -294,15 +294,6 @@ export default function UserPage() {
               <thead className="">
                 <tr className="text-sm font-semibold text-gray-700">
                   <th className="w-12 px-6 py-4 rounded-tl-xl">
-                  <input
-                    type="checkbox"
-                    className="accent-amber-600"
-                    checked={
-                      cartData?.cartItems?.length > 0 &&
-                      selectedItems.length === cartData.cartItems.length
-                    }
-                    onChange={handleSelectAll}
-                  />
                   </th>
                   <th className="px-6 py-4 text-left">Sản Phẩm</th>
                   <th className="px-6 py-4 text-left">Giá</th>
@@ -318,12 +309,6 @@ export default function UserPage() {
                     className="transition duration-300 "
                   >
                     <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="accent-amber-600"
-                      checked={selectedItems.includes(item.cartItemId)}
-                      onChange={() => handleSelectItem(item.cartItemId)}
-                    />
                     </td>
                     <td className="flex items-center gap-4 px-6 py-4">
                       <div className="overflow-hidden rounded-lg shadow-sm">
@@ -401,15 +386,6 @@ export default function UserPage() {
           <div className="p-6 space-y-6 bg-white border border-gray-100 shadow-lg rounded-xl">
             <div className="pt-4 space-y-3 text-sm text-gray-700 border-t border-gray-200">
               <div className="flex justify-between">
-                <span className="font-medium">Tạm tính:</span>
-                <span>
-                  {formatCurrency(
-                    cartData?.cartItems?.reduce(
-                      (sum, item) => sum + item.total,
-                      0
-                    ) ?? 0
-                  )}
-                </span>
               </div>
               <div className="flex justify-between text-base font-bold text-gray-800">
                 <span>Tổng thanh toán:</span>
@@ -431,9 +407,9 @@ export default function UserPage() {
             {isLoggedIn ? (
               <button
                 onClick={handleCheckout}
-                className="w-full py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out transform rounded-lg shadow-md bg-amber-600 hover:bg-amber-700 hover:scale-105"
+                className="w-full py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out transform rounded-lg shadow-md bg-amber-600 hover:bg-amber-700 hover:scale-103"
               >
-                Thanh Toán Ngay
+                Đặt mua ngay
               </button>
             ) : (
               <button

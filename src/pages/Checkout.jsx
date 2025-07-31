@@ -52,12 +52,14 @@ const CheckoutPage = () => {
     enabled: isLoggedIn,
   });
 
+  // Format currency
   const formatCurrency = (value) =>
     new Intl.NumberFormat("vi-VN", {
       style: "decimal",
       minimumFractionDigits: 0,
     }).format(value) + " VND";
 
+  // Clear cart mutation
   const clearCartMutation = useMutation({
     mutationFn: async () => {
       for (const item of cartItems) {
@@ -83,6 +85,7 @@ const CheckoutPage = () => {
     },
   });
 
+  // Calculate shipping fee based on address
   useEffect(() => {
     const fetchCoordinatesAndShippingFee = async () => {
       if (!addressFromMap) {
@@ -91,7 +94,7 @@ const CheckoutPage = () => {
       }
 
       try {
-        // Kiểm tra nếu addressFromMap đã chứa tọa độ dạng "lat, lng"
+        // Check if addressFromMap contains coordinates
         const coordsMatch = addressFromMap.match(
           /^(-?\d+\.\d+),\s*(-?\d+\.\d+)/
         );
@@ -101,7 +104,7 @@ const CheckoutPage = () => {
           lat = parseFloat(coordsMatch[1]);
           lng = parseFloat(coordsMatch[2]);
         } else {
-          // Lấy tọa độ từ Nominatim API
+          // Fetch coordinates from Nominatim API
           const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
               addressFromMap
@@ -116,10 +119,10 @@ const CheckoutPage = () => {
           }
         }
 
-        // Cập nhật tọa độ
+        // Update coordinates
         setCoordinates({ lat, lng });
 
-        // Tính phí vận chuyển
+        // Calculate shipping fee
         if (lat && lng) {
           const response = await OrderService.calculateShippingFee({
             lat,
@@ -140,16 +143,12 @@ const CheckoutPage = () => {
     fetchCoordinatesAndShippingFee();
   }, [addressFromMap]);
 
+  // Calculate totals
   const subtotal =
     cartItems.reduce((sum, item) => sum + item.total, 0) ||
     initialSubtotal ||
     0;
   const tempTotal = subtotal + shippingFee;
-  // alert(
-  //   `Tổng tạm tính: ${formatCurrency(
-  //     tempTotal
-  //   )}\nPhí vận chuyển: ${formatCurrency(shippingFee)}`
-  // );
   const discountAmount =
     discount > 0 && selectedVoucher
       ? selectedVoucher.hardValue
@@ -158,11 +157,13 @@ const CheckoutPage = () => {
       : 0;
   const total = tempTotal - discountAmount;
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    // Validation
     if (!form.name.trim()) {
       setError("Vui lòng nhập tên của bạn");
       setLoading(false);
@@ -185,6 +186,11 @@ const CheckoutPage = () => {
     }
     if (!addressFromMap.trim()) {
       setError("Vui lòng chọn địa chỉ giao hàng trên bản đồ");
+      setLoading(false);
+      return;
+    }
+    if (!form.deliveryTime) {
+      setError("Vui lòng chọn thời gian giao hàng");
       setLoading(false);
       return;
     }
@@ -215,7 +221,7 @@ const CheckoutPage = () => {
         address: addressFromMap,
         longitude: coordinates.lng,
         latitude: coordinates.lat,
-        deliveryTime: form.deliveryTime || "2025-07-19T22:25:00Z",
+        deliveryTime: form.deliveryTime,
         customerName: form.name,
         email: form.email,
         phoneNumber: form.phoneNumber,
@@ -422,6 +428,9 @@ const CheckoutPage = () => {
               formatCurrency={formatCurrency}
               subtotal={subtotal}
             />
+            {error && (
+              <p className="mt-4 text-sm text-red-600">{error}</p>
+            )}
           </div>
         </div>
       </main>
