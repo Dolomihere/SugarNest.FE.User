@@ -51,7 +51,6 @@ export default function Chat() {
   const [connecting, setConnecting] = useState(false);
   const [sendRipple, setSendRipple] = useState(false);
   const messagesEndRef = useRef(null);
-  const audioRef = useRef(null);
   const [userClosed, setUserClosed] = useState(false);
 
   const sendMessage = (customInput) => {
@@ -73,7 +72,6 @@ export default function Chat() {
         ...prev,
         { sender: "bot", text: `${reply.answer} ${reply.emoji}` },
       ]);
-      audioRef.current?.play();
     }, reply.emoji === "🎧" ? 1500 : 1000);
   };
 
@@ -106,15 +104,13 @@ export default function Chat() {
   setVisible(false);
   setTimeout(() => {
     setOpen(false);
-    setUserClosed(true); // Mark as user closed manually
+    setUserClosed(true);
   }, 300);
 };
 
 
   return (
     <>
-      <audio ref={audioRef} src="https://assets.mixkit.co/sfx/download/mixkit-bell-notification-933.wav" preload="auto" />
-
       {!open && (
         <button
           onClick={handleOpen}
@@ -130,7 +126,7 @@ export default function Chat() {
             flex flex-col transition-all duration-300 transform
             ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
         >
-          {/* Header */}
+
           <div className="bg-[#d4a373] text-white text-center py-3 font-semibold text-lg relative shadow-md rounded-t-2xl">
             <FontAwesomeIcon icon={faCakeCandles} className="mr-2" />
             Trợ Lý Bánh Ngọt
@@ -143,31 +139,37 @@ export default function Chat() {
             </button>
           </div>
 
-          {/* Chat content */}
           <div className="flex-1 p-4 space-y-3 overflow-y-auto bg-[#fffaf7] text-sm scroll-smooth">
+
             {messages.map((msg, index) => (
               <div
                 key={index}
                 className={`flex items-end ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
+
                 {msg.sender === "bot" && (
                   <div className="w-8 h-8 mr-2 flex-shrink-0 bg-[#f2d5b8] text-white rounded-full flex items-center justify-center text-xs">
                     <FontAwesomeIcon icon={faCakeCandles} />
                   </div>
                 )}
+                
                 <div
                   className={`px-4 py-2 rounded-2xl max-w-[70%] shadow-md transition transform duration-200
                     ${msg.sender === "user" ? "bg-[#f2d5b8] text-gray-800" : "bg-[#fcefe6] text-gray-700"}`}
                 >
                   {msg.text}
                 </div>
+
                 {msg.sender === "user" && (
                   <div className="w-8 h-8 ml-2 flex-shrink-0 bg-[#d4a373] text-white rounded-full flex items-center justify-center text-xs">
                     <FontAwesomeIcon icon={faUser} />
                   </div>
                 )}
+
               </div>
+
             ))}
+
             {typing && (
               <div className="flex items-center gap-2 text-xs text-gray-400 pl-10">
                 {connecting ? (
@@ -180,10 +182,10 @@ export default function Chat() {
                 )}
               </div>
             )}
+
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input + Gợi ý */}
           <div className="flex flex-col gap-2 p-3 border-t border-[#eac9aa] bg-[#fffaf7]">
             <div className="relative flex items-center gap-3">
               <input
@@ -194,6 +196,7 @@ export default function Chat() {
                 placeholder="Bạn muốn hỏi gì?"
                 className="flex-1 px-4 py-2 text-sm rounded-full border border-[#deb887] bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-[#d4a373]"
               />
+
               <button
                 onClick={() => sendMessage()}
                 className={`bg-[#d4a373] hover:bg-[#c28c5d] text-white px-4 py-2 rounded-full transition-all duration-300 overflow-hidden relative ${
@@ -205,6 +208,7 @@ export default function Chat() {
             </div>
 
             <div className="flex flex-wrap gap-2 text-xs">
+
               {faqList.slice(0, 4).map((item, idx) => (
                 <button
                   key={idx}
@@ -214,12 +218,13 @@ export default function Chat() {
                   {item.keywords.join(" + ")}
                 </button>
               ))}
+
             </div>
           </div>
+
         </div>
       )}
 
-      {/* Custom styles */}
       <style>{`
         .animate-ping-once::after {
           content: '';
