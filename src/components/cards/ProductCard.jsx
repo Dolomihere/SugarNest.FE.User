@@ -1,144 +1,48 @@
 import { Link } from 'react-router-dom';
 import StarRating from '../StarRating';
 
-export default function ProductCard(item, viewMode = "grid") {
+export default function ProductCard({ product }) {
 
-  if (viewMode === "grid") {
-    return (
-      <div className={`relative flex flex-col h-full min-h-[420px] max-w-sm rounded-xl bg-white border-2 border-amber-200 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group`}>
-
-        <Link
-          to={`/products/${item.productId}`}
-          className="relative block overflow-hidden rounded-t-xl h-60"
-        >
-          <img
-            src={item.productImg[0]}
-            alt={item.name}
-            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
-          />
-
-          <div className="absolute top-3 left-3 px-3 py-1.5 text-base font-semibold text-amber-700 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-amber-300">
-            {typeof finalUnitPrice === "number" ? `${finalUnitPrice.toFixed(0)}₫` : ""}
-          </div>
-
-          <button
-            onClick={handleFavoriteClick}
-            className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-all duration-200
-              ${isFavorite
-                ? "bg-amber-500 border-amber-500"
-                : "bg-white border-gray-300 hover:border-amber-500 hover:shadow-md"
-              }`}
-          ></button>
-
-        </Link>
-
-        <div className="flex flex-col flex-1 p-5">
-         <h3 className="flex items-center justify-between text-lg font-bold text-amber-600 truncate">
-
-          <span className="truncate block">{item.name}</span>
-
-            {discountPercent > 0 && (
-              <span className="discount-badge ml-2">
-                -{discountPercent}%
-              </span>
-            )}
-
-          </h3>
-
-          {/* <div className="flex items-center justify-between mt-3">
-            {ratingLoading ? (
-              <span className="text-base text-gray-500">Đang tải...</span>
-            ) : ratingError ? (
-              <span className="text-base text-red-500">Lỗi tải rating</span>
-            ) : (
-              <span className="text-base font-semibold text-amber-500">
-                <StarRating averageRating={data?.averageRatingPoint ?? 0} />
-              </span>
-            )}
-            <span className="text-sm text-gray-500">
-              {ratingLoading ? "Đang tải..." : `${reviewCount} đánh giá`}
-            </span>
-          </div> */}
-
-          <Link
-            to={`/products/${productId}`}
-            className="px-4 py-2 mt-4 text-sm font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-amber-500 hover:bg-amber-600 hover:scale-105 active:scale-95"
-          >
-            Xem Chi Tiết
-          </Link>
-
-        </div>
-      </div>
-    );
-  }
-
-  // Blog view
   return (
-    <div
-      className={`relative flex flex-row w-full max-w-full overflow-hidden bg-white rounded-xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300 group ${className}`}
-    >
-      <Link
-        to={`/products/${productId}`}
-        className="relative block w-1/2 overflow-hidden rounded-l-xl h-80"
-      >
-        <img
-          src={productImg}
-          alt={name}
-          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
-        />
-        <div className="absolute top-3 left-3 px-3 py-1.5 text-base font-semibold text-amber-700 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-amber-300">
-{typeof finalUnitPrice === "number" ? `${finalUnitPrice.toFixed(0)}₫` : ""}
-        </div>
-          <button
-  onClick={handleFavoriteClick}
-  className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-all duration-200
-    ${isFavorite
-      ? "bg-amber-500 border-amber-500"
-      : "bg-white border-gray-300 hover:border-amber-500 hover:shadow-md"
-    }`}
-  aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-></button>
+    <div className="relative m-10 flex w-full max-w-xs flex-col overflow-hidden rounded-lg border border-gray-100 bg-white shadow-md">
+      
+      <Link className="relative flex h-60 overflow-hidden" to={`/products/${product.productId}`}>
+
+        {product.imgs.length > 0 
+        ? <img className="object-cover" src={product.imgs[0]} alt="product_image" />
+        : <div className="w-100 grid place-content-center">
+            <svg className="w-30 h-30 text-gray-200 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
+              <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z"/>
+            </svg>
+          </div>
+        }
+
+        <span className="absolute top-0 left-0 m-2 rounded-full bg-black px-2 text-center text-sm font-medium text-white">- {product.discountAmount} Đ</span>
       </Link>
-      <div className="flex flex-col w-1/2 p-6">
-        <h3 className="flex items-center gap-2 text-lg font-bold text-amber-600 truncate">
-        <span className="truncate block max-w-[calc(100%-60px)]">
-          {name}
-        </span>
-        {discountPercent > 0 && (
-          <span className="discount-badge flex-shrink-0">
-            -{discountPercent}%
-          </span>
-        )}
-      </h3>
 
+      <div className="px-5 pb-5">
+        <Link to={`/products/${product.productId}`}><h5 className="mt-2 text-xl tracking-tight text-slate-900">{product.name}</h5></Link>
 
-        {description && (
-          <p className="mt-2 text-sm text-gray-600 line-clamp-3">
-            {description}
-          </p>
-        )}
-        <div className="flex items-center justify-between mt-4">
-          {ratingLoading ? (
-            <span className="text-lg text-gray-500">Đang tải...</span>
-          ) : ratingError ? (
-            <span className="text-lg text-red-500">Lỗi tải rating</span>
-          ) : (
-            <span className="text-lg font-semibold text-amber-500">
-              {"★".repeat(Math.round(averageRating)) +
-                "☆".repeat(5 - Math.round(averageRating))}
-            </span>
-          )}
-          <span className="text-base text-gray-500">
-            {ratingLoading ? "Đang tải..." : `${reviewCount} đánh giá`}
-          </span>
+        <div className="mt-2 mb-5 flex items-center justify-between">
+            <span className="text-3xl font-bold text-slate-900">{product.finalUnitPrice.toLocaleString('en')} Đ</span>
+            
+            {product.discountAmount > 0 && <span className="text-sm text-slate-900 line-through">{product.unitPrice.toLocaleString('en')} Đ</span> }
         </div>
-        <Link
-          to={`/products/${productId}`}
-          className="w-40 px-4 py-2 mt-6 text-base font-semibold text-white transition-all duration-300 rounded-lg shadow-sm bg-amber-500 hover:bg-amber-600 hover:scale-105 active:scale-95"
-        >
-          Xem Chi Tiết
-        </Link>
+
+        <div className="flex items-center">
+          <StarRating averageRating={product.averageRatingPoint}></StarRating>
+          <span className="m-2">({product.averageRatingPoint})</span>
+        </div>
+
+        <a className="flex items-center justify-center cursor-pointer rounded-md mt-3 bg-slate-900 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-300">
+          <svg xmlns="http://www.w3.org/2000/svg" className="mr-2 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Thêm vào giỏ
+        </a>
+
       </div>
+
     </div>
   );
 }

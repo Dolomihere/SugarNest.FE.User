@@ -7,21 +7,21 @@ export const productService = {
     const res = await serverApi.get(`${path}/${productId}`);
     return res.data;
   },
-  getAll: async ({ queryKey }) => {
-    const [_key, { searchTerm, sortBy, sortDescending, isActive, categoryId, pageIndex, pageSize }] = queryKey;
-
-    const res = await axios.get('https://sugarnest-api.io.vn/products/sellable', {
-      params: {
-        SearchTerm: searchTerm,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        'Filter.IsActive': isActive,
-        'Filter.CategoryId': categoryId,
-        PageIndex: pageIndex,
-        PageSize: pageSize,
+  getAll: async (params) => {
+    const queryString = JSON.stringify(
+      {
+        SearchTerm: params.searchTerm || '',
+        SortBy: params.sortBy || 'CreatedAt',
+        SortDescending: params.sortDescending ?? true,
+        'Filter.IsActive': params.isActive ?? true,
+        'Filter.CategoryId': params.categoryId || undefined,
+        PageIndex: params.pageIndex ?? 1,
+        PageSize: params.pageSize ?? 10,
       },
-    });
+      { skipNulls: true }
+    );
 
+    const res = await serverApi.get(`${path}?${queryString}`);
     return res.data;
-  }
+  },
 };

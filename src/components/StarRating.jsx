@@ -1,5 +1,5 @@
 
-export default function StarRating (averageRating) {
+export default function StarRating ({ averageRating }) {
   const fullStars = Math.floor(averageRating);
   const partialStarPercentage = averageRating - fullStars;
 
