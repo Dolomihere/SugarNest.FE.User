@@ -520,7 +520,56 @@ const finalTotalPrice =
               </div>
               {showRatings && ratingsData.data.length > 0 ? (
                 <div className="space-y-6">
-                  {/* Average + List of Ratings */}
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={averageRating} />
+                    <span className="text-sm text-gray-500">
+                      {averageRating.toFixed(1)} ({ratingsData.data.length} đánh
+                      giá)
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    {ratingsData.data.map((r) => {
+                      if (
+                        typeof r.ratingPoint !== "number" ||
+                        isNaN(r.ratingPoint)
+                      ) {
+                        console.error("Invalid ratingPoint for rating:", r);
+                        return null;
+                      }
+                      return (
+                        <div
+                          key={r.ratingId}
+                          className="p-4 transition-shadow duration-300 bg-white border rounded-lg shadow cursor-pointer border-amber-200 hover:shadow-md"
+                          onClick={() => setSelectedRating(r)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <StarRating rating={r.ratingPoint} />
+                            <span className="text-sm text-gray-500">
+                              bởi {r.userName || "Người dùng ẩn danh"}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm text-gray-600">
+                            {r.comment || "Không có nhận xét"}
+                          </p>
+                          {r.imgs && r.imgs.length > 0 && (
+                            <div className="flex gap-2 mt-2 overflow-x-auto">
+                              {r.imgs.map((img, idx) => (
+                                <img
+                                  key={idx}
+                                  src={img}
+                                  alt={`Hình ảnh đánh giá ${idx + 1}`}
+                                  className="object-cover w-24 h-24 rounded"
+                                  onError={(e) =>
+                                    (e.target.src = "/images/placeholder.png")
+                                  }
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : showRatings ? (
                 <p className="text-sm text-gray-500">
@@ -559,7 +608,6 @@ const finalTotalPrice =
                 navigate={navigate}
               />
             </div>
-
             <SuggestedProducts suggestions={suggestions} />
           </>
         )}

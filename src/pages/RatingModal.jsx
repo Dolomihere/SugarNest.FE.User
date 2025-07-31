@@ -11,75 +11,62 @@ function RatingModal({
   if (!selectedRating) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
         ref={modalRef}
-        className="w-11/12 max-w-xl p-8 transition-all duration-300 transform bg-white border-2 shadow-2xl border-amber-300 rounded-2xl bg-gradient-to-br from-amber-50 to-white"
+className="w-11/12 max-w-lg p-6 border border-amber-300 rounded-xl shadow-xl bg-gradient-to-br from-[#FFF9F4] to-white transition-transform duration-300"
       >
-        <h4 className="mb-4 text-2xl font-bold text-amber-600 font-cute">
+        <h4 className="mb-4 text-xl font-semibold text-amber-600 font-cute">
           Chi tiết đánh giá
         </h4>
-        <div className="flex flex-col gap-6 md:flex-row">
-          <div className="w-full md:w-1/2">
-            <div className="relative w-64 h-64 overflow-hidden border-2 rounded-2xl border-amber-200">
+        <div className="flex flex-col gap-4 md:flex-row items-start">
+          {/* Hình ảnh */}
+          <div className="w-full md:w-2/5">
+            <div className="relative w-full aspect-square overflow-hidden rounded-xl border border-amber-200">
               {selectedRating.imgs && selectedRating.imgs.length > 0 ? (
                 <img
                   src={selectedRating.imgs[currentImageIndex]}
                   alt={`Hình ảnh đánh giá ${currentImageIndex + 1}`}
-                  className="object-cover w-full h-full transition-transform duration-300 rounded-2xl hover:scale-105"
+                  className="object-cover w-full h-full transition-transform duration-200 hover:scale-105"
                 />
               ) : (
                 <img
                   src="/images/placeholder.png"
                   alt="Hình ảnh mặc định"
-                  className="object-cover w-full h-full rounded-2xl"
+                  className="object-cover w-full h-full"
                 />
               )}
               {selectedRating.imgs && selectedRating.imgs.length > 1 && (
-                <div className="absolute inset-x-0 flex justify-between px-2 transform -translate-y-1/2 top-1/2">
+                <div className="absolute inset-0 flex justify-between items-center px-2">
                   <button
                     onClick={handlePrevImage}
-                    className="flex items-center justify-center w-8 h-8 text-white transition-colors duration-200 rounded-full bg-amber-600 hover:bg-amber-700"
+                    className="w-7 h-7 text-white bg-amber-600 hover:bg-amber-700 rounded-full flex items-center justify-center"
                     aria-label="Ảnh trước"
                   >
-                    <i className="fa-solid fa-chevron-left"></i>
+                    <i className="fa-solid fa-chevron-left text-sm"></i>
                   </button>
                   <button
                     onClick={handleNextImage}
-                    className="flex items-center justify-center w-8 h-8 text-white transition-colors duration-200 rounded-full bg-amber-600 hover:bg-amber-700"
+                    className="w-7 h-7 text-white bg-amber-600 hover:bg-amber-700 rounded-full flex items-center justify-center"
                     aria-label="Ảnh tiếp theo"
                   >
-                    <i className="fa-solid fa-chevron-right"></i>
+                    <i className="fa-solid fa-chevron-right text-sm"></i>
                   </button>
                 </div>
               )}
-              <button className="absolute text-xl transition-colors duration-200 text-amber-500 top-2 right-2 hover:text-red-500">
-                <i className="fa-solid fa-heart"></i>
-              </button>
-            </div>
-            <div className="mt-4">
-              <div>
-                <StarRating rating={selectedRating.ratingPoint} />
-                <span className="block mt-1 text-lg text-gray-500 font-cute">
-                  bởi: {selectedRating.userName || "Người dùng ẩn danh"}
-                </span>
-              </div>
-              <p className="mt-2 text-lg text-gray-600 font-cute">
-                Đánh giá: {selectedRating.comment || "Không có nhận xét"}
-              </p>
             </div>
           </div>
-          <div className="w-full space-y-2 text-right md:w-1/2">
-            <p className="text-lg text-gray-700 font-cute">
-              ID: {selectedRating.ratingId}
+
+          {/* Nội dung đánh giá */}
+          <div className="w-full md:w-3/5 md:pl-4">
+            <StarRating rating={selectedRating.ratingPoint} />
+            <span className="block mt-2 text-sm text-gray-500 font-cute">
+              bởi: {selectedRating.userName || "Người dùng ẩn danh"}
+            </span>
+            <p className="mt-1 text-sm text-gray-600 font-cute">
+              Đánh giá: {selectedRating.comment || "Không có nhận xét"}
             </p>
-            <p className="text-lg text-gray-700 font-cute">
-              Điểm đánh giá: {selectedRating.ratingPoint} sao
-            </p>
-            <p className="text-lg text-gray-700 font-cute">
-              Sản phẩm: {selectedRating.productId}
-            </p>
-            <p className="text-lg text-gray-700 font-cute">
+            <p className="mt-3 text-sm text-gray-700 font-cute">
               Ngày tạo:{" "}
               {new Date(selectedRating.createdAt).toLocaleString("vi-VN", {
                 hour: "2-digit",
@@ -89,17 +76,17 @@ function RatingModal({
                 year: "numeric",
               })}
             </p>
-            <p className="text-lg text-gray-700 font-cute">
-              Tạo bởi: {selectedRating.createdBy || "Không xác định"}
-            </p>
           </div>
         </div>
-        <button
-          className="px-6 py-2 mt-6 text-white transition-colors duration-200 rounded-full bg-amber-600 hover:bg-amber-700 font-cute"
-          onClick={closeModal}
-        >
-          Đóng
-        </button>
+
+        <div className="mt-5 text-right">
+          <button
+            className="px-4 py-1.5 text-sm text-white bg-amber-600 hover:bg-amber-700 rounded-full font-cute transition-colors"
+            onClick={closeModal}
+          >
+            Đóng
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -22,8 +22,8 @@ export function ProductShowcase() {
     img: `https://i.pinimg.com/736x/32/27/61/322761c59b52a2f0e4cce7a06347b65a.jpg`,
   }))
 
-  const enrichedCategories = (categories.length >= 4 ? categories : demoCategories).slice(0, 4)
-
+  const enrichedCategories = (categories.length >= 4 ? categories : demoCategories)
+  .slice(0, 4)
   const demoHotProducts = Array.from({ length: 4 }, (_, i) => ({
     productId: `hot-${i}`,
     name: `Bánh Hot ${i + 1}`,
@@ -53,45 +53,48 @@ export function ProductShowcase() {
   return (
     <section className="px-4 md:px-24 py-16 space-y-24 bg-section text-main text-base">
       {/* Danh Mục Sản Phẩm */}
-      <div>
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-amber-600 mb-3">Danh Mục Sản Phẩm</h2>
-          <p className="text-heading max-w-2xl mx-auto">
-            Khám phá các loại bánh đa dạng, được làm thủ công mỗi ngày từ nguyên liệu tươi ngon nhất.
-          </p>
-        </div>
+      {/* Danh Mục Sản Phẩm */}
+<div>
+  <div className="text-center mb-10">
+    <h2 className="text-3xl md:text-4xl font-extrabold text-amber-600 mb-3">Danh Mục Sản Phẩm</h2>
+    <p className="text-heading max-w-2xl mx-auto">
+      Khám phá các loại bánh đa dạng, được làm thủ công mỗi ngày từ nguyên liệu tươi ngon nhất.
+    </p>
+  </div>
 
-        {loadingCategories ? (
-          <p className="text-center text-sub">Đang tải danh mục...</p>
-        ) : (
-          
-            <div className="px-24">
-              <div className="grid grid-cols-4 gap-12">
-            {enrichedCategories.map((cat) => (
-              <div
-                key={cat.categoryId}
-                className="bg-white rounded-xl shadow-md border border-orange-100 transition hover:-translate-y-1"
-              >
-                <img
-                  src={
-                    cat.img && cat.img.trim() !== ''
-                      ? cat.img
-                      : 'https://i.pinimg.com/736x/19/33/80/1933806d5ccb3e262fae2feadabe593a.jpg'
-                  }
-                  alt={cat.name}
-                  className="h-40 w-full object-cover object-center rounded-t-xl"
-                />
-                <div className="p-4 text-center">
-                  <h4 className="text-base font-semibold text-main truncate">{cat.name}</h4>
-                  <p className="text-sm text-sub mt-1">Khám phá ngay</p>
-                </div>
+  {loadingCategories ? (
+    <p className="text-center text-sub">Đang tải danh mục...</p>
+  ) : (
+    <div className="px-24">
+      <div className="grid grid-cols-4 gap-12">
+        {enrichedCategories.map((cat) => {
+          const imageUrl =
+            cat.img && cat.img.trim() !== ''
+              ? cat.img
+              : cat.imgs?.[0] || cat.imageUrls?.[0] || 'https://i.pinimg.com/736x/19/33/80/1933806d5ccb3e262fae2feadabe593a.jpg';
+
+          return (
+            <div
+              key={cat.categoryId}
+              className="bg-white rounded-xl shadow-md border border-orange-100 transition hover:-translate-y-1"
+            >
+              <img
+                src={imageUrl}
+                alt={cat.name}
+                className="h-40 w-full object-cover object-center rounded-t-xl"
+              />
+              <div className="p-4 text-center">
+                <h4 className="text-base font-semibold text-main truncate">{cat.name}</h4>
+                <p className="text-sm text-sub mt-1">Khám phá ngay</p>
               </div>
-            ))}
-          </div>
             </div>
-          
-        )}
+          );
+        })}
       </div>
+    </div>
+  )}
+</div>
+
 
       {/* Sản Phẩm Bán Chạy */}
       <div>

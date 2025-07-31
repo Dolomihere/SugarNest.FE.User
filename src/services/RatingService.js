@@ -77,6 +77,23 @@ const RatingService = {
       throw error;
     }
   },
+ getProductRatingPoint: async (productId, token) => {
+    try {
+      const response = await publicApi.get(`/ratings/${productId}/point`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log(`Phản hồi điểm đánh giá cho product ${productId}:`, response.data);
+      return response;
+    } catch (error) {
+      console.error(
+        `Lỗi lấy điểm đánh giá cho product ${productId}:`,
+        error.response?.data || error.message
+      );
+      return { data: { data: 0, reviewCount: 0 } };
+    }
+  },
 };
 
 export default RatingService;
