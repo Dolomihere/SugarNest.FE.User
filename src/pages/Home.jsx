@@ -1,5 +1,6 @@
 import { Header } from './layouts/Header'
 import { Footer } from './layouts/Footer'
+import { Link } from "react-router-dom";
 
 import { AboutAndReviews } from './layouts/home/AboutAndReview'
 import { ProductShowcase } from './layouts/home/ProductShowcase'
@@ -58,14 +59,18 @@ export function HomePage() {
 
           <div className="flex flex-wrap gap-4 mt-4">
           
-              <button className="btn-primary shadow-md hover:shadow-lg cursor-pointer">
-                Đặt bánh ngay
-              </button>
+               <Link
+              to="/products" className="btn-primary shadow-md hover:shadow-lg cursor-pointer">
+              Đặt bánh ngay
+                </Link>
 
            
-              <button className="text-amber-600 border border-amber-300 px-5 py-3 rounded-xl text-lg hover:bg-amber-100 transition cursor-pointer">
-                Liên hệ với chúng tôi
-              </button>
+              <Link
+              to="/contact"
+              className="text-amber-600 border border-amber-300 px-5 py-3 rounded-xl text-lg hover:bg-amber-100 transition cursor-pointer"
+            >
+              Liên hệ với chúng tôi
+            </Link>
           </div>
         </div>
 

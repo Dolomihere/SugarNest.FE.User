@@ -7,6 +7,7 @@ import { useDebouncedSearch } from "../core/hooks/useDebouncedSearch";
 import FavoriteService from "../services/FavoriteService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
+import RatingService from "../services/RatingService";
 
 export function ProductPage() {
   const [categories, setCategories] = useState([]);
