@@ -46,9 +46,8 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
-
       <main className="flex flex-col w-full gap-20 px-4 py-16 mx-auto max-w-7xl md:px-6 lg:px-8">
-        {/* Giới thiệu */}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -63,7 +62,6 @@ export default function AboutPage() {
           </p>
         </motion.div>
 
-        {/* Câu chuyện thương hiệu */}
         <section className="grid items-center gap-12 md:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -98,7 +96,6 @@ export default function AboutPage() {
           />
         </section>
 
-        {/* Timeline */}
         <section className="space-y-12">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -114,6 +111,7 @@ export default function AboutPage() {
             <div className="absolute left-1/2 top-0 h-full w-[3px] bg-yellow-500 -translate-x-1/2 z-0" />
 
             <div className="relative z-10 flex flex-col gap-20">
+              
               {timeline.map((item, index) => (
                 <motion.div
                   key={index}
@@ -163,11 +161,11 @@ export default function AboutPage() {
                   </div>
                 </motion.div>
               ))}
+
             </div>
           </div>
         </section>
 
-        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -182,8 +180,8 @@ export default function AboutPage() {
             Khám phá sản phẩm
           </Link>
         </motion.div>
-      </main>
 
+      </main>
     </div>
   );
 }
