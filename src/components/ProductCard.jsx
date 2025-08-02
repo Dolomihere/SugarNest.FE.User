@@ -114,9 +114,8 @@ export function ProductCard({
             alt={name}
             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
           />
-          <div className="absolute top-3 left-3 px-3 py-1.5 text-base font-semibold text-amber-700 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-amber-300">
-            {typeof finalUnitPrice === "number" ? `${finalUnitPrice.toFixed(0)}₫` : ""}
-          </div>
+         
+
           <button
             onClick={handleFavoriteClick}
             className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-all duration-200 ${
@@ -126,10 +125,25 @@ export function ProductCard({
           ></button>
         </Link>
         <div className="flex flex-col flex-1 p-5">
-          <h3 className="flex items-center justify-between text-lg font-bold text-amber-600 truncate">
-            <span className="truncate block">{name}</span>
-            {discountPercent > 0 && <span className="discount-badge ml-2">-{discountPercent}%</span>}
-          </h3>
+          <div className="flex flex-col">
+            <h3 className="text-lg font-bold text-amber-600 truncate">
+              {name}
+            </h3>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-lg font-bold text-red-600">
+                {finalUnitPrice.toLocaleString("vi-VN")}₫
+              </span>
+              {unitPrice > finalUnitPrice && (
+                <span className="text-sm text-gray-500 line-through">
+                  {unitPrice.toLocaleString("vi-VN")}₫
+                </span>
+              )}
+              {discountPercent > 0 && (
+                <span className="ml-auto discount-badge">-{discountPercent}%</span>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center justify-between mt-3">
             {ratingLoading ? (
               <span className="text-base text-gray-500">Đang tải...</span>
@@ -160,24 +174,33 @@ export function ProductCard({
           alt={name}
           className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="absolute top-3 left-3 px-3 py-1.5 text-base font-semibold text-amber-700 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-amber-300">
-          {typeof finalUnitPrice === "number" ? `${finalUnitPrice.toFixed(0)}₫` : ""}
-        </div>
-        <button
-          onClick={handleFavoriteClick}
-          className={`absolute p-2 rounded-full top-3 right-3 border transition-all ${
-            isFavorite ? "bg-amber-100 border-amber-400" : "bg-white border-gray-300 hover:bg-gray-100"
-          }`}
-          aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-        >
-          <i className={`fa-regular fa-heart ${heartClassName}`}></i>
-        </button>
+        
+       <button
+            onClick={handleFavoriteClick}
+            className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-all duration-200 ${
+              isFavorite ? "bg-amber-500 border-amber-500" : "bg-white border-gray-300 hover:border-amber-500 hover:shadow-md"
+            }`}
+            aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+          ></button>
       </Link>
       <div className="flex flex-col w-1/2 p-6">
-        <h3 className="flex items-center gap-2 text-lg font-bold text-amber-600 truncate">
-          <span className="truncate block max-w-[calc(100%-60px)]">{name}</span>
-          {discountPercent > 0 && <span className="discount-badge flex-shrink-0">-{discountPercent}%</span>}
-        </h3>
+       <div className="flex flex-col">
+        <h3 className="text-lg font-bold text-amber-600 truncate">{name}</h3>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="text-lg font-bold text-red-600">
+            {finalUnitPrice.toLocaleString("vi-VN")}₫
+          </span>
+          {unitPrice > finalUnitPrice && (
+            <span className="text-sm text-gray-500 line-through">
+              {unitPrice.toLocaleString("vi-VN")}₫
+            </span>
+          )}
+          {discountPercent > 0 && (
+            <span className="ml-auto discount-badge">-{discountPercent}%</span>
+          )}
+        </div>
+      </div>
+
         {description && <p className="mt-2 text-sm text-gray-600 line-clamp-3">{description}</p>}
         <div className="flex items-center justify-between mt-4">
           {ratingLoading ? (

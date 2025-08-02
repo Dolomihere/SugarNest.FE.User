@@ -183,172 +183,171 @@ const isFavorite = (productId) =>
   };
 
   return (
-    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
-      <Header />
-      <main className="w-full px-8 py-6 mx-auto max-w-7xl">
-        <h2 className="mb-6 text-3xl font-bold text-center text-amber-600">
-          Sản Phẩm Của Chúng Tôi
-        </h2>
+    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-[#5A3E2B]">
+  <Header />
+  <main className="w-full px-8 py-6 mx-auto max-w-7xl">
+    <h2 className="mb-6 text-3xl font-bold text-center text-[#E8B273]">
+      Sản Phẩm Của Chúng Tôi
+    </h2>
 
-        {/* Filters */}
-        <div className="grid grid-cols-12 gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Tìm kiếm..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="col-span-12 p-2 border rounded lg:col-span-3"
-          />
-          <select
-            className="col-span-12 p-2 border rounded lg:col-span-3"
-            value={selectedCategory}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-          >
-            <option value="">Tất cả danh mục</option>
-            {categories.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className="col-span-12 p-2 border rounded lg:col-span-3"
-            value={selectedSeason}
-            onChange={(e) => handleSeasonChange(e.target.value)}
-          >
-            {seasonOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className="col-span-12 p-2 border rounded lg:col-span-3"
-            value={selectedSort}
-            onChange={(e) => handleSortChange(e.target.value)}
-          >
-            {sortOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-wrap justify-between gap-2 mb-6">
-          <div className="flex gap-2">
-            <button
-              onClick={handleClearFilters}
-              className="px-3 py-2 border rounded-md hover:bg-amber-100"
-            >
-              Bỏ lọc
-            </button>
-            <button
-              onClick={() => setReloadTrigger((prev) => !prev)}
-              className="px-3 py-2 border rounded-md hover:bg-amber-100"
-            >
-              Lọc và sắp xếp
-            </button>
-            <button
-              onClick={() => setShowFavoritesOnly((prev) => !prev)}
-              className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
-                showFavoritesOnly
-                  ? "bg-red-100 border-red-400 text-red-600"
-                  : ""
-              }`}
-            >
-              Yêu thích
-            </button>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
-                viewMode === "grid" ? "bg-amber-200" : ""
-              }`}
-            >
-              Dạng lưới
-            </button>
-            <button
-              onClick={() => setViewMode("blog")}
-              className={`px-3 py-2 border rounded-md hover:bg-amber-100 ${
-                viewMode === "blog" ? "bg-amber-200" : ""
-              }`}
-            >
-              Dạng blog
-            </button>
-          </div>
-        </div>
-
-        {/* Product List */}
-        {loading ? (
-          <p>Đang tải sản phẩm...</p>
-        ) : error ? (
-          <p className="text-red-500">Lỗi: {error.message}</p>
-        ) : apiResponse?.data?.length > 0 ? (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8"
-                : "flex flex-col gap-6 mb-8"
-            }
-          >
-            {(showFavoritesOnly
-              ? apiResponse.data.filter((p) => isFavorite(p.productId))
-              : apiResponse.data
-            ).map((p) => (
-              <ProductCard
-                key={p.productId}
-                product={p}
-                viewMode={viewMode}
-                isFavorite={isFavorite(p.productId)}
-                onAddFavorite={() =>
-                  isFavorite(p.productId)
-                    ? removeFromFavorites(p.productId)
-                    : addToFavorites(p.productId)
-                }
-              />
-            ))}
-          </div>
-        ) : (
-          <p>Không có sản phẩm nào.</p>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mb-10">
-            <button
-              disabled={isFirstPage}
-              onClick={() => handlePageChange(currentPage - 1)}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              ← Trước
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 border rounded ${
-                  page === currentPage
-                    ? "bg-amber-600 text-white"
-                    : "hover:bg-amber-100"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              disabled={isLastPage}
-              onClick={() => handlePageChange(currentPage + 1)}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Tiếp →
-            </button>
-          </div>
-        )}
-      </main>
-      <Footer />
+    {/* Filters */}
+    <div className="grid grid-cols-12 gap-4 mb-6">
+      <input
+        type="text"
+        placeholder="Tìm kiếm..."
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        className="col-span-12 p-2 border border-[#C8A079] rounded lg:col-span-3 bg-white text-[#5A3E2B]"
+      />
+      <select
+        className="col-span-12 p-2 border border-[#C8A079] rounded lg:col-span-3 bg-white text-[#5A3E2B]"
+        value={selectedCategory}
+        onChange={(e) => handleCategoryChange(e.target.value)}
+      >
+        <option value="">Tất cả danh mục</option>
+        {categories.map((c) => (
+          <option key={c.value} value={c.value}>
+            {c.label}
+          </option>
+        ))}
+      </select>
+      <select
+        className="col-span-12 p-2 border border-[#C8A079] rounded lg:col-span-3 bg-white text-[#5A3E2B]"
+        value={selectedSeason}
+        onChange={(e) => handleSeasonChange(e.target.value)}
+      >
+        {seasonOptions.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <select
+        className="col-span-12 p-2 border border-[#C8A079] rounded lg:col-span-3 bg-white text-[#5A3E2B]"
+        value={selectedSort}
+        onChange={(e) => handleSortChange(e.target.value)}
+      >
+        {sortOptions.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
     </div>
+
+    {/* Actions */}
+    <div className="flex flex-wrap justify-between gap-2 mb-6">
+      <div className="flex gap-2">
+        <button className="px-3 py-2 border border-[#C8A079] rounded-md hover:bg-[#F5D7A1] transition-colors duration-200">
+          Bỏ lọc
+        </button>
+        <button className="px-3 py-2 border border-[#C8A079] rounded-md hover:bg-[#F5D7A1] transition-colors duration-200">
+          Lọc và sắp xếp
+        </button>
+        <button
+          onClick={() => setShowFavoritesOnly((prev) => !prev)}
+          className={`px-3 py-2 border rounded-md transition-colors duration-200 ${
+            showFavoritesOnly
+              ? "bg-[#FDEBD0] border-[#E8B273] text-[#A47449]"
+              : "border-[#C8A079] hover:bg-[#F5D7A1]"
+          }`}
+        >
+          Yêu thích
+        </button>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setViewMode("grid")}
+          className={`px-3 py-2 border rounded-md transition-colors duration-200 ${
+            viewMode === "grid"
+              ? "bg-[#F4C78A] border-[#C8A079]"
+              : "border-[#C8A079] hover:bg-[#F5D7A1]"
+          }`}
+        >
+          Dạng lưới
+        </button>
+        <button
+          onClick={() => setViewMode("blog")}
+          className={`px-3 py-2 border rounded-md transition-colors duration-200 ${
+            viewMode === "blog"
+              ? "bg-[#F4C78A] border-[#C8A079]"
+              : "border-[#C8A079] hover:bg-[#F5D7A1]"
+          }`}
+        >
+          Dạng blog
+        </button>
+      </div>
+    </div>
+
+    {/* Product List */}
+    {loading ? (
+      <p>Đang tải sản phẩm...</p>
+    ) : error ? (
+      <p className="text-[#A47449]">Lỗi: {error.message}</p>
+    ) : apiResponse?.data?.length > 0 ? (
+      <div
+        className={
+          viewMode === "grid"
+            ? "grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8"
+            : "flex flex-col gap-6 mb-8"
+        }
+      >
+        {(showFavoritesOnly
+          ? apiResponse.data.filter((p) => isFavorite(p.productId))
+          : apiResponse.data
+        ).map((p) => (
+          <ProductCard
+            key={p.productId}
+            product={p}
+            viewMode={viewMode}
+            isFavorite={isFavorite(p.productId)}
+            onAddFavorite={() =>
+              isFavorite(p.productId)
+                ? removeFromFavorites(p.productId)
+                : addToFavorites(p.productId)
+            }
+          />
+        ))}
+      </div>
+    ) : (
+      <p>Không có sản phẩm nào.</p>
+    )}
+
+    {/* Pagination */}
+    {totalPages > 1 && (
+      <div className="flex justify-center gap-2 mb-10">
+        <button
+          disabled={isFirstPage}
+          onClick={() => handlePageChange(currentPage - 1)}
+          className="px-3 py-1 border border-[#C8A079] rounded disabled:opacity-50 hover:bg-[#F5D7A1]"
+        >
+          ← Trước
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={`px-3 py-1 border border-[#C8A079] rounded ${
+              page === currentPage
+                ? "bg-[#E8B273] text-white"
+                : "hover:bg-[#F5D7A1]"
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          disabled={isLastPage}
+          onClick={() => handlePageChange(currentPage + 1)}
+          className="px-3 py-1 border border-[#C8A079] rounded disabled:opacity-50 hover:bg-[#F5D7A1]"
+        >
+          Tiếp →
+        </button>
+      </div>
+    )}
+  </main>
+  <Footer />
+</div>
+
   );
 }
