@@ -8,24 +8,23 @@ const DeliveryForm = ({
   setForm,
   addressFromMap,
   setAddressFromMap,
-  paymentMethod,
-  setPaymentMethod,
   handleSubmit,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [errors, setErrors] = useState({}); // Lưu lỗi validation
 
-  // Lấy token từ localStorage hoặc sessionStorage giống như Header.jsx
+  // Lấy token từ localStorage hoặc sessionStorage
   const token =
     localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
 
-  // Hàm lấy thời gian hiện tại dưới dạng datetime-local
+  // Hàm lấy thời gian hiện tại dạng datetime-local
   const getCurrentDateTime = () => {
     const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // fix timezone offset
-    return now.toISOString().slice(0, 16); // định dạng yyyy-MM-ddTHH:mm
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
   };
 
-  // Fetch dữ liệu người dùng cá nhân
+  // Fetch dữ liệu người dùng
   const {
     data: userData,
     isLoading,
@@ -35,11 +34,11 @@ const DeliveryForm = ({
     queryFn: () => UserService.getPersonalUser(token),
     enabled: !!token,
     onError: (err) => {
-      console.error("Error fetching user data:", err);
+      console.error("Lỗi khi lấy dữ liệu người dùng:", err);
     },
   });
 
-  // Cập nhật form khi có dữ liệu
+  // Cập nhật form với dữ liệu người dùng
   useEffect(() => {
     if (userData && userData.data) {
       setForm((prev) => ({
@@ -54,23 +53,48 @@ const DeliveryForm = ({
     }
   }, [userData, setForm, setAddressFromMap]);
 
+  // Tự động lưu số điện thoại vào localStorage
+  useEffect(() => {
+    if (isEditing && form.phoneNumber && token) {
+      localStorage.setItem("phoneNumber", form.phoneNumber);
+    }
+  }, [form.phoneNumber, isEditing, token]);
+
+  // Xử lý thay đổi input
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" })); // Xóa lỗi khi nhập
   };
 
-  const handlePaymentMethodChange = (e) => {
-    setPaymentMethod(e.target.value);
+  // Xử lý submit form
+  const onSubmit = (e) => {
+    e.preventDefault();
+    let newErrors = {};
+    if (!form.phoneNumber) {
+      newErrors.phoneNumber = "Số điện thoại là bắt buộc";
+    }
+    if (!form.deliveryTime) {
+      newErrors.deliveryTime = "Thời gian giao hàng là bắt buộc";
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    handleSubmit(e);
   };
 
+  // Xử lý trạng thái loading
   if (isLoading) {
     return <div>Loading user data...</div>;
   }
 
+  // Xử lý lỗi khi fetch dữ liệu
   if (error) {
     return <div>Error loading user data: {error.message}. Please try again.</div>;
   }
 
+  // Yêu cầu đăng nhập nếu không có token
   if (!token) {
     return <div>Vui lòng đăng nhập để tiếp tục.</div>;
   }
@@ -90,7 +114,7 @@ const DeliveryForm = ({
         )}
       </div>
 
-      <form className="space-y-5 text-main" onSubmit={handleSubmit}>
+      <form className="space-y-5 text-main" onSubmit={onSubmit}>
         <div>
           <label className="block mb-1 text-sm font-medium text-sub">Tên của bạn</label>
           <input
@@ -107,18 +131,28 @@ const DeliveryForm = ({
         </div>
 
         <div>
-          <label className="block mb-1 text-sm font-medium text-sub">Điện thoại</label>
+          <label className="block mb-1 text-sm font-medium text-sub">
+            Điện thoại <span className="text-red-600">*</span>
+          </label>
           <input
             type="tel"
             name="phoneNumber"
             value={form.phoneNumber}
             onChange={handleInputChange}
             disabled={!isEditing}
+            required
             className={`w-full p-3 border rounded-lg ${
-              !isEditing ? "bg-gray-100 cursor-not-allowed" : "border-gray-300"
+              !isEditing
+                ? "bg-gray-100 cursor-not-allowed"
+                : errors.phoneNumber
+                ? "border-red-600"
+                : "border-gray-300"
             }`}
             placeholder="Nhập số điện thoại"
           />
+          {errors.phoneNumber && (
+            <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>
+          )}
         </div>
 
         <div>
@@ -153,19 +187,29 @@ const DeliveryForm = ({
         </div>
 
         <div>
-          <label className="block mb-1 text-sm font-medium text-sub">Thời gian giao hàng</label>
+          <label className="block mb-1 text-sm font-medium text-sub">
+            Thời gian giao hàng <span className="text-red-600">*</span>
+          </label>
           <input
             type="datetime-local"
             name="deliveryTime"
             value={form.deliveryTime}
             onChange={handleInputChange}
             min={getCurrentDateTime()}
+            required
             disabled={!isEditing}
             className={`w-full p-3 border rounded-lg ${
-              !isEditing ? "bg-gray-100 cursor-not-allowed" : "border-gray-300"
+              !isEditing
+                ? "bg-gray-100 cursor-not-allowed"
+                : errors.deliveryTime
+                ? "border-red-600"
+                : "border-gray-300"
             }`}
             placeholder="Chọn thời gian giao hàng"
           />
+          {errors.deliveryTime && (
+            <p className="mt-1 text-sm text-red-600">{errors.deliveryTime}</p>
+          )}
         </div>
 
         <div>
@@ -183,47 +227,6 @@ const DeliveryForm = ({
           />
         </div>
 
-        <div>
-          <label className="block mb-1 text-sm font-medium text-sub">Phương thức thanh toán</label>
-          <div className="flex space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="cash"
-                checked={paymentMethod === "cash"}
-                onChange={handlePaymentMethodChange}
-                disabled={!isEditing}
-                className="mr-2"
-              />
-              Tiền mặt
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="bank_transfer"
-                checked={paymentMethod === "bank_transfer"}
-                onChange={handlePaymentMethodChange}
-                disabled={!isEditing}
-                className="mr-2"
-              />
-              Chuyển khoản
-            </label>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={!isEditing}
-          className={`w-full py-3 font-semibold text-white rounded-lg ${
-            isEditing
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-gray-400 cursor-not-allowed"
-          }`}
-        >
-          Gửi thông tin
-        </button>
       </form>
     </div>
   );

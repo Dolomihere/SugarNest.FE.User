@@ -278,6 +278,7 @@ export default function UserPage() {
               <thead className="">
                 <tr className="text-sm font-semibold text-gray-700">
                   
+
                   <th className="px-6 py-4 text-left">Sản Phẩm</th>
                   <th className="px-6 py-4 text-left">Giá</th>
                   <th className="px-6 py-4 text-left">Số Lượng</th>
@@ -292,6 +293,7 @@ export default function UserPage() {
                     className="transition duration-300 "
                   >
                     
+
                     <td className="flex items-center gap-4 px-6 py-4">
                       <div className="overflow-hidden rounded-lg shadow-sm">
                         <img
@@ -390,9 +392,9 @@ export default function UserPage() {
             {isLoggedIn ? (
               <button
                 onClick={handleCheckout}
-                className="w-full py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out transform rounded-lg shadow-md bg-amber-600 hover:bg-amber-700 hover:scale-105"
+                className="w-full py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out transform rounded-lg shadow-md bg-amber-600 hover:bg-amber-700 hover:scale-103"
               >
-                Thanh Toán Ngay
+                Đặt mua ngay
               </button>
             ) : (
               <button
