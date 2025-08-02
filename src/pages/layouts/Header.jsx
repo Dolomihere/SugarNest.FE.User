@@ -66,6 +66,8 @@ export function Header() {
     { to: "/contact", label: "Liên hệ" },
     { to: "/discounts", label: "Chương trình giảm giá" },
     { to: "/unity-game", label: "Giải trí" },
+    { to: "/order-history", label: "Đơn hàng" },
+
   ];
 
   useEffect(() => {

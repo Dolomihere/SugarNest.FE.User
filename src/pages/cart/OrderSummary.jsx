@@ -13,7 +13,8 @@ const OrderSummary = ({
   error,
   loading,
 }) => {
-  const isFreeShipping = subtotal >= 300000 || shippingFee === 0; // Miễn phí nếu subtotal >= 300k hoặc shippingFee = 0
+const isFreeShipping = shippingFee <= 0;
+
 
   return (
     <div className="p-6 space-y-4 bg-white shadow-md rounded-2xl">
@@ -30,7 +31,7 @@ const OrderSummary = ({
       )}
       <div className="flex justify-between mt-2 text-sm">
         <span>Phí vận chuyển:</span>
-        <span>{isFreeShipping ? "Miễn phí" : formatCurrency(shippingFee)}</span>
+        <span>{shippingFee <= 0 ? "Miễn phí" : formatCurrency(shippingFee)}</span>
       </div>
       {discount > 0 || (selectedVoucher?.hardValue && selectedVoucher) ? (
         <div className="flex justify-between text-sm text-green-600">
