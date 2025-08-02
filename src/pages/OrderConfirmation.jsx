@@ -114,6 +114,8 @@ const OrderConfirmation = () => {
       setError(`Không thể xóa giỏ hàng: ${err.message}. Đơn hàng vẫn được tạo thành công.`);
     },
   });
+  const discountAmount =
+  initialOrderData?.discountAmount || fetchedOrderData?.data?.discountAmount || checkoutDiscount || 0;
 
   const handleConfirmOrder = async () => {
     if (!isLoggedIn) {
@@ -152,7 +154,7 @@ const OrderConfirmation = () => {
 
       const paymentResponse = await OrderService.processPayment({
         orderId,
-        amount: (orderData.total || checkoutTotal) + (orderData.shippingFee || checkoutShippingFee || 0),
+        amount: orderData.total || checkoutTotal,
       });
 
       if (paymentResponse.status !== "success") {
@@ -167,10 +169,11 @@ const OrderConfirmation = () => {
           orderId,
           orderData: {
             ...orderDataToSend,
+            
             subtotal: orderData.subtotal || subtotal || 0,
-            discount: orderData.discount || checkoutDiscount || 0,
+            discountAmount: initialOrderData?.discountAmount || fetchedOrderData?.data?.discountAmount || 0,
             shippingFee: orderData.shippingFee || checkoutShippingFee || 0,
-            total: (orderData.total || checkoutTotal) + (orderData.shippingFee || checkoutShippingFee || 0),
+            total: orderData.total || checkoutTotal,
             paymentMethod: orderData.paymentMethod || checkoutPaymentMethod || "cash",
             createdAt: new Date().toISOString(),
           },
@@ -187,17 +190,19 @@ const OrderConfirmation = () => {
         state: {
           orderId,
           paymentStatus: paymentResponse.status,
+          discountAmount,
           orderData: {
             ...orderDataToSend,
             subtotal: orderData.subtotal || subtotal || 0,
-            discount: orderData.discount || checkoutDiscount || 0,
+            discountAmount: initialOrderData?.discountAmount || fetchedOrderData?.data?.discountAmount || 0,
             shippingFee: orderData.shippingFee || checkoutShippingFee || 0,
-            total: (orderData.total || checkoutTotal) + (orderData.shippingFee || checkoutShippingFee || 0),
+            total: orderData.total || checkoutTotal, // Không cộng ship ở đây
             paymentMethod: orderData.paymentMethod || checkoutPaymentMethod || "cash",
             createdAt: new Date().toISOString(),
           },
           showSuccessMessage: "Đơn hàng đã được đặt thành công!",
           checkoutData: restoredCheckoutData,
+           discountAmount,
         },
       });
 
@@ -223,14 +228,8 @@ const OrderConfirmation = () => {
         {orderId ? (
           <div className="p-6 bg-white shadow-md rounded-2xl">
             <div className="flex justify-between mb-4">
-              <h3 className="text-lg font-semibold text-heading">Đơn hàng #{orderId || "N/A"}</h3>
-              <span
-                className={`text-sm ${
-                  paymentStatus === "success" ? "text-green-600" : "text-yellow-600"
-                }`}
-              >
-                {paymentStatus === "success" ? "Thanh toán thành công" : "Đang xử lý" || "N/A"}
-              </span>
+            <h3 className="text-lg font-semibold text-heading">Thông tin đơn hàng</h3>
+              <span className="text-sm text-yellow-600">Đang xử lý</span>
             </div>
             <div className="text-sm text-gray-600">
               <p><strong>Ngày đặt:</strong> {formatDate(orderData.createdAt)}</p>
@@ -243,28 +242,20 @@ const OrderConfirmation = () => {
                 {orderData.paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản"}
               </p>
             </div>
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold text-sub">Chi tiết đơn hàng</h4>
-              <ul className="mt-2 space-y-2 text-sm text-gray-600">
-                {cartItems.length > 0 ? (
-                  cartItems.map((item, index) => (
+           {false && (
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold text-sub">Chi tiết đơn hàng</h4>
+                <ul className="mt-2 space-y-2 text-sm text-gray-600">
+                  {cartItems.map((item, index) => (
                     <li key={index} className="flex justify-between">
-                      <span>
-                        {item.productName || `Sản phẩm ${index + 1}`}{" "}
-                        {item.cartItemOptions?.length > 0 && (
-                          <span>
-                            ({item.cartItemOptions.map((opt) => opt.optionValue || "Tùy chọn").join(", ")})
-                          </span>
-                        )}
-                      </span>
-                      <span>{formatCurrency(item.total || 0)}</span>
+                      <span>{item.productName}</span>
+                      <span>{formatCurrency(item.total)}</span>
                     </li>
-                  ))
-                ) : (
-                  <li className="text-gray-500">Không có sản phẩm nào</li>
-                )}
-              </ul>
-            </div>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="mt-4">
               <p className="text-sm text-gray-600">
                 <strong>Phí vận chuyển:</strong>{" "}
@@ -276,8 +267,18 @@ const OrderConfirmation = () => {
                 </p>
               )}
               <p className="text-base font-bold text-amber-600">
-                <strong>Tổng thanh toán:</strong> {formatCurrency(orderData.total)}
-              </p>
+              <strong>Tổng thanh toán:</strong>{" "}
+              {formatCurrency(
+                (orderData.subtotal || 0) -
+                (orderData.discount || 0) +
+                (orderData.shippingFee || 0)
+              )}
+            </p>
+
+
+
+
+
             </div>
             <div className="mt-4 space-x-4">
               <button
@@ -326,13 +327,21 @@ const OrderConfirmation = () => {
                     {(checkoutShippingFee > 0 || orderData.shippingFee > 0) ? formatCurrency(checkoutShippingFee || orderData.shippingFee) : "Miễn phí"}
                   </p>
                   {(checkoutDiscount > 0 || orderData.discount > 0) && (
-                    <p className="text-green-600">
-                      <strong>Giảm giá:</strong> -{formatCurrency(checkoutDiscount || orderData.discount)}
+                    <p className="text-sm text-green-600">
+                      <strong>Giảm giá:</strong> -{formatCurrency(discountAmount)}
                     </p>
+
                   )}
-                  <p className="text-base font-bold text-amber-600">
-                    <strong>Tổng thanh toán:</strong> {formatCurrency((orderData.total || checkoutTotal) + (orderData.shippingFee || checkoutShippingFee || 0))}
-                  </p>
+                <p className="text-base font-bold text-amber-600">
+                <strong>Tổng thanh toán:</strong>{" "}
+                {formatCurrency(
+                  (orderData.subtotal || 0) -
+                  (orderData.discount || 0) +
+                  (orderData.shippingFee || 0)
+                )}
+              </p>
+
+
                 </div>
                 <div className="mt-4 space-x-4">
                   <button

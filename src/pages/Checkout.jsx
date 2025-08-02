@@ -224,10 +224,13 @@ const CheckoutPage = () => {
         recipientPhone: form.phoneNumber,
         note: form.note || null,
         userVoucher: selectedVoucher?.voucherId || null,
-        cartItems: cartItems.map((item) => ({
+        cartItems: cartItems
+        .filter((item) => item.productId && item.quantity > 0)
+        .map((item) => ({
           productId: item.productId.toString(),
           quantity: item.quantity,
         })),
+
       };
 
       const response = await OrderService.createOrder(

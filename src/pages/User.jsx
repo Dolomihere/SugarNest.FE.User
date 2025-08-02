@@ -12,22 +12,6 @@ export default function UserPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const [selectedItems, setSelectedItems] = useState([]);
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      const allIds = cartData?.cartItems?.map((item) => item.cartItemId) || [];
-      setSelectedItems(allIds);
-    } else {
-      setSelectedItems([]);
-    }
-  };
-  const handleSelectItem = (cartItemId) => {
-  setSelectedItems((prevSelected) =>
-    prevSelected.includes(cartItemId)
-      ? prevSelected.filter((id) => id !== cartItemId)
-      : [...prevSelected, cartItemId]
-  );
-};
 
   // Get token and check login status
   const token =
@@ -293,17 +277,7 @@ export default function UserPage() {
             <table className="min-w-full border-separate border-spacing-0">
               <thead className="">
                 <tr className="text-sm font-semibold text-gray-700">
-                  <th className="w-12 px-6 py-4 rounded-tl-xl">
-                  <input
-                    type="checkbox"
-                    className="accent-amber-600"
-                    checked={
-                      cartData?.cartItems?.length > 0 &&
-                      selectedItems.length === cartData.cartItems.length
-                    }
-                    onChange={handleSelectAll}
-                  />
-                  </th>
+                  
                   <th className="px-6 py-4 text-left">Sản Phẩm</th>
                   <th className="px-6 py-4 text-left">Giá</th>
                   <th className="px-6 py-4 text-left">Số Lượng</th>
@@ -317,14 +291,7 @@ export default function UserPage() {
                     key={item.cartItemId}
                     className="transition duration-300 "
                   >
-                    <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="accent-amber-600"
-                      checked={selectedItems.includes(item.cartItemId)}
-                      onChange={() => handleSelectItem(item.cartItemId)}
-                    />
-                    </td>
+                    
                     <td className="flex items-center gap-4 px-6 py-4">
                       <div className="overflow-hidden rounded-lg shadow-sm">
                         <img
@@ -401,15 +368,7 @@ export default function UserPage() {
           <div className="p-6 space-y-6 bg-white border border-gray-100 shadow-lg rounded-xl">
             <div className="pt-4 space-y-3 text-sm text-gray-700 border-t border-gray-200">
               <div className="flex justify-between">
-                <span className="font-medium">Tạm tính:</span>
-                <span>
-                  {formatCurrency(
-                    cartData?.cartItems?.reduce(
-                      (sum, item) => sum + item.total,
-                      0
-                    ) ?? 0
-                  )}
-                </span>
+                
               </div>
               <div className="flex justify-between text-base font-bold text-gray-800">
                 <span>Tổng thanh toán:</span>

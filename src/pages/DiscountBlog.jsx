@@ -16,52 +16,63 @@ export default function DiscountBlog() {
   const imageRef = useRef(null);
   const canvasRef = useRef(null);
   const [magnifier, setMagnifier] = useState(null);
+  const [pageIndex, setPageIndex] = useState(1);
+  const pageSize = 9; // Bạn có thể chỉnh tùy ý
+  const [totalCount, setTotalCount] = useState(0);
 
 const API_URL = "https://sugarnest-api.io.vn/vouchers";
 
   useEffect(() => {
-    const fetchVouchers = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(API_URL, {
-          headers: {
-            Accept: "*/*",
-          },
-        });
-          
-        const voucherData = Array.isArray(response.data) ? response.data : response.data.data || [];
-        if (!Array.isArray(voucherData)) {
-          throw new Error("Dữ liệu voucher không phải là mảng");
-        }
+  const fetchVouchers = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(API_URL, {
+        params: {
+          pageIndex,
+          pageSize,
+        },
+        headers: {
+          Accept: "*/*",
+        },
+      });
 
-        const mappedDeals = voucherData.map((voucher) => ({
-          title: voucher.name || "Không có tiêu đề",
-          description: voucher.description || "Không có mô tả",
-          discount: voucher.percentValue
-            ? `${voucher.percentValue}%`
-            : voucher.hardValue
-            ? `${voucher.hardValue.toLocaleString("vi-VN")}đ`
-            : "N/A",
-          expiryDate: voucher.endTime,
-          code: voucher.voucherId || "N/A",
-          category: "food",
-         images: voucher.imgs && voucher.imgs.length
-          ? voucher.imgs
-          : ["../../public/images/banner.png"],
+      const voucherData = Array.isArray(response.data)
+        ? response.data
+        : response.data.data || [];
 
-        }));
+      const total = response.data?.meta?.totalCount || 0;
+      setTotalCount(total);
 
-        setDeals(mappedDeals);
-        setLoading(false);
-      } catch (err) {
-        console.error("Lỗi khi lấy voucher:", err);
-        setError("Không thể tải voucher. Vui lòng kiểm tra kết nối hoặc thử lại sau.");
-        setLoading(false);
-      }
-    };
+      const mappedDeals = voucherData.map((voucher) => ({
+        title: voucher.name || "Không có tiêu đề",
+        description: voucher.description || "Không có mô tả",
+        discount: voucher.percentValue
+          ? `${voucher.percentValue}%`
+          : voucher.hardValue
+          ? `${voucher.hardValue.toLocaleString("vi-VN")}đ`
+          : "N/A",
+        expiryDate: voucher.endTime,
+        startDate: voucher.startTime,
+        code: voucher.voucherId || "N/A",
+        category: "food",
+        images:
+          voucher.imgs && voucher.imgs.length
+            ? voucher.imgs
+            : ["../../public/images/banner.png"],
+      }));
 
-    fetchVouchers();
-  }, []);
+      setDeals(mappedDeals);
+      setLoading(false);
+    } catch (err) {
+      console.error("Lỗi khi lấy voucher:", err);
+      setError("Không thể tải voucher. Vui lòng kiểm tra kết nối hoặc thử lại sau.");
+      setLoading(false);
+    }
+  };
+
+  fetchVouchers();
+}, [pageIndex]);
+
 
   const isDealValid = (expiryDate) => {
     const today = new Date();
@@ -225,11 +236,36 @@ const API_URL = "https://sugarnest-api.io.vn/vouchers";
                   <p className="text-xs text-gray-500 mt-1">
                     Hết hạn: {new Date(deal.expiryDate).toLocaleDateString("vi-VN")}
                   </p>
+
                 </div>
               </motion.div>
             );
           })}
         </div>
+          {/* Phân trang */}
+<div className="flex justify-center mt-10 gap-4 items-center">
+  <button
+    onClick={() => setPageIndex((prev) => Math.max(prev - 1, 1))}
+    disabled={pageIndex === 1}
+    className="px-4 py-2 rounded border bg-white text-[#5b3e2b] hover:bg-gray-100 disabled:opacity-50"
+  >
+    Trang trước
+  </button>
+  <span className="text-[#5b3e2b] font-medium">
+    Trang {pageIndex} / {Math.ceil(totalCount / pageSize)}
+  </span>
+  <button
+    onClick={() =>
+      setPageIndex((prev) =>
+        prev < Math.ceil(totalCount / pageSize) ? prev + 1 : prev
+      )
+    }
+    disabled={pageIndex >= Math.ceil(totalCount / pageSize)}
+    className="px-4 py-2 rounded border bg-white text-[#5b3e2b] hover:bg-gray-100 disabled:opacity-50"
+  >
+    Trang sau
+  </button>
+</div>
 
         {/* Phần chi tiết hiển thị inline */}
         <AnimatePresence>
@@ -328,9 +364,11 @@ const API_URL = "https://sugarnest-api.io.vn/vouchers";
             <div className="flex flex-col gap-4">
               <h2 className="text-xl font-semibold">{selectedDeal.title}</h2>
               <p className="text-sm text-gray-700">{selectedDeal.description}</p>
-              <p className="text-sm text-gray-500">
+             <p className="text-sm text-gray-500">
+                Bắt đầu: {new Date(selectedDeal.startDate).toLocaleDateString("vi-VN")} <br />
                 Hết hạn: {new Date(selectedDeal.expiryDate).toLocaleDateString("vi-VN")}
               </p>
+
               <p className="text-base font-bold text-[#d98044]">
                 {selectedDeal.discount} GIẢM
               </p>
