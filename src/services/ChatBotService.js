@@ -11,8 +11,8 @@ export const chatBotService = {
     });
     return res.data;
   },
-  getCurrentChat: async (token) => {
-    const res = await publicApi.get(`${path}/chat/messages`, {
+  getCurrentChat: async (token, conversationId) => {
+    const res = await publicApi.get(`${path}/chat/messages?ConversationId=${conversationId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -20,7 +20,7 @@ export const chatBotService = {
     return res.data;
   },
   submitMessage: async (text, token) => {
-    const res = await publicApi.post(`${path}/chat/recommend`, { text }, {
+    const res = await publicApi.post(`${path}/chat/recommend`, JSON.stringify(text), {
       headers: {
         Authorization: `Bearer ${token}`,
       },

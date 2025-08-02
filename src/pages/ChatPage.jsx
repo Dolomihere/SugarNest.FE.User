@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import {
   faPaperPlane,
   faCommentDots,
   faXmark,
   faUser,
   faCakeCandles,
+  faSquareArrowUpRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -133,8 +135,7 @@ export default function ChatPage() {
       )}
 
       {open && (
-        <div
-          className={`fixed bottom-5 right-5 w-[360px] h-[540px] rounded-2xl overflow-hidden font-sans shadow-xl border border-[#eac9aa] bg-[#fffaf5] 
+        <div className={`fixed bottom-5 right-5 w-[360px] h-[540px] rounded-2xl overflow-hidden font-sans shadow-xl border border-[#eac9aa] bg-[#fffaf5] 
             flex flex-col transition-all duration-300 transform
             ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
         >
@@ -142,6 +143,9 @@ export default function ChatPage() {
           <div className="bg-[#d4a373] text-white text-center py-3 font-semibold text-lg relative shadow-md rounded-t-2xl">
             <FontAwesomeIcon icon={faCakeCandles} className="mr-2" />
             Trợ Lý Bánh Ngọt
+            <Link to="/ai-chat" className="absolute top-2 left-3">
+              <FontAwesomeIcon icon={faSquareArrowUpRight} />
+            </Link>
             <button
               onClick={handleClose}
               className="absolute top-2 right-3 text-white hover:opacity-80 text-xl focus:outline-none"
