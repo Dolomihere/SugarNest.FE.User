@@ -9,17 +9,17 @@ import { faFacebook, faInstagram } from '@fortawesome/free-brands-svg-icons';
 
 export function Footer() {
   const navLinks = [
-    { to: "/about", label: "Về chúng tôi" },
-    { to: "/menu", label: "Thực đơn" },
-    { to: "/qna", label: "Câu hỏi thường gặp" },
-    { to: "/policy", label: "Chính sách giao hàng" },
-    { to: "/safety", label: "Chính sách bảo mật" }
+    { to: '/', label: 'Trang chủ' },
+    { to: '/products', label: 'Sản phẩm' },
+    { to: '/about', label: 'Về chúng tôi' },
+    { to: '/contact', label: 'Liên hệ' },
+    { to: '/discounts', label: 'Chương trình giảm giá' },
+    { to: '/unity-game', label: 'Giải trí' },
   ];
 
   return (
     <footer className="bg-[#4B2E2B] text-[#F9E8D9]">
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12">
-        
+      <div className="grid grid-cols-1 gap-12 px-6 py-12 mx-auto max-w-7xl sm:grid-cols-2 md:grid-cols-4">
         <section>
           <h2 className="text-xl font-bold text-[#FFDAB9] uppercase mb-4">SugarNest</h2>
           <p className="mt-2 text-sm text-[#EFD8C5]">
@@ -32,7 +32,7 @@ export function Footer() {
           <ul className="space-y-1 text-sm text-[#EFD8C5]">
             {navLinks.map((link, i) => (
               <li key={i}>
-                <Link to={link.to} className="hover:text-white hover:underline transition">
+                <Link to={link.to} className="transition hover:text-white hover:underline">
                   {link.label}
                 </Link>
               </li>
@@ -42,15 +42,22 @@ export function Footer() {
 
         <section>
           <h3 className="text-xl font-bold text-[#FFDAB9] uppercase mb-4">Thông tin liên hệ</h3>
-          <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
+          <p className="text-sm text-[#EFD8C5] flex items-center gap-2 mb-5">
             <FontAwesomeIcon icon={faLocationDot} className="text-[#FFB877]" />
-            123 Bakery Street, SugarNestville
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=QTSC+Building+1,+Đ.+Quang+Trung,+Tân+Hưng+Thuận,+Hóc+Môn,+Hồ+Chí+Minh,+Việt+Nam"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition hover:text-white hover:underline"
+            >
+              QTSC Building 1, Đ. Quang Trung, Tân Hưng Thuận, Hóc Môn, Hồ Chí Minh, Việt Nam
+            </a>
           </p>
-          <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
+          <p className="text-sm text-[#EFD8C5] flex items-center gap-2 mb-5">
             <FontAwesomeIcon icon={faEnvelope} className="text-[#FFB877]" />
             contact@sugarnestcake.com
           </p>
-          <p className="text-sm text-[#EFD8C5] flex items-center gap-2">
+          <p className="text-sm text-[#EFD8C5] flex items-center gap-2 mb-5">
             <FontAwesomeIcon icon={faPhone} className="text-[#FFB877]" />
             0915 027 930
           </p>
@@ -75,7 +82,7 @@ export function Footer() {
 
           <div className="flex gap-4 mt-4 text-[#FFDAB9] text-sm">
             <a
-              href="https://https://www.facebook.com/yn.nhi.2975"
+              href="https://www.facebook.com/yn.nhi.2975"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#FFB877] transition flex items-center gap-2"

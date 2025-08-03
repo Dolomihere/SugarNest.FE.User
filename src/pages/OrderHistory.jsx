@@ -5,6 +5,22 @@ import OrderService from "../services/OrderService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 
+// Ánh xạ trạng thái đơn hàng sang tiếng Việt và màu sắc
+const getStatusInVietnamese = (status) => {
+  const statusMap = {
+    "-2": { label: "Đã trả hàng", bg: "bg-red-100", text: "text-red-700" }, // Returned
+    "-1": { label: "Đã hủy", bg: "bg-red-100", text: "text-red-700" }, // Canceled
+    "0": { label: "Đang chờ xác nhận", bg: "bg-yellow-100", text: "text-yellow-800" }, // Pending
+    "1": { label: "Đã xác nhận", bg: "bg-blue-100", text: "text-blue-800" }, // Confirmed
+    "2": { label: "Đang xử lý", bg: "bg-yellow-100", text: "text-yellow-800" }, // Processing
+    "3": { label: "Đang vận chuyển", bg: "bg-blue-100", text: "text-blue-800" }, // InTransit
+    "4": { label: "Đã giao hàng", bg: "bg-green-100", text: "text-green-800" }, // Delivered
+  };
+  // Chuẩn hóa status để xử lý cả chuỗi và số
+  const normalizedStatus = status?.toString();
+  return statusMap[normalizedStatus] || { label: "Không xác định", bg: "bg-gray-200", text: "text-gray-600" };
+};
+
 const OrderHistory = () => {
   const token = localStorage.getItem("accessToken");
   const navigate = useNavigate();
@@ -32,52 +48,36 @@ const OrderHistory = () => {
     });
   };
 
-  const mapOrderStatus = (statusCode) => {
-    switch (statusCode) {
-      case 0:
-      case "Pending":
-        return { label: "Đang xử lý", bg: "bg-yellow-100", text: "text-yellow-800" };
-      case 1:
-      case "Completed":
-        return { label: "Đã hoàn tất", bg: "bg-green-100", text: "text-green-800" };
-      case 2:
-      case "Cancelled":
-        return { label: "Đã hủy", bg: "bg-red-100", text: "text-red-700" };
-      default:
-        return { label: "Không rõ", bg: "bg-gray-200", text: "text-gray-600" };
-    }
-  };
-
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#FFF9F4] text-[#3d2e23]">
       <Header />
-      <main className="w-full max-w-7xl mx-auto px-6 py-10">
+      <main className="w-full px-6 py-10 mx-auto max-w-7xl">
         <h2 className="text-3xl font-bold mb-8 text-center text-[#a17455]">
           Lịch sử đơn hàng
         </h2>
 
         {isLoading && <p className="text-[#a17455] text-center">Đang tải đơn hàng...</p>}
-        {isError && <p className="text-red-600 text-center">Lỗi: {error.message}</p>}
+        {isError && <p className="text-center text-red-600">Lỗi: {error.message}</p>}
         {!isLoading && data?.data?.orders?.length === 0 && (
-          <p className="text-gray-600 text-center">Bạn chưa có đơn hàng nào.</p>
+          <p className="text-center text-gray-600">Bạn chưa có đơn hàng nào.</p>
         )}
 
         {!isLoading && (
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {data?.data?.orders?.map((order) => {
-              const status = mapOrderStatus(order.status);
+              const status = getStatusInVietnamese(order.status);
               return (
                 <div
                   key={order.orderId}
                   className="p-5 bg-white border border-[#eaded2] rounded-2xl shadow hover:shadow-lg transition duration-200"
                 >
-                  <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold text-[#7b553c]">Đơn hàng</h3>
                     <span className={`text-xs font-semibold rounded-full px-3 py-1 ${status.bg} ${status.text}`}>
                       {status.label}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-600 space-y-1 mb-3">
+                  <div className="mb-3 space-y-1 text-sm text-gray-600">
                     <p>
                       Ngày đặt: <span className="text-[#5e5045]">{formatDate(order.createdAt)}</span>
                     </p>

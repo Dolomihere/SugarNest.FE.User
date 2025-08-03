@@ -19,7 +19,16 @@ const VoucherSection = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Đóng dropdown khi nhấp ra ngoài
+  useEffect(() => {
+    console.log("userVouchers:", userVouchers);
+    console.log("isLoggedIn:", isLoggedIn);
+    console.log("Dropdown conditions:", {
+      isDropdownOpen,
+      isLoggedIn,
+      hasVouchers: userVouchers.length > 0,
+    });
+  }, [userVouchers, isLoggedIn, isDropdownOpen]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -145,7 +154,7 @@ const VoucherSection = ({
               onChange={(e) => {
                 setVoucherInput(e.target.value);
                 setIsDropdownOpen(true);
-                setSelectedVoucher(null); // Xóa voucher đã chọn khi nhập thủ công
+                setSelectedVoucher(null);
               }}
               onFocus={() => isLoggedIn && setIsDropdownOpen(true)}
               placeholder="Nhập mã voucher hoặc chọn từ danh sách"
@@ -166,22 +175,28 @@ const VoucherSection = ({
                 d="M19 9l-7 7-7-7"
               />
             </svg>
-            {isDropdownOpen && isLoggedIn && userVouchers.length > 0 && (
+            {isDropdownOpen && isLoggedIn && (
               <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
-                {userVouchers.map((voucher) => (
-                  <div
-                    key={voucher.voucherId}
-                    className="p-3 text-sm text-gray-700 cursor-pointer hover:bg-amber-50"
-                    onClick={() => handleVoucherSelect(voucher)}
-                  >
-                    {voucher.name}{" "}
-                    {voucher.percentValue
-                      ? `(${voucher.percentValue}% off)`
-                      : voucher.hardValue
-                      ? `(${formatCurrency(voucher.hardValue)} off)`
-                      : ""}
+                {userVouchers.length > 0 ? (
+                  userVouchers.map((voucher) => (
+                    <div
+                      key={voucher.voucherId}
+                      className="p-3 text-sm text-gray-700 cursor-pointer hover:bg-amber-50"
+                      onClick={() => handleVoucherSelect(voucher)}
+                    >
+                      {voucher.name}{" "}
+                      {voucher.percentValue
+                        ? `(${voucher.percentValue}% off)`
+                        : voucher.hardValue
+                        ? `(${formatCurrency(voucher.hardValue)} off)`
+                        : ""}
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-3 text-sm text-gray-500">
+                    Không có voucher nào khả dụng.
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
