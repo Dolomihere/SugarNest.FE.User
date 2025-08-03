@@ -17,6 +17,7 @@ import UnityGame from "./pages/UnityGame";
 import ScrollToTop from "./pages/layouts/ScrollToTopLayout.jsx";
 import { Header } from "./pages/layouts/Header";
 import AccountPage from './pages/AccountPage.jsx';
+import { ChatBotPage } from "./pages/ChatBot.jsx";
 
 
 import { Footer } from "./pages/layouts/Footer.jsx";
@@ -64,6 +65,7 @@ function App() {
         />
 
         {/* Route mới cho AI cá nhân hóa */}
+        <Route path="/ai-chat" element={<ChatBotPage />} />
       </Routes>
     </>
   );
