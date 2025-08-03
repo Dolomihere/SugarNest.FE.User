@@ -5,6 +5,26 @@ import OrderService from "../services/OrderService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 
+// Ánh xạ trạng thái đơn hàng sang tiếng Việt với màu sắc dễ thương
+const getStatusInVietnamese = (status) => {
+  const statusMap = {
+    "-2": { label: "Đã trả hàng", bg: "bg-pink-100", text: "text-pink-600", border: "border-pink-300" },
+    "-1": { label: "Đã hủy", bg: "bg-pink-100", text: "text-pink-600", border: "border-pink-300" },
+    0: { label: "Đang chờ xác nhận", bg: "bg-yellow-100", text: "text-yellow-600", border: "border-yellow-300" },
+    1: { label: "Đã xác nhận", bg: "bg-blue-100", text: "text-blue-600", border: "border-blue-300" },
+    2: { label: "Đang xử lý", bg: "bg-yellow-100", text: "text-yellow-600", border: "border-yellow-300" },
+    3: { label: "Đang vận chuyển", bg: "bg-blue-100", text: "text-blue-600", border: "border-blue-300" },
+    4: { label: "Đã giao hàng", bg: "bg-green-100", text: "text-green-600", border: "border-green-300" },
+  };
+  const normalizedStatus = status?.toString();
+  return statusMap[normalizedStatus] || {
+    label: "Không xác định",
+    bg: "bg-gray-100",
+    text: "text-gray-600",
+    border: "border-gray-300",
+  };
+};
+
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
   const token = localStorage.getItem("accessToken");
@@ -19,22 +39,6 @@ const OrderDetailsPage = () => {
     queryFn: () => OrderService.getOrderById(orderId, token),
     enabled: !!orderId && !!token,
   });
-
-  const mapOrderStatus = (statusCode) => {
-    switch (statusCode) {
-      case 0:
-      case "Pending":
-        return { label: "Đang xử lý", color: "text-yellow-600" };
-      case 1:
-      case "Completed":
-        return { label: "Đã hoàn tất", color: "text-green-600" };
-      case 2:
-      case "Cancelled":
-        return { label: "Đã hủy", color: "text-red-500" };
-      default:
-        return { label: "Không rõ", color: "text-gray-500" };
-    }
-  };
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("vi-VN", {
@@ -54,124 +58,132 @@ const OrderDetailsPage = () => {
   };
 
   return (
-    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#fffaf3]">
+    <div className="min-h-screen bg-[#fffaf3] text-gray-800">
       <Header />
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6">Chi tiết đơn hàng </h2>
+      <main className="container max-w-4xl px-4 py-10 mx-auto sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold text-center text-[#a17455] mb-8 tracking-wide">
+          Chi tiết đơn hàng
+        </h2>
 
-        {isLoading && <p>Đang tải dữ liệu...</p>}
-        {isError && <p className="text-red-600">Lỗi: {error.message}</p>}
+        {isLoading && (
+          <div className="text-center text-[#a17455] text-lg font-medium animate-pulse bg-[#fef7e8] p-4 rounded-2xl border border-[#eaded2]">
+            Đang tải dữ liệu...
+          </div>
+        )}
+        {isError && (
+          <div className="p-4 text-lg font-medium text-center text-pink-600 border border-pink-200 bg-pink-50 rounded-2xl">
+            Lỗi: {error.message}
+          </div>
+        )}
 
-        {order && (() => {
-          const statusDisplay = mapOrderStatus(order.status);
-
-          return (
-            <div className="bg-white rounded-2xl shadow-md p-6 space-y-6 text-sm text-gray-800">
-              {/* Thông tin người nhận */}
-              <section>
-                <h3 className="text-xl font-semibold mb-2">Thông tin người nhận</h3>
-                <table className="w-full border border-gray-200 rounded-lg overflow-hidden text-sm">
-                  <tbody className="divide-y divide-gray-100">
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3 w-1/3">Tên</td>
-                      <td className="p-3">{order.recipientName}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3">Số điện thoại</td>
-                      <td className="p-3">{order.recipientPhone}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3">Email</td>
-                      <td className="p-3">{order.recipientEmail}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3">Địa chỉ</td>
-                      <td className="p-3">{order.address}</td>
-                    </tr>
+        {order && (
+          <div className="bg-white rounded-2xl shadow-md p-6 md:p-8 space-y-8 border border-[#eaded2]">
+            {/* Thông tin người nhận */}
+            <section>
+              <h3 className="text-xl font-semibold text-[#a17455] mb-4">Thông tin người nhận</h3>
+              <div className="border border-[#eaded2] rounded-2xl overflow-hidden bg-[#fffaf3]">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-[#eaded2]">
+                    {[
+                      { label: "Tên", value: order.recipientName || "Không có" },
+                      { label: "Số điện thoại", value: order.recipientPhone || "Không có" },
+                      { label: "Email", value: order.recipientEmail || "Không có" },
+                      { label: "Địa chỉ", value: order.address || "Không có" },
+                    ].map((item, index) => (
+                      <tr key={index} className="hover:bg-[#fef7e8] transition-colors duration-200">
+                        <td className="w-1/3 p-4 font-medium text-[#7b553c] bg-[#fef7e8]">{item.label}</td>
+                        <td className="p-4 text-gray-700">{item.value}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
-              </section>
+              </div>
+            </section>
 
-              {/* Thông tin đơn hàng */}
-              <section>
-                <h3 className="text-xl font-semibold mb-2">Thông tin đơn hàng</h3>
-                <table className="w-full border border-gray-200 rounded-lg overflow-hidden text-sm mt-2">
-                  <tbody className="divide-y divide-gray-100">
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3 w-1/3">Ngày đặt</td>
-                      <td className="p-3">{formatDate(order.createdAt)}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3">Trạng thái</td>
-                      <td className={`p-3 ${statusDisplay.color}`}>{statusDisplay.label}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3">Ghi chú</td>
-                      <td className="p-3">{order.note || "Không có"}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3">Đơn hàng tùy chỉnh</td>
-                      <td className="p-3">{order.isCustomOrder ? "Có" : "Không"}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-medium text-gray-700 p-3">Đã thanh toán</td>
-                      <td className="p-3">{order.isPaid ? "Có" : "Chưa"}</td>
-                    </tr>
+            {/* Thông tin đơn hàng */}
+            <section>
+              <h3 className="text-xl font-semibold text-[#a17455] mb-4">Thông tin đơn hàng</h3>
+              <div className="border border-[#eaded2] rounded-2xl overflow-hidden bg-[#fffaf3]">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-[#eaded2]">
+                    {[
+                      { label: "Ngày đặt", value: formatDate(order.createdAt) },
+                      { label: "Ngày giao hàng", value: formatDate(order.deliveryTime) },
+                      {
+                        label: "Trạng thái",
+                        value: (
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusInVietnamese(order.status).bg} ${getStatusInVietnamese(order.status).text} border ${getStatusInVietnamese(order.status).border}`}
+                          >
+                            {getStatusInVietnamese(order.status).label}
+                          </span>
+                        ),
+                      },
+                      { label: "Ghi chú", value: order.note || "Không có" },
+                      { label: "Đơn hàng tùy chỉnh", value: order.isCustomOrder ? "Có" : "Không" },
+                      { label: "Đã thanh toán", value: order.isPaid ? "Có" : "Chưa" },
+                    ].map((item, index) => (
+                      <tr key={index} className="hover:bg-[#fef7e8] transition-colors duration-200">
+                        <td className="w-1/3 p-4 font-medium text-[#7b553c] bg-[#fef7e8]">{item.label}</td>
+                        <td className="p-4 text-gray-700">{item.value}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
-              </section>
+              </div>
+            </section>
 
-              {/* Danh sách sản phẩm */}
-              <section>
-                <h3 className="text-xl font-semibold mb-2">Danh sách sản phẩm</h3>
-                <ul className="divide-y divide-gray-100">
-                  {order.orderItems.map((item, index) => (
-                    <li
-                      key={item.productId || index}
-                      className="py-4 flex items-center gap-4"
-                    >
-                      <img
-                        src={item.imgs?.[0]}
-                        alt={item.productName}
-                        className="w-20 h-20 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium">{item.productName}</p>
-                        <p className="text-sm text-gray-500">Số lượng: {item.quantity}</p>
-                        <p className="text-sm text-gray-500">Đơn giá: {formatCurrency(item.unitPrice)}</p>
-                      </div>
-                      <p className="font-semibold text-amber-600">
-                        {formatCurrency(item.unitPrice * item.quantity)}
-                      </p>
-                    </li>
-                  ))}
+            {/* Danh sách sản phẩm */}
+            <section>
+              <h3 className="text-xl font-semibold text-[#a17455] mb-4">Danh sách sản phẩm</h3>
+              <div className="border border-[#eaded2] rounded-2xl overflow-hidden bg-[#fffaf3]">
+                <ul className="divide-y divide-[#eaded2]">
+                  {Array.isArray(order.orderItems) && order.orderItems.length > 0 ? (
+                    order.orderItems.map((item, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center gap-4 p-4 hover:bg-[#fef7e8] transition-colors duration-200"
+                      >
+                        <img
+                          src={item.imgs?.[0] || "/images/placeholder.png"}
+                          alt={item.productName || "Sản phẩm"}
+                          className="w-16 h-16 object-cover rounded-lg border border-[#eaded2] shadow-sm"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-[#a17455] truncate">{item.productName || "Không có tên"}</p>
+                          <p className="text-sm text-gray-600">Số lượng: {item.quantity || 0}</p>
+                          <p className="text-sm text-gray-600">Đơn giá: {formatCurrency(item.unitPrice)}</p>
+                        </div>
+                        <p className="font-semibold text-[#d48d57]">
+                          {formatCurrency(item.unitPrice * item.quantity)}
+                        </p>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="p-4 text-center text-gray-600">Không có sản phẩm trong đơn hàng</li>
+                  )}
                 </ul>
-              </section>
+              </div>
+            </section>
 
-              {/* Tổng tiền */}
-              <section className="border-t pt-4 space-y-1 text-right">
-                <p>
-                  <span className="font-medium">Tạm tính:</span>{" "}
-                  {formatCurrency(order.subTotal)}
+            {/* Tổng tiền */}
+            <section className="border-t border-[#eaded2] pt-6 text-right space-y-3">
+              {[
+                { label: "Tạm tính", value: formatCurrency(order.subTotal) },
+                { label: "Phí vận chuyển", value: formatCurrency(order.shippingFee) },
+                { label: "Giảm giá", value: formatCurrency(order.voucherDiscountAmount) },
+              ].map((item, index) => (
+                <p key={index} className="text-sm">
+                  <span className="font-medium text-[#7b553c]">{item.label}:</span>{" "}
+                  <span className="text-gray-700">{item.value}</span>
                 </p>
-                <p>
-                  <span className="font-medium">Phí vận chuyển:</span>{" "}
-                  {formatCurrency(order.shippingFee)}
-                </p>
-                <p>
-                  <span className="font-medium">Giảm giá voucher:</span>{" "}
-                  {formatCurrency(order.voucherDiscountAmount)}
-                </p>
-                <p className="text-xl font-bold">
-                  Tổng thanh toán:{" "}
-                  <span className="text-amber-600">
-                    {formatCurrency(order.total)}
-                  </span>
-                </p>
-              </section>
-            </div>
-          );
-        })()}
+              ))}
+              <p className="text-lg font-bold text-[#a17455]">
+                Tổng thanh toán: <span className="text-[#d48d57]">{formatCurrency(order.total)}</span>
+              </p>
+            </section>
+          </div>
+        )}
       </main>
       <Footer />
     </div>
