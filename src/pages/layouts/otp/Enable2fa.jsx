@@ -50,7 +50,7 @@ export function Enable2fa(email) {
       setErrorMgs('Lỗi xác thực, thử lại lần sau');
     },
     onSuccess: (data, variables, context) => {
-      goto('/login');
+      goto('/signin');
     }
   });
 
