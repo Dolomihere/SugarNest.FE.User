@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 export const publicApi = axios.create({
-  baseURL: 'https://sugarnest-api.io.vn/',
+  baseURL: "https://sugarnest-api.io.vn/",
+
   headers: {
     'Content-Type': 'application/json',
   },
@@ -9,9 +10,8 @@ export const publicApi = axios.create({
 
 export const privateApi = axios.create({
   baseURL: 'https://sugarnest-api.io.vn/',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
+
 });
 
 let isRefreshing = false;
@@ -65,7 +65,10 @@ privateApi.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const res = await publicApi.post('https://sugarnest-api.io.vn/auth/refresh-token', { refreshToken });
+        const response = await axios.post('https://sugarnest-api.io.vn/auth/refresh-token', {
+          refreshToken
+        });
+
 
         const newAccessToken = res.data.data.accessToken;
         localStorage.setItem('accessToken', newAccessToken);

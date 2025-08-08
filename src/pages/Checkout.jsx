@@ -43,7 +43,7 @@ const CheckoutPage = () => {
   const isLoggedIn = !!accessToken;
 
   // Fetch user-specific vouchers
-  const { data: userVouchers = [] } = useQuery({
+  const { data: userVouchers = [], error: voucherError } = useQuery({
     queryKey: ["userVouchers", accessToken],
     queryFn: () =>
       VoucherService.getUserVouchers(accessToken).then(
@@ -51,6 +51,19 @@ const CheckoutPage = () => {
       ),
     enabled: isLoggedIn,
   });
+
+// Trong CheckoutPage
+const validVouchers = userVouchers.filter((voucher) => {
+  const now = new Date();
+  const startTime = new Date(voucher.startTime);
+  const endTime = new Date(voucher.endTime);
+  const isActive = now >= startTime && now <= endTime; // Bỏ voucher.isActive
+  const isApplicable =
+    !voucher.productId ||
+    cartItems.some((item) => item.productId === voucher.productId);
+  const isNotUsed = !voucher.isUsed; // Thêm kiểm tra isUsed
+  return isActive && isApplicable && isNotUsed;
+});
 
   // Format currency
   const formatCurrency = (value) =>
@@ -94,7 +107,6 @@ const CheckoutPage = () => {
       }
 
       try {
-        // Check if addressFromMap contains coordinates
         const coordsMatch = addressFromMap.match(
           /^(-?\d+\.\d+),\s*(-?\d+\.\d+)/
         );
@@ -104,7 +116,6 @@ const CheckoutPage = () => {
           lat = parseFloat(coordsMatch[1]);
           lng = parseFloat(coordsMatch[2]);
         } else {
-          // Fetch coordinates from Nominatim API
           const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
               addressFromMap
@@ -119,10 +130,8 @@ const CheckoutPage = () => {
           }
         }
 
-        // Update coordinates
         setCoordinates({ lat, lng });
 
-        // Calculate shipping fee
         if (lat && lng) {
           const response = await OrderService.calculateShippingFee({
             lat,
@@ -145,9 +154,7 @@ const CheckoutPage = () => {
 
   // Calculate totals
   const subtotal =
-    cartItems.reduce((sum, item) => sum + item.total, 0) ||
-    initialSubtotal ||
-    0;
+    cartItems.reduce((sum, item) => sum + item.total, 0) || initialSubtotal || 0;
   const tempTotal = subtotal + shippingFee;
   const discountAmount =
     discount > 0 && selectedVoucher
@@ -163,17 +170,39 @@ const CheckoutPage = () => {
     setError("");
     setLoading(true);
 
-    // Validation
     if (!form.name.trim()) {
       setError("Vui lòng nhập tên của bạn");
       setLoading(false);
       return;
     }
-    if (!form.phoneNumber.trim()) {
+    const phone = form.phoneNumber.trim();
+
+    if (!phone) {
       setError("Vui lòng nhập số điện thoại");
       setLoading(false);
       return;
     }
+
+    if (!/^\d+$/.test(phone)) {
+      setError("Số điện thoại chỉ được chứa chữ số (0–9)");
+      setLoading(false);
+      return;
+    }
+
+    if (phone.length !== 10) {
+      setError("Số điện thoại phải gồm đúng 10 chữ số");
+      setLoading(false);
+      return;
+    }
+
+    if (!/^(03|05|07|08|09)\d{8}$/.test(phone)) {
+      setError(
+        "Số điện thoại không hợp lệ. Vui lòng nhập số di động bắt đầu bằng 03, 05, 07, 08 hoặc 09"
+      );
+      setLoading(false);
+      return;
+    }
+
     if (!form.email.trim()) {
       setError("Vui lòng nhập email");
       setLoading(false);
@@ -231,12 +260,11 @@ const CheckoutPage = () => {
         note: form.note || null,
         userVoucher: selectedVoucher?.voucherId || null,
         cartItems: cartItems
-        .filter((item) => item.productId && item.quantity > 0)
-        .map((item) => ({
-          productId: item.productId.toString(),
-          quantity: item.quantity,
-        })),
-
+          .filter((item) => item.productId && item.quantity > 0)
+          .map((item) => ({
+            productId: item.productId.toString(),
+            quantity: item.quantity,
+          })),
       };
 
       const response = await OrderService.createOrder(
@@ -272,7 +300,7 @@ const CheckoutPage = () => {
           orderData: {
             ...orderData,
             subtotal,
-            discount,
+            discount: discountAmount, // Sửa discount thành discountAmount
             shippingFee,
             total: total + shippingFee,
             paymentMethod,
@@ -294,7 +322,7 @@ const CheckoutPage = () => {
           orderData: {
             ...orderData,
             subtotal,
-            discount,
+            discount: discountAmount, // Sửa discount thành discountAmount
             shippingFee,
             total: total + shippingFee,
             paymentMethod,
@@ -304,7 +332,7 @@ const CheckoutPage = () => {
           checkoutData: {
             cartData,
             selectedVoucher,
-            discount,
+            discount: discountAmount, // Sửa discount thành discountAmount
             subtotal,
             total,
             guestCartId,
@@ -331,7 +359,7 @@ const CheckoutPage = () => {
             <OrderSummary
               cartItems={cartItems}
               selectedVoucher={selectedVoucher}
-              discount={discount}
+              discount={discountAmount} // Sửa discount thành discountAmount
               subtotal={subtotal}
               total={total}
               discountAmount={discountAmount}
@@ -419,7 +447,7 @@ const CheckoutPage = () => {
             />
             <VoucherSection
               isLoggedIn={isLoggedIn}
-              userVouchers={userVouchers}
+              userVouchers={validVouchers} // Sử dụng validVouchers thay vì userVouchers
               selectedVoucher={selectedVoucher}
               setSelectedVoucher={setSelectedVoucher}
               discount={discount}
@@ -430,9 +458,12 @@ const CheckoutPage = () => {
               setVoucherInput={setVoucherInput}
               formatCurrency={formatCurrency}
               subtotal={subtotal}
+              cartItems={cartItems} // Truyền cartItems để kiểm tra productId
             />
-            {error && (
-              <p className="mt-4 text-sm text-red-600">{error}</p>
+            {(error || voucherError) && (
+              <p className="mt-4 text-sm text-red-600">
+                {error || voucherError?.message || "Lỗi không xác định"}
+              </p>
             )}
           </div>
         </div>
