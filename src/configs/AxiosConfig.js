@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 export const publicApi = axios.create({
-  baseURL: "http://14.225.218.217:5000/",
+  baseURL: "https://sugarnest-api.io.vn/",
   headers: {
     "Content-Type": "application/json",
   },
 });
 export const privateApi = axios.create({
-  baseURL: 'http://14.225.218.217:5000/',
+  baseURL: 'https://sugarnest-api.io.vn/',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -63,7 +63,7 @@ privateApi.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post('https://localhost:5001/api/auth/refresh-token', {
+        const response = await axios.post('https://sugarnest-api.io.vn/auth/refresh-token', {
           refreshToken
         });
 

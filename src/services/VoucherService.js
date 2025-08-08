@@ -11,7 +11,7 @@ const VoucherService = {
       const pageSize = 100; // Adjust based on API limits
 
       while (page < totalPages) {
-        const response = await publicApi.get(endpoint, {
+    const response = await publicApi.get("/itemvouchers/mine", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
