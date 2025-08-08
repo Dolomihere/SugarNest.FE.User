@@ -12,6 +12,7 @@ import { RatingModal } from "./RatingModal";
 import { RatingForm } from "./RatingForm";
 import { SuggestedProducts } from "./SuggestedProducts";
 import ToastMessage from ".././components/ToastMessage";
+import ChatPage from "./ChatPage";
 
 export function ProductDetailPage() {
   const [toast, setToast] = useState(null);
@@ -374,8 +375,8 @@ const finalTotalPrice =
    
   </div>
 </div>
-<div className="p-6 mt-10 bg-white border border-amber-200 rounded-2xl shadow-sm">
-  <h4 className="mb-6 text-2xl font-semibold text-gray-800 border-b border-amber-100 pb-3">
+<div className="p-6 mt-10 bg-white border shadow-sm border-amber-200 rounded-2xl">
+  <h4 className="pb-3 mb-6 text-2xl font-semibold text-gray-800 border-b border-amber-100">
     Tùy chọn sản phẩm
   </h4>
 
@@ -384,12 +385,12 @@ const finalTotalPrice =
       {optionGroups.map((group) => (
         <div
           key={group.optionGroupId}
-          className="p-4 bg-gray-50 border border-gray-100 rounded-xl shadow-sm space-y-4"
+          className="p-4 space-y-4 border border-gray-100 shadow-sm bg-gray-50 rounded-xl"
         >
           <div>
             <p className="text-base font-medium text-gray-800">{group.name}</p>
             {group.description && (
-              <p className="mt-1 text-sm text-gray-500 italic">{group.description}</p>
+              <p className="mt-1 text-sm italic text-gray-500">{group.description}</p>
             )}
           </div>
 
@@ -398,7 +399,7 @@ const finalTotalPrice =
               ? group.optionItems?.map((item) => (
                   <label
                     key={item.optionItemId}
-                    className="flex items-center p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm transition"
+                    className="flex items-center p-3 transition bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm"
                   >
                     <input
                       type="checkbox"
@@ -418,7 +419,7 @@ const finalTotalPrice =
               : group.optionItems?.map((item) => (
                   <label
                     key={item.optionItemId}
-                    className="flex items-center p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm transition"
+                    className="flex items-center p-3 transition bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm"
                   >
                     <input
                       type="radio"
@@ -443,19 +444,19 @@ const finalTotalPrice =
     <p className="text-sm text-gray-500">Không có tùy chọn nào cho sản phẩm này.</p>
   )}
 
- <div className="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-6 mt-10 w-full">
+ <div className="flex flex-col items-center justify-end w-full gap-4 mt-10 sm:flex-row sm:gap-6">
   {/* Quantity Control */}
   <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
     <button
       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-      className="w-10 h-10 text-lg font-bold text-gray-700 bg-gray-50 rounded-full hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none border-none active:border-none"
+      className="w-10 h-10 text-lg font-bold text-gray-700 border-none rounded-full bg-gray-50 hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none active:border-none"
     >
       −
     </button>
     <span className="text-xl font-medium">{quantity}</span>
     <button
       onClick={() => setQuantity(quantity + 1)}
-      className="w-10 h-10 text-lg font-bold text-gray-700 bg-gray-50 rounded-full hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none border-none active:border-none"
+      className="w-10 h-10 text-lg font-bold text-gray-700 border-none rounded-full bg-gray-50 hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none active:border-none"
     >
       +
     </button>
@@ -473,13 +474,13 @@ const finalTotalPrice =
     <div className="relative flex items-center gap-4">
       <button
         onClick={handleAddToCart}
-        className="px-5 py-3 text-white bg-amber-500 hover:bg-amber-600 rounded-xl transition font-medium"
+        className="px-5 py-3 font-medium text-white transition bg-amber-500 hover:bg-amber-600 rounded-xl"
       >
         Thêm vào giỏ hàng
       </button>
 
       <button
-        className="px-4 py-2 text-sm font-medium border border-amber-300 text-amber-600 rounded-lg hover:border-amber-500 hover:bg-amber-50 transition"
+        className="px-4 py-2 text-sm font-medium transition border rounded-lg border-amber-300 text-amber-600 hover:border-amber-500 hover:bg-amber-50"
         title="Sao chép hoặc chia sẻ"
         onClick={() => {
           const url = window.location.href;
@@ -492,12 +493,12 @@ const finalTotalPrice =
           }
         }}
       >
-        <i className="fa-regular fa-share-from-square mr-2 text-amber-500"></i>
+        <i className="mr-2 fa-regular fa-share-from-square text-amber-500"></i>
         Chia sẻ
       </button>
 
       {copied && (
-        <div className="absolute px-2 py-1 text-xs text-white bg-amber-600 rounded shadow left-1/2 -top-8 -translate-x-1/2">
+        <div className="absolute px-2 py-1 text-xs text-white -translate-x-1/2 rounded shadow bg-amber-600 left-1/2 -top-8">
           Đã sao chép!
         </div>
       )}
@@ -621,6 +622,7 @@ const finalTotalPrice =
         />
       )}
       <Footer />
+      <ChatPage />
     </div>
   );
 }
