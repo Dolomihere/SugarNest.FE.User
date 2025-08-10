@@ -14,11 +14,11 @@ export function HomePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="flex flex-col md:flex-row flex-wrap gap-5 p-5 max-w-7xl mx-auto">
-        <div className="flex flex-col gap-5 p-5 flex-1">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-main leading-tight">
+      <section className="flex flex-col flex-wrap gap-5 p-5 mx-auto md:flex-row max-w-7xl">
+        <div className="flex flex-col flex-1 gap-5 p-5">
+          <h1 className="text-4xl font-extrabold leading-tight md:text-5xl text-main">
             Bánh Ngọt{' '}
-            <span className="text-amber-600 inline-flex items-center">
+            <span className="inline-flex items-center text-amber-600">
               Tuyệt Hảo{' '}
             </span>
             <br />
@@ -60,21 +60,21 @@ export function HomePage() {
           <div className="flex flex-wrap gap-4 mt-4">
           
                <Link
-              to="/products" className="btn-primary shadow-md hover:shadow-lg cursor-pointer">
+              to="/products" className="shadow-md cursor-pointer btn-primary hover:shadow-lg">
               Đặt bánh ngay
                 </Link>
 
            
               <Link
               to="/contact"
-              className="text-amber-600 border border-amber-300 px-5 py-3 rounded-xl text-lg hover:bg-amber-100 transition cursor-pointer"
+              className="px-5 py-3 text-lg transition border cursor-pointer text-amber-600 border-amber-300 rounded-xl hover:bg-amber-100"
             >
               Liên hệ với chúng tôi
             </Link>
           </div>
         </div>
 
-        <div className="hidden md:flex justify-center items-center flex-1 p-5">
+        <div className="items-center justify-center flex-1 hidden p-5 md:flex">
           <img
             src="https://i.pinimg.com/736x/f3/40/aa/f340aa237513bc33d67074f674b2305a.jpg"
             alt="Delicious cake"
@@ -100,7 +100,7 @@ export function HomePage() {
 
       <Footer />
 
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed z-50 bottom-4 right-4">
         <ChatPage />
       </div>
     </div>

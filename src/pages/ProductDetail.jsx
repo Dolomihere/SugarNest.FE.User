@@ -622,7 +622,6 @@ const finalTotalPrice =
         />
       )}
       <Footer />
-      <ChatPage />
     </div>
   );
 }
