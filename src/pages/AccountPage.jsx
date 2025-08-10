@@ -10,6 +10,8 @@ import { ProductCard } from '../components/ProductCard';
 import { useQueryClient } from '@tanstack/react-query';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ToastMessage from '../components/ToastMessage';
+import OrderHistory from './OrderHistory'; // Hoặc đúng path tương ứng
+
 import {
   faUser,
   faPhone,
@@ -144,64 +146,86 @@ const AccountPage = () => {
     }
   };
 
-  const handleUpdateAddress = async () => {
-    try {
-      const response = await AxiosInstance.patch('/users/address', address);
-      if (response.data.isSuccess) {
-        setUser((prev) => ({
-          ...prev,
-          address: address.address,
-          latitude: address.latitude,
-          longitude: address.longitude,
-        }));
-        setSuccess('Cập nhật địa chỉ thành công.');
-        setError('');
-        setEditProfile(false);
-      } else {
-        setError(response.data.message || 'Không thể cập nhật địa chỉ.');
-        setSuccess('');
-      }
-    } catch (err) {
-      setError('Lỗi khi cập nhật địa chỉ.');
+ const handleUpdateAddress = async () => {
+  if (!address.address.trim()) {
+    setError("Vui lòng nhập địa chỉ.");
+    return;
+  }
+
+  try {
+    const response = await AxiosInstance.patch('/users/address', address);
+    if (response.data.isSuccess) {
+      setUser((prev) => ({
+        ...prev,
+        address: address.address,
+        latitude: address.latitude,
+        longitude: address.longitude,
+      }));
+      setSuccess("Cập nhật địa chỉ thành công.");
+      setError('');
+      setEditProfile(false);
+    } else {
+      setError(response.data.message || "Không thể cập nhật địa chỉ.");
       setSuccess('');
     }
-  };
+  } catch (err) {
+    setError("Lỗi khi cập nhật địa chỉ.");
+    setSuccess('');
+  }
+};
 
   const handleUpdateBio = async () => {
-    try {
-      const response = await AxiosInstance.patch('/users/bio', { Bio: bio });
-      if (response.data.isSuccess) {
-        setUser((prev) => ({ ...prev, bio }));
-        setSuccess('Cập nhật tiểu sử thành công.');
-        setError('');
-        setEditProfile(false);
-      } else {
-        setError(response.data.message || 'Không thể cập nhật tiểu sử.');
-        setSuccess('');
-      }
-    } catch (err) {
-      setError('Lỗi khi cập nhật tiểu sử.');
+  if (bio.length > 300) {
+    setError("Tiểu sử không được vượt quá 300 ký tự.");
+    return;
+  }
+
+  try {
+    const response = await AxiosInstance.patch('/users/bio', { Bio: bio });
+    if (response.data.isSuccess) {
+      setUser((prev) => ({ ...prev, bio }));
+      setSuccess("Cập nhật tiểu sử thành công.");
+      setError('');
+      setEditProfile(false);
+    } else {
+      setError(response.data.message || "Không thể cập nhật tiểu sử.");
       setSuccess('');
     }
-  };
+  } catch (err) {
+    setError("Lỗi khi cập nhật tiểu sử.");
+    setSuccess('');
+  }
+};
+
 
   const handleUpdateFullname = async () => {
-    try {
-      const response = await AxiosInstance.patch('/users/fullname', { Fullname: fullname });
-      if (response.data.isSuccess) {
-        setUser((prev) => ({ ...prev, fullname }));
-        setSuccess('Cập nhật họ tên thành công.');
-        setError('');
-        setEditProfile(false);
-      } else {
-        setError(response.data.message || 'Không thể cập nhật họ tên.');
-        setSuccess('');
-      }
-    } catch (err) {
-      setError('Lỗi khi cập nhật họ tên.');
+  const name = fullname.trim();
+  if (!name) {
+    setError("Vui lòng nhập họ tên.");
+    return;
+  }
+  if (name.length < 2) {
+    setError("Họ tên phải có ít nhất 2 ký tự.");
+    return;
+  }
+
+  try {
+    const response = await AxiosInstance.patch('/users/fullname', { Fullname: name });
+    if (response.data.isSuccess) {
+      setUser((prev) => ({ ...prev, fullname: name }));
+      setSuccess("Cập nhật họ tên thành công.");
+      setError('');
+      setEditProfile(false);
+    } else {
+      setError(response.data.message || "Không thể cập nhật họ tên.");
       setSuccess('');
     }
-  };
+  } catch (err) {
+    setError("Lỗi khi cập nhật họ tên.");
+    setSuccess('');
+  }
+};
+
 
   const handleUpdateGender = async () => {
     try {
@@ -222,22 +246,45 @@ const AccountPage = () => {
   };
 
   const handleUpdatePhoneNumber = async () => {
-    try {
-      const response = await AxiosInstance.patch('/users/phone', { PhoneNumber: phoneNumber });
-      if (response.data.isSuccess) {
-        setUser((prev) => ({ ...prev, phoneNumber }));
-        setSuccess('Cập nhật số điện thoại thành công.');
-        setError('');
-        setEditProfile(false);
-      } else {
-        setError(response.data.message || 'Không thể cập nhật số điện thoại.');
-        setSuccess('');
-      }
-    } catch (err) {
-      setError('Lỗi khi cập nhật số điện thoại.');
+  const phone = phoneNumber.trim();
+
+  if (!phone) {
+    setError("Vui lòng nhập số điện thoại.");
+    return;
+  }
+
+  if (!/^\d+$/.test(phone)) {
+    setError("Số điện thoại chỉ được chứa chữ số (0–9).");
+    return;
+  }
+
+  if (phone.length !== 10) {
+    setError("Số điện thoại phải gồm đúng 10 chữ số.");
+    return;
+  }
+
+  if (!/^(03|05|07|08|09)\d{8}$/.test(phone)) {
+    setError("Số điện thoại không hợp lệ. Vui lòng dùng các đầu số: 03, 05, 07, 08 hoặc 09.");
+    return;
+  }
+
+  try {
+    const response = await AxiosInstance.patch('/users/phone', { PhoneNumber: phone });
+    if (response.data.isSuccess) {
+      setUser((prev) => ({ ...prev, phoneNumber: phone }));
+      setSuccess("Cập nhật số điện thoại thành công.");
+      setError('');
+      setEditProfile(false);
+    } else {
+      setError(response.data.message || "Không thể cập nhật số điện thoại.");
       setSuccess('');
     }
-  };
+  } catch (err) {
+    setError("Lỗi khi cập nhật số điện thoại.");
+    setSuccess('');
+  }
+};
+
 
   const handleLogout = () => {
     logout();
@@ -333,14 +380,27 @@ const AccountPage = () => {
     >
       <FontAwesomeIcon icon={faUser} /> Thông tin cá nhân
     </button>
-      <button
-      onClick={() => setActiveTab('favorites')}
+     <button
+  onClick={() => setActiveTab('favorites')}
+  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm hover:bg-amber-50 transition-colors ${
+    activeTab === 'favorites' ? 'bg-amber-100 text-amber-700 font-semibold' : 'text-gray-700'
+  }`}
+>
+  <i className="fa-solid fa-heart text-orange-300"></i>
+  Sản phẩm yêu thích
+  <span className="ml-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-amber-500 text-white rounded-full">
+    {favoriteProducts.length}
+  </span>
+</button>
+
+    <button
+      onClick={() => setActiveTab('orderHistory')}
       className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm hover:bg-amber-50 transition-colors ${
-        activeTab === 'favorites' ? 'bg-amber-100 text-amber-700 font-semibold' : 'text-gray-700'
+        activeTab === 'orderHistory' ? 'bg-amber-100 text-amber-700 font-semibold' : 'text-gray-700'
       }`}
     >
-      <i className="fa-solid fa-heart text-orange-300"></i>
-      Sản phẩm yêu thích
+      <i className="fa-solid fa-clock-rotate-left text-orange-300"></i>
+      Lịch sử đơn hàng
     </button>
 
     <button
@@ -351,6 +411,7 @@ const AccountPage = () => {
     </button>
   </nav>
 
+  {/* 👤 THÔNG TIN CÁ NHÂN */}
   {/* 👤 THÔNG TIN CÁ NHÂN */}
   {activeTab === 'profile' && (
      <div className="grid gap-6 text-sm text-gray-800 sm:grid-cols-2">
@@ -497,10 +558,9 @@ const AccountPage = () => {
 
   {/* ❤️ SẢN PHẨM YÊU THÍCH */}
   {activeTab === 'favorites' && (
-    <div className="p-6 space-y-4 bg-white shadow-md rounded-xl">
-      <h2 className="text-2xl font-semibold text-amber-700">
-        Sản phẩm yêu thích ({favoriteProducts.length})
-      </h2>
+  <div className="p-6 bg-white border rounded-xl shadow-md space-y-4">
+
+      
       {favoritesLoading ? (
         <p>Đang tải danh sách yêu thích...</p>
       ) : favoritesError ? (
@@ -516,12 +576,22 @@ const AccountPage = () => {
               isFavorite={true}
               viewMode="grid"
               onAddFavorite={() => handleRemoveFavorite(product.productId)}
+              hidePrice={true}
             />
           ))}
         </div>
       )}
     </div>
   )}
+ {activeTab === 'orderHistory' && (
+  <div className="p-6 bg-white border rounded-xl shadow-md space-y-4">
+    <OrderHistory />
+  </div>
+)}
+
+
+
+
 </section> 
 </div>
 </main>

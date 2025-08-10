@@ -9,12 +9,13 @@ export function ProductCard({
   onAddFavorite,
   isFavorite,
   className,
+  hidePrice = false
 }) {
   const {
     productId,
     name,
-    unitPrice,
-    finalUnitPrice,
+    unitPrice = 0,
+    finalUnitPrice = 0,
     imgs = ["/placeholder.jpg"],
     description = "",
     createdDate = "Feb 12, 2020",
@@ -27,6 +28,11 @@ export function ProductCard({
 
   // Giả sử token được lấy từ context hoặc state
   const token = "your-auth-token"; // TODO: Thay bằng logic lấy token thực tế
+  const formatCurrency = (value) => {
+    return typeof value === 'number'
+      ? value.toLocaleString("vi-VN") + '₫'
+      : '0₫';
+  };
 
   const {
     data: ratingData,
@@ -116,22 +122,37 @@ export function ProductCard({
           />
          
 
-          <button
-            onClick={handleFavoriteClick}
-            className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-all duration-200 ${
-              isFavorite ? "bg-amber-500 border-amber-500" : "bg-white border-gray-300 hover:border-amber-500 hover:shadow-md"
-            }`}
-            aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-          ></button>
+        <button
+          onClick={handleFavoriteClick}
+          className="absolute top-3 right-3 p-1 transition-all duration-300"
+          aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill={isFavorite ? "currentColor" : "none"}
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className={`w-6 h-6 ${isFavorite ? "text-amber-500" : "text-gray-400 hover:text-amber-500"}`}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
+            />
+          </svg>
+        </button>
+
         </Link>
         <div className="flex flex-col flex-1 p-5">
           <div className="flex flex-col">
             <h3 className="text-lg font-bold text-amber-600 truncate">
               {name}
             </h3>
+            {!hidePrice && (
             <div className="mt-1 flex items-center gap-2">
               <span className="text-lg font-bold text-red-600">
-                {finalUnitPrice.toLocaleString("vi-VN")}₫
+                {formatCurrency(finalUnitPrice)}
               </span>
               {unitPrice > finalUnitPrice && (
                 <span className="text-sm text-gray-500 line-through">
@@ -142,6 +163,8 @@ export function ProductCard({
                 <span className="ml-auto discount-badge">-{discountPercent}%</span>
               )}
             </div>
+          )}
+
           </div>
 
           <div className="flex items-center justify-between mt-3">
@@ -176,19 +199,34 @@ export function ProductCard({
         />
         
        <button
-            onClick={handleFavoriteClick}
-            className={`absolute top-3 right-3 w-5 h-5 rounded-full border transition-all duration-200 ${
-              isFavorite ? "bg-amber-500 border-amber-500" : "bg-white border-gray-300 hover:border-amber-500 hover:shadow-md"
-            }`}
-            aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-          ></button>
+        onClick={handleFavoriteClick}
+        className="absolute top-3 right-3 p-1 transition-all duration-300"
+        aria-label={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill={isFavorite ? "currentColor" : "none"}
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          className={`w-6 h-6 ${isFavorite ? "text-amber-500" : "text-gray-400 hover:text-amber-500"}`}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
+          />
+        </svg>
+      </button>
+
       </Link>
       <div className="flex flex-col w-1/2 p-6">
        <div className="flex flex-col">
         <h3 className="text-lg font-bold text-amber-600 truncate">{name}</h3>
+       {!hidePrice && (
         <div className="mt-1 flex items-center gap-2">
           <span className="text-lg font-bold text-red-600">
-            {finalUnitPrice.toLocaleString("vi-VN")}₫
+            {formatCurrency(finalUnitPrice)}
           </span>
           {unitPrice > finalUnitPrice && (
             <span className="text-sm text-gray-500 line-through">
@@ -199,6 +237,8 @@ export function ProductCard({
             <span className="ml-auto discount-badge">-{discountPercent}%</span>
           )}
         </div>
+      )}
+
       </div>
 
         {description && <p className="mt-2 text-sm text-gray-600 line-clamp-3">{description}</p>}
