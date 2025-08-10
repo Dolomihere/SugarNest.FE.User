@@ -333,7 +333,6 @@ export function ProductPage() {
         )}
       </main>
       <Footer />
-      <ChatPage />
     </div>
   );
 }

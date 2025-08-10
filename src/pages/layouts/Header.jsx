@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import AxiosInstance from "../../core/services/AxiosInstance";
 import CartService from "../../services/CartService";
+import ChatPage from "../ChatPage"; // Import ChatPage component
 
 // Icon giỏ hàng
 const CartIcon = (props) => (
@@ -37,7 +38,8 @@ export function Header() {
   const [avatar, setAvatar] = useState("/public/images/owner.png");
 
   const token =
-    localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken");
   const guestCartId = localStorage.getItem("guestCartId");
 
   const { data: cartData } = useQuery({
@@ -56,7 +58,9 @@ export function Header() {
   });
 
   const cartItemCount = useMemo(() => {
-    return cartData?.cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+    return (
+      cartData?.cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0
+    );
   }, [cartData]);
 
   const navLinks = [
@@ -66,7 +70,7 @@ export function Header() {
     { to: "/contact", label: "Liên hệ" },
     { to: "/discounts", label: "Chương trình giảm giá" },
     { to: "/unity-game", label: "Giải trí" },
-
+    { to: "/order-history", label: "Đơn hàng" },
   ];
 
   useEffect(() => {
@@ -122,9 +126,8 @@ export function Header() {
             <CartIcon className="w-8 h-8 translate-y-[2px]" />
             {cartItemCount > 0 && (
               <span className="absolute -top-1.5 -right-1 bg-red-500 text-white text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center animate-bounce">
-            {cartItemCount}
-          </span>
-
+                {cartItemCount}
+              </span>
             )}
           </button>
 
@@ -185,9 +188,8 @@ export function Header() {
                 <CartIcon className="w-6 h-6" />
                 {cartItemCount > 0 && (
                   <span className="absolute -top-1.5 -right-1 bg-red-500 text-white text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center animate-bounce">
-                {cartItemCount}
-              </span>
-
+                    {cartItemCount}
+                  </span>
                 )}
               </button>
             </li>
@@ -228,6 +230,9 @@ export function Header() {
           </ul>
         </div>
       )}
+
+      {/* Add ChatPage component to render on all pages */}
+      {/* <ChatPage /> */}
     </header>
   );
 }
