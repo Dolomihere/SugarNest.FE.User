@@ -14,6 +14,8 @@ const VoucherSection = ({
 
   const cartItemKey = getCartItemKey(product); // dùng key thống nhất
 
+
+  // Đóng dropdown khi nhấp ra ngoài
   useEffect(() => {
     const found = userVouchers.find(v => v.voucherId === voucherId);
     if (found) {
@@ -27,6 +29,8 @@ const VoucherSection = ({
     if (!voucher) return false;
     if (voucher.productId && voucher.productId !== product.productId) {
       return false;
+
+   
     }
     if (
       voucher.minQuantity > product.quantity ||
@@ -89,6 +93,7 @@ const VoucherSection = ({
           <option 
             key={`${v.voucherId}-${cartItemKey}`} 
             value={v.voucherId}
+
           >
             {v.name} -{" "}
             {v.percentValue

@@ -7,6 +7,7 @@ import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 import OrderDetailContent from "./OrderDetailContent";
 
+
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
   const token = localStorage.getItem("accessToken");
@@ -34,6 +35,25 @@ const OrderDetailsPage = () => {
     });
   };
 
+  const renderTable = (rows) => (
+    <div className="border border-[#e2d8c5] rounded-xl overflow-hidden bg-[#fffefb]">
+      <table className="w-full text-sm text-gray-700 font-light leading-relaxed tracking-wide">
+        <tbody className="divide-y divide-[#f0e6d9]">
+          {rows.map((item, index) => (
+            <tr key={index} className="hover:bg-[#fef9f1] transition duration-200">
+              <td className="w-1/3 p-4 font-medium text-[#7b553c] bg-[#fff7ec] border border-[#f0e6d9]">
+                {item.label}
+              </td>
+              <td className="p-4 font-normal text-gray-800 border border-[#f0e6d9] bg-white">
+                {item.value}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#fffaf3] text-gray-800">
       <Header />
@@ -46,6 +66,7 @@ const OrderDetailsPage = () => {
         {isLoading && (
           <div className="animate-pulse text-center text-lg font-medium bg-white p-4 rounded-xl shadow">
             Đang tải dữ liệu...
+
           </div>
         )}
 
@@ -61,6 +82,7 @@ const OrderDetailsPage = () => {
             formatCurrency={formatCurrency}
             formatDate={formatDate}
           />
+
         )}
       </main>
 

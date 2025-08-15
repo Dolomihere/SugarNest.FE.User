@@ -49,6 +49,7 @@ const CheckoutPage = () => {
 
   // Lấy voucher người dùng
   const { data: userVouchers = [] } = useQuery({
+  
     queryKey: ["userVouchers", accessToken],
     queryFn: () =>
       VoucherService.getUserItemVouchers(accessToken).then((data) =>
@@ -62,6 +63,7 @@ const CheckoutPage = () => {
       ),
     enabled: isLoggedIn,
   });
+
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("vi-VN", {
@@ -101,6 +103,7 @@ const CheckoutPage = () => {
         return;
       }
       try {
+
         let lat, lng;
         const coordsMatch = addressFromMap.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
         if (coordsMatch) {
@@ -109,6 +112,7 @@ const CheckoutPage = () => {
         } else {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressFromMap)}`
+
           );
           const data = await res.json();
           if (data.length > 0) {
@@ -117,6 +121,7 @@ const CheckoutPage = () => {
           }
         }
         setCoordinates({ lat, lng });
+
         if (lat && lng) {
           const { shippingFee } = await OrderService.calculateShippingFee({ lat, lng });
           setShippingFee(shippingFee || 0);
@@ -178,6 +183,7 @@ const handleSubmit = async () => {
 
     console.log("📦 Order data gửi lên:", orderData);
 
+
     const res = await OrderService.createOrder(orderData, accessToken, guestCartId);
     console.log("📩 Response từ createOrder:", res);
 
@@ -210,6 +216,7 @@ const handleSubmit = async () => {
 
 
 
+  
 
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#fffaf3] text-gray-700">
@@ -221,6 +228,7 @@ const handleSubmit = async () => {
               cartItems={cartItems}
               selectedVouchers={selectedVouchers}
               discounts={productDiscounts}
+
               subtotal={subtotal}
               total={total}
               discountAmount={totalDiscount}
@@ -284,6 +292,7 @@ const handleSubmit = async () => {
               handleSubmit={handleSubmit}
             />
             {error && <p className="text-red-600 text-sm">{error}</p>}
+
           </div>
         </div>
       </main>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
+
 import OrderService from "../services/OrderService";
 
 const getStatusInVietnamese = (status) => {
@@ -129,10 +130,21 @@ const OrderHistory = () => {
                 </div>
               );
             })}
+
+
           </div>
-        )}
-      </main>
-      <Footer />
+          <button
+            onClick={() => navigate(`/order/${order.orderId}`)}
+            className="w-full text-sm font-medium text-[#a17455] border border-[#d6a97e] px-4 py-2 rounded-lg hover:bg-[#f5e9dc] transition"
+          >
+            Xem chi tiết
+          </button>
+        </div>
+      );
+    })}
+  </div>
+)}
+
     </div>
   );
 };
