@@ -1,22 +1,19 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import OrderService from "../services/OrderService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
+import OrderService from "../services/OrderService";
 
-// Ánh xạ trạng thái đơn hàng sang tiếng Việt và màu sắc
 const getStatusInVietnamese = (status) => {
   const statusMap = {
-    "-2": { label: "Đã trả hàng", bg: "bg-red-100", text: "text-red-700" }, // Returned
-    "-1": { label: "Đã hủy", bg: "bg-red-100", text: "text-red-700" }, // Canceled
-    "0": { label: "Đang chờ xác nhận", bg: "bg-yellow-100", text: "text-yellow-800" }, // Pending
-    "1": { label: "Đã xác nhận", bg: "bg-blue-100", text: "text-blue-800" }, // Confirmed
-    "2": { label: "Đang xử lý", bg: "bg-yellow-100", text: "text-yellow-800" }, // Processing
-    "3": { label: "Đang vận chuyển", bg: "bg-blue-100", text: "text-blue-800" }, // InTransit
-    "4": { label: "Đã giao hàng", bg: "bg-green-100", text: "text-green-800" }, // Delivered
+    "-2": { label: "Đã trả hàng", bg: "bg-red-100", text: "text-red-700" },
+    "-1": { label: "Đã hủy", bg: "bg-red-100", text: "text-red-700" },
+    "0": { label: "Đang chờ xác nhận", bg: "bg-yellow-100", text: "text-yellow-800" },
+    "1": { label: "Đã xác nhận", bg: "bg-blue-100", text: "text-blue-800" },
+    "2": { label: "Đang xử lý", bg: "bg-yellow-100", text: "text-yellow-800" },
+    "3": { label: "Đang vận chuyển", bg: "bg-blue-100", text: "text-blue-800" },
+    "4": { label: "Đã giao hàng", bg: "bg-green-100", text: "text-green-800" },
   };
-  // Chuẩn hóa status để xử lý cả chuỗi và số
   const normalizedStatus = status?.toString();
   return statusMap[normalizedStatus] || { label: "Không xác định", bg: "bg-gray-200", text: "text-gray-600" };
 };
@@ -24,18 +21,12 @@ const getStatusInVietnamese = (status) => {
 const OrderHistory = () => {
   const token = localStorage.getItem("accessToken");
   const navigate = useNavigate();
-
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["orderHistory", token],
-    queryFn: () => OrderService.getOrderHistory(token),
-    enabled: !!token,
-  });
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const formatCurrency = (value) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "decimal",
-      minimumFractionDigits: 0,
-    }).format(value || 0) + " VND";
+    new Intl.NumberFormat("vi-VN", { style: "decimal", minimumFractionDigits: 0 }).format(value || 0) + " VND";
 
   const formatDate = (dateString) => {
     if (!dateString) return "Không xác định";
@@ -48,23 +39,66 @@ const OrderHistory = () => {
     });
   };
 
+  useEffect(() => {
+    if (!token) {
+      setError("Bạn chưa đăng nhập.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchOrders = async () => {
+      try {
+        // 1️⃣ Lấy danh sách orderId từ lịch sử
+        const historyRes = await OrderService.getOrderHistory(token);
+        const orderList = historyRes?.data?.orders || [];
+
+        // 2️⃣ Promise.all gọi getOrderById cho từng orderId
+        const detailedOrders = await Promise.all(
+          orderList.map(async (order) => {
+            try {
+              const detailRes = await OrderService.getOrderById(order.orderId, token);
+              const detail = detailRes.data || detailRes;
+
+              // 3️⃣ Tính total chính xác
+              const total = (detail.subTotal || 0) + (detail.shippingFee || 0) - (detail.voucherDiscount || 0);
+
+              return {
+                ...order,
+                ...detail,
+                total, // ghi đè để frontend hiển thị đúng
+              };
+            } catch (err) {
+              console.error(`Lỗi lấy chi tiết đơn ${order.orderId}`, err);
+              return order; // fallback nếu lỗi
+            }
+          })
+        );
+
+        setOrders(detailedOrders);
+      } catch (err) {
+        console.error("Lỗi lấy lịch sử đơn hàng:", err);
+        setError("Không thể tải lịch sử đơn hàng.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [token]);
+
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#FFF9F4] text-[#3d2e23]">
       <Header />
       <main className="w-full px-6 py-10 mx-auto max-w-7xl">
-        <h2 className="text-3xl font-bold mb-8 text-center text-[#a17455]">
-          Lịch sử đơn hàng
-        </h2>
+        <h2 className="text-3xl font-bold mb-8 text-center text-[#a17455]">Lịch sử đơn hàng</h2>
 
-        {isLoading && <p className="text-[#a17455] text-center">Đang tải đơn hàng...</p>}
-        {isError && <p className="text-center text-red-600">Lỗi: {error.message}</p>}
-        {!isLoading && data?.data?.orders?.length === 0 && (
-          <p className="text-center text-gray-600">Bạn chưa có đơn hàng nào.</p>
-        )}
+        {loading && <p className="text-center">Đang tải đơn hàng...</p>}
+        {error && <p className="text-center text-red-600">{error}</p>}
+        {!loading && orders.length === 0 && <p className="text-center">Bạn chưa có đơn hàng nào.</p>}
 
-        {!isLoading && (
+        {!loading && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data?.data?.orders?.map((order) => {
+            {orders.map((order) => {
               const status = getStatusInVietnamese(order.status);
               return (
                 <div
@@ -83,9 +117,7 @@ const OrderHistory = () => {
                     </p>
                     <p>
                       Tổng thanh toán:{" "}
-                      <span className="font-semibold text-[#d48d57]">
-                        {formatCurrency(order.total)}
-                      </span>
+                      <span className="font-semibold text-[#d48d57]">{formatCurrency(order.total)}</span>
                     </p>
                   </div>
                   <button

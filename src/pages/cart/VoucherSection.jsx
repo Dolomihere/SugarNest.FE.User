@@ -1,225 +1,125 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
-import VoucherService from "../../services/VoucherService";
+import React, { useState, useEffect } from "react";
+import { getCartItemKey } from "../../utils/cart"; // thêm import
 
 const VoucherSection = ({
-  isLoggedIn,
+  product,
   userVouchers,
   selectedVoucher,
   setSelectedVoucher,
-  discount,
-  setDiscount,
-  promoMessage,
-  setPromoMessage,
-  voucherInput,
-  setVoucherInput,
-  formatCurrency,
-  subtotal,
+  setDiscountForProduct,
+  formatCurrency
 }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const [voucherId, setVoucherId] = useState(selectedVoucher?.voucherId || "");
+  const [voucher, setVoucher] = useState(selectedVoucher || null);
+
+  const cartItemKey = getCartItemKey(product); // dùng key thống nhất
 
   useEffect(() => {
-    console.log("userVouchers:", userVouchers);
-    console.log("isLoggedIn:", isLoggedIn);
-    console.log("Dropdown conditions:", {
-      isDropdownOpen,
-      isLoggedIn,
-      hasVouchers: userVouchers.length > 0,
-    });
-  }, [userVouchers, isLoggedIn, isDropdownOpen]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const fetchVoucherMutation = useMutation({
-    mutationFn: (voucherId) =>
-      VoucherService.getVoucherById(
-        voucherId,
-        localStorage.getItem("accessToken")
-      ),
-    onSuccess: (response) => {
-      const voucher = response.data.data;
-      if (
-        voucher &&
-        voucher.isActive &&
-        (!voucher.endTime || new Date(voucher.endTime) > new Date())
-      ) {
-        setSelectedVoucher(voucher);
-        setPromoMessage("");
-        setVoucherInput(voucher.name);
-      } else {
-        setSelectedVoucher(null);
-        setDiscount(0);
-        setPromoMessage("Mã voucher không hợp lệ hoặc đã hết hạn.");
-      }
-    },
-    onError: (err) => {
-      setSelectedVoucher(null);
-      setDiscount(0);
-      setPromoMessage(`Không tìm thấy voucher: ${err.message}`);
-    },
-  });
-
-  const handleVoucherSelect = (voucher) => {
-    if (!isLoggedIn) {
-      setDiscount(0);
-      setPromoMessage("Vui lòng đăng nhập để sử dụng voucher!");
-      return;
+    const found = userVouchers.find(v => v.voucherId === voucherId);
+    if (found) {
+      setVoucher(found);
+    } else {
+      setVoucher(null);
     }
-    fetchVoucherMutation.mutate(voucher.voucherId);
-    setIsDropdownOpen(false);
+  }, [voucherId, userVouchers]);
+
+  const isVoucherValid = () => {
+    if (!voucher) return false;
+    if (voucher.productId && voucher.productId !== product.productId) {
+      return false;
+    }
+    if (
+      voucher.minQuantity > product.quantity ||
+      voucher.maxQuantity < product.quantity
+    ) {
+      return false;
+    }
+    return true;
   };
 
-  const handleApplyVoucher = () => {
-    if (!isLoggedIn) {
-      setDiscount(0);
-      setPromoMessage("Vui lòng đăng nhập để sử dụng voucher!");
-      return;
+  const getVoucherValue = (unitPrice, voucher) => {
+    if (!voucher) return 0;
+
+    let discount = 0;
+    if (voucher.percentValue && voucher.percentValue > 0) {
+      discount = (unitPrice * voucher.percentValue) / 100;
     }
-    if (!voucherInput.trim()) {
-      setDiscount(0);
-      setPromoMessage("Vui lòng nhập mã voucher!");
-      return;
+    if (voucher.hardValue && voucher.hardValue > 0) {
+      discount = Math.max(discount, voucher.hardValue);
     }
-    fetchVoucherMutation.mutate(voucherInput.trim());
-    setIsDropdownOpen(false);
+    discount = Math.min(discount, unitPrice);
+    return Math.round(discount);
+  };
+
+  const calculateProductTotal = (unitPrice, quantity, discountPerUnit) => {
+    const total = (unitPrice - discountPerUnit) * quantity;
+    return Math.max(Math.round(total * 100) / 100, 0);
+  };
+
+  const applyVoucher = () => {
+    if (isVoucherValid()) {
+      const discountPerUnit = getVoucherValue(product.unitPrice, voucher);
+      const totalDiscount = discountPerUnit * product.quantity;
+      setSelectedVoucher(cartItemKey, voucher); // truyền kèm key
+      setDiscountForProduct(cartItemKey, totalDiscount);
+    } else {
+      setSelectedVoucher(cartItemKey, null);
+      setDiscountForProduct(cartItemKey, 0);
+    }
   };
 
   useEffect(() => {
-    if (!selectedVoucher) {
-      setDiscount(0);
-      return;
-    }
-    if (
-      selectedVoucher.minPriceCondition &&
-      subtotal < selectedVoucher.minPriceCondition
-    ) {
-      setSelectedVoucher(null);
-      setDiscount(0);
-      setPromoMessage(
-        `Tổng đơn hàng phải đạt tối thiểu ${formatCurrency(
-          selectedVoucher.minPriceCondition
-        )} để sử dụng voucher này.`
-      );
-      return;
-    }
-    if (
-      !selectedVoucher.isActive ||
-      (selectedVoucher.endTime &&
-        new Date(selectedVoucher.endTime) < new Date())
-    ) {
-      setSelectedVoucher(null);
-      setDiscount(0);
-      setPromoMessage("Voucher đã hết hạn hoặc không hoạt động.");
-      return;
-    }
-    let discountValue = 0;
-    if (selectedVoucher.percentValue) {
-      discountValue = selectedVoucher.percentValue / 100;
-      setPromoMessage(
-        `Áp dụng voucher ${selectedVoucher.name} thành công! Giảm ${selectedVoucher.percentValue}%.`
-      );
-    } else if (selectedVoucher.hardValue) {
-      discountValue = selectedVoucher.hardValue / subtotal;
-      setPromoMessage(
-        `Áp dụng voucher ${
-          selectedVoucher.name
-        } thành công! Giảm ${formatCurrency(selectedVoucher.hardValue)}.`
-      );
-    }
-    setDiscount(discountValue);
-  }, [selectedVoucher, subtotal, formatCurrency, setDiscount, setPromoMessage]);
+    applyVoucher();
+  }, [voucher, product.quantity]);
 
   return (
-    <div className="p-6 space-y-6 bg-white border border-gray-100 shadow-lg rounded-2xl">
-      <h2 className="text-xl font-bold text-gray-800">Mã giảm giá</h2>
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-600">
-          Nhập hoặc chọn mã voucher
-        </label>
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1" ref={dropdownRef}>
-            <input
-              type="text"
-              className="w-full p-3 pr-10 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-              value={voucherInput}
-              onChange={(e) => {
-                setVoucherInput(e.target.value);
-                setIsDropdownOpen(true);
-                setSelectedVoucher(null);
-              }}
-              onFocus={() => isLoggedIn && setIsDropdownOpen(true)}
-              placeholder="Nhập mã voucher hoặc chọn từ danh sách"
-              disabled={!isLoggedIn}
-            />
-            <svg
-              className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 cursor-pointer right-3 top-1/2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              onClick={() => isLoggedIn && setIsDropdownOpen(!isDropdownOpen)}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-            {isDropdownOpen && isLoggedIn && (
-              <div className="absolute z-10 w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg max-h-60">
-                {userVouchers.length > 0 ? (
-                  userVouchers.map((voucher) => (
-                    <div
-                      key={voucher.voucherId}
-                      className="p-3 text-sm text-gray-700 cursor-pointer hover:bg-amber-50"
-                      onClick={() => handleVoucherSelect(voucher)}
-                    >
-                      {voucher.name}{" "}
-                      {voucher.percentValue
-                        ? `(${voucher.percentValue}% off)`
-                        : voucher.hardValue
-                        ? `(${formatCurrency(voucher.hardValue)} off)`
-                        : ""}
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-3 text-sm text-gray-500">
-                    Không có voucher nào khả dụng.
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <button
-            onClick={handleApplyVoucher}
-            className="px-4 py-2 text-sm font-semibold text-white rounded-lg bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            disabled={!isLoggedIn || !voucherInput.trim()}
+    <div className="voucher-section mt-2">
+      <label>Chọn voucher cho sản phẩm:</label>
+      <select
+        className="border rounded p-1 ml-2"
+        value={voucherId}
+        onChange={(e) => setVoucherId(e.target.value)}
+      >
+        <option value="">Không áp dụng</option>
+       {[...new Map(
+          userVouchers
+            .filter(v => v.productId === product.productId)
+            .map(v => [v.voucherId, v]) // voucherId làm key trong Map → loại trùng
+        ).values()].map(v => (
+          <option 
+            key={`${v.voucherId}-${cartItemKey}`} 
+            value={v.voucherId}
           >
-            Áp dụng
-          </button>
-        </div>
-        {promoMessage && (
-          <p
-            className={`text-sm mt-2 ${
-              discount > 0 || selectedVoucher?.hardValue
-                ? "text-green-600"
-                : "text-red-500"
-            }`}
-          >
-            {promoMessage}
-          </p>
-        )}
-      </div>
+            {v.name} -{" "}
+            {v.percentValue
+              ? `${v.percentValue}%`
+              : `${formatCurrency(v.hardValue)}`}
+          </option>
+        ))}
+
+      </select>
+
+      {isVoucherValid() && voucher && (
+        <p className="text-green-600 mt-1">
+          Giảm:{" "}
+          {formatCurrency(getVoucherValue(product.unitPrice, voucher) * product.quantity)} (
+          Tổng còn:{" "}
+          {formatCurrency(
+            calculateProductTotal(
+              product.unitPrice,
+              product.quantity,
+              getVoucherValue(product.unitPrice, voucher)
+            )
+          )}
+          )
+        </p>
+      )}
+
+      {!isVoucherValid() && voucher && (
+        <p className="text-red-600 mt-1">
+          Voucher không hợp lệ với số lượng hiện tại
+        </p>
+      )}
     </div>
   );
 };

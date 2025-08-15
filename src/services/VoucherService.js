@@ -1,97 +1,108 @@
+// src/services/VoucherService.js
 import { publicApi } from "../configs/AxiosConfig";
 
 const endpoint = "/vouchers";
 
 const VoucherService = {
-  getUserVouchers: async (token) => {
+  // Lấy tất cả voucher
+  getAllVouchers: async (accessToken) => {
     try {
-      let allVouchers = [];
-      let page = 0;
-      let totalPages = 1;
-      const pageSize = 100; // Adjust based on API limits
-
-      while (page < totalPages) {
-        const response = await publicApi.get(endpoint, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            page, // Shorthand for page: page
-            size: pageSize,
-          },
-        });
-
-        console.log(`API response (page ${page}):`, response.data); // Log raw response
-
-        // Adjust based on your API's structure
-        const { data, totalPages: fetchedTotalPages, total_pages } = response.data;
-        const vouchers = data || response.data.results || response.data.vouchers || []; // Handle common field names
-        totalPages = fetchedTotalPages || total_pages || 1; // Handle common pagination fields
-
-        console.log(`Extracted vouchers (page ${page}):`, vouchers);
-
-        allVouchers = [...allVouchers, ...vouchers];
-        page += 1;
-      }
-
-      console.log("All user vouchers:", allVouchers);
-      return { data: { data: allVouchers } }; // Match expected structure
+      const res = await publicApi.get(endpoint, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      return res.data?.data || [];
     } catch (error) {
-      console.error("Get user vouchers error:", error.response?.data || error.message);
+      console.error("VoucherService.getAllVouchers error:", error);
       if (error.response?.status === 401) {
         throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
       }
-      return { data: { data: [] } }; // Fallback to empty array
+      throw new Error(
+        "Không thể tải danh sách voucher: " +
+          (error.response?.data?.message || error.message)
+      );
     }
   },
 
-  // Other methods (getAllVouchers, getVoucherById) remain unchanged
-  getAllVouchers: async () => {
+  // Lấy voucher theo ID
+  getVoucherById: async (voucherId, accessToken) => {
     try {
-      let allVouchers = [];
-      let page = 0;
-      let totalPages = 1;
-      const pageSize = 100;
-
-      while (page < totalPages) {
-        const response = await publicApi.get(endpoint, {
-          params: {
-            page,
-            size: pageSize,
-          },
-        });
-
-        console.log(`API response (page ${page}):`, response.data);
-
-        const { data, totalPages: fetchedTotalPages, total_pages } = response.data;
-        const vouchers = data || response.data.results || response.data.vouchers || [];
-        totalPages = fetchedTotalPages || total_pages || 1;
-
-        allVouchers = [...allVouchers, ...vouchers];
-        page += 1;
-      }
-
-      console.log("All vouchers:", allVouchers);
-      return { data: { data: allVouchers } };
-    } catch (error) {
-      console.error("Get vouchers error:", error.response?.data || error.message);
-      throw error;
-    }
-  },
-
-  getVoucherById: async (id, token) => {
-    try {
-      console.log(`Sending request to ${endpoint}/${id}`);
-      const response = await publicApi.get(`${endpoint}/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const url = `${endpoint}/${voucherId}`;
+      const res = await publicApi.get(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log("Get voucher by id response:", response.data);
-      return response;
+      return res.data;
     } catch (error) {
-      console.error("Get voucher by id error:", error.response?.data || error.message);
-      throw error;
+      console.error("VoucherService.getVoucherById error:", error);
+      if (error.response?.status === 401) {
+        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      }
+      throw new Error(
+        "Không thể lấy thông tin voucher: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  },
+
+  // Lấy danh sách voucher item của user
+ getUserItemVouchers: async (accessToken) => {
+  try {
+    const res = await publicApi.get("/itemvouchers/mine", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res?.data?.data) return [];
+    return res.data.data;
+  } catch (error) {
+    console.error("getUserItemVouchers error:", error);
+    return [];
+  }
+},
+
+
+  // Áp dụng voucher
+  applyVoucher: async ({ code, cartId, accessToken }) => {
+    try {
+      const url = `${endpoint}/apply`;
+      const res = await publicApi.post(
+        url,
+        { code, cartId },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      return res.data;
+    } catch (error) {
+      console.error("VoucherService.applyVoucher error:", error);
+      if (error.response?.status === 401) {
+        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      }
+      // mock fallback nếu API chưa sẵn sàng
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          resolve({
+            status: "success",
+            discount: 50000,
+            mock: true,
+          });
+        }, 1000)
+      );
+    }
+  },
+
+  // Kiểm tra voucher
+  validateVoucher: async (code, accessToken) => {
+    try {
+      const url = `${endpoint}/validate/${code}`;
+      const res = await publicApi.get(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.error("VoucherService.validateVoucher error:", error);
+      if (error.response?.status === 401) {
+        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      }
+      throw new Error(
+        "Không thể kiểm tra voucher: " +
+          (error.response?.data?.message || error.message)
+      );
     }
   },
 };

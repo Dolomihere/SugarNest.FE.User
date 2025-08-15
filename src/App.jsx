@@ -43,7 +43,7 @@ function App() {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/discounts" element={<DiscountBlog />} />
         <Route path="/unity-game" element={<UnityGame />} />
-        <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
         <Route path="/order-history" element={<OrderHistoryPage />} />
         <Route path="/order/:orderId" element={<OrderDetailsPage />} />
 
