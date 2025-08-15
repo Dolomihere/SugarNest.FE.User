@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Modal } from "../ui";
 import ChatService from "../../services/ChatService";
 import ProductCard from "../Product/ProductCard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const ToastMessage = ({ type, message, onClose }) => {
   const bgColor = type === "error" ? "bg-red-600" : "bg-emerald-600";
@@ -46,7 +48,7 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
       console.error("Failed to load conversations:", error.response?.data || error.message);
       setToast({
         type: "error",
-        message: error.response?.data?.message || error.response?.data?.title || "Lỗi khi tải danh sách hội thoại. Vui lòng thử lại!",
+        message: error.response?.data?.message || error.response?.data?.title || "Hiện tại bạn không có hội thoại để hiển thị!",
       });
     }
   };
@@ -54,6 +56,8 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
   useEffect(() => {
     if (conversationIds?.length > 0) {
       setConversationId(conversationIds[0]);
+    } else {
+      setConversationId(null); // Đảm bảo không có conversationId nếu không có cuộc trò chuyện
     }
   }, [conversationIds]);
 
@@ -155,6 +159,12 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
         return updatedMessages;
       });
       setIsTyping(false);
+
+      // Tạo một conversationId mới nếu chưa có
+      if (!conversationId && response.data.conversationId) {
+        setConversationId(response.data.conversationId);
+        setConversationIds((prev) => [response.data.conversationId, ...(prev || [])]);
+      }
     } catch (error) {
       console.error("Failed to send message:", error.response?.data || error.message);
       setIsTyping(false);
@@ -167,6 +177,39 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
       setToast({
         type: "error",
         message: errorDetails,
+      });
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!accessToken) {
+      setToast({
+        type: "error",
+        message: "Vui lòng đăng nhập để xóa cuộc trò chuyện!",
+      });
+      return;
+    }
+
+    if (!window.confirm("Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện này?")) {
+      return;
+    }
+
+    try {
+      if (conversationId) {
+        await ChatService.deleteConversation(accessToken, conversationId);
+      }
+      setToast({
+        type: "success",
+        message: "Xóa cuộc trò chuyện thành công!",
+      });
+      setChatMessages([]); // Xóa toàn bộ tin nhắn trên giao diện
+      setConversationId(null); // Reset conversationId
+      loadConversations(); // Tải lại danh sách conversations
+    } catch (error) {
+      console.error("Failed to delete conversation:", error.response?.data || error.message);
+      setToast({
+        type: "error",
+        message: error.response?.data?.message || error.response?.data?.title || "Lỗi khi xóa cuộc trò chuyện. Vui lòng thử lại!",
       });
     }
   };
@@ -191,69 +234,88 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
             <h4 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
               Trò chuyện với AI
             </h4>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-600 transition-all duration-200 bg-gray-100 rounded-full dark:text-gray-300 dark:bg-gray-700 hover:bg-amber-300 dark:hover:bg-amber-600 hover:text-gray-900 dark:hover:text-white"
-              aria-label="Đóng"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleDeleteConversation}
+                className="p-2 text-gray-600 transition-all duration-200 bg-gray-100 rounded-full dark:text-red-300 dark:bg-gray-700 hover:bg-red-300 dark:hover:bg-red-600 hover:text-red-900 dark:hover:text-white"
+                aria-label="Xóa cuộc trò chuyện"
+                title="Xóa toàn bộ cuộc trò chuyện"
+              >
+                <FontAwesomeIcon icon={faTrash} size="sm" />
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-600 transition-all duration-200 bg-gray-100 rounded-full dark:text-gray-300 dark:bg-gray-700 hover:bg-amber-300 dark:hover:bg-amber-600 hover:text-gray-900 dark:hover:text-white"
+                aria-label="Đóng"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div
             ref={chatContainerRef}
             className="flex-1 px-6 py-5 space-y-6 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-gray-900"
           >
-            {chatMessages.map((item, index) => (
-              <div
-                key={item.cbMessageId}
-                className="space-y-4"
-                ref={index === chatMessages.length - 1 ? latestMessageRef : null}
-              >
-                {item.userMessage && (
-                  <div className="flex justify-end">
-                    <div className="max-w-[75%] bg-gradient-to-r from-amber-500 to-amber-600 text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                      <p className="text-sm font-medium">{item.userMessage}</p>
-                      <span className="block mt-2 text-xs text-amber-100 opacity-90">
-                        {new Date(item.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {item.aiMessage && (
-                  <div className="flex justify-start">
-                    <div className="max-w-[75%] bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                      <p className="text-sm font-medium">
-                        {item.isTyping ? (
-                          <span className="flex items-center">
-                            Đang trả lời...
-                            <span className="inline-block w-2 h-2 ml-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0s" }}></span>
-                            <span className="inline-block w-2 h-2 ml-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></span>
-                            <span className="inline-block w-2 h-2 ml-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></span>
-                          </span>
-                        ) : (
-                          item.aiMessage
-                        )}
-                      </p>
-                      {!item.isTyping && (
-                        <span className="block mt-2 text-xs text-gray-400 dark:text-gray-500 opacity-90">
+            {chatMessages.length === 0 && !isTyping ? (
+              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <p>Chưa có tin nhắn. Bắt đầu trò chuyện ngay! <br />
+                Bắt đầu cuộc trò chuyện mới bằng cách gửi tin nhắn. <br />
+                Mỗi cuộc trò chuyện sẽ được lưu lại để bạn có thể xem lại sau. <br />
+                Mình sẽ giúp bạn giải đáp mọi thắc mắc về sản phẩm hoặc bất kỳ câu hỏi nào khác.</p>
+              </div>
+            ) : (
+              chatMessages.map((item, index) => (
+                <div
+                  key={item.cbMessageId}
+                  className="space-y-4"
+                  ref={index === chatMessages.length - 1 ? latestMessageRef : null}
+                >
+                  {item.userMessage && (
+                    <div className="flex justify-end">
+                      <div className="max-w-[75%] bg-gradient-to-r from-amber-500 to-amber-600 text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                        <p className="text-sm font-medium">{item.userMessage}</p>
+                        <span className="block mt-2 text-xs text-amber-100 opacity-90">
                           {new Date(item.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                )}
-                {item.attachedProducts?.length > 0 && (
-                  <div className="flex flex-wrap gap-4 mt-6">
-                    {item.attachedProducts.map((productId) => (
-                      <ProductCard key={productId} id={productId} index={index} borderClass="" />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                  {item.aiMessage && (
+                    <div className="flex justify-start">
+                      <div className="max-w-[75%] bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                        <p className="text-sm font-medium">
+                          {item.isTyping ? (
+                            <span className="flex items-center">
+                              Đang trả lời...
+                              <span className="inline-block w-2 h-2 ml-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0s" }}></span>
+                              <span className="inline-block w-2 h-2 ml-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></span>
+                              <span className="inline-block w-2 h-2 ml-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></span>
+                            </span>
+                          ) : (
+                            item.aiMessage
+                          )}
+                        </p>
+                        {!item.isTyping && (
+                          <span className="block mt-2 text-xs text-gray-400 dark:text-gray-500 opacity-90">
+                            {new Date(item.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {item.attachedProducts?.length > 0 && (
+                    <div className="flex flex-wrap gap-4 mt-6">
+                      {item.attachedProducts.map((productId) => (
+                        <ProductCard key={productId} id={productId} index={index} borderClass="" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           <div className="sticky bottom-0 left-0 right-0 flex items-center gap-4 p-5 bg-white border-t border-gray-200 shadow-inner dark:bg-gray-800 dark:border-gray-700">
