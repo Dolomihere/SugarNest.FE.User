@@ -1,9 +1,10 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Header } from "./layouts/Header";
+import { Footer } from "./layouts/Footer";
+
 import OrderService from "../services/OrderService";
 
-// Ánh xạ trạng thái đơn hàng sang tiếng Việt và màu sắc
 const getStatusInVietnamese = (status) => {
   const statusMap = {
     "-2": { label: "Đã trả hàng", bg: "bg-red-100", text: "text-red-700" },
@@ -21,18 +22,12 @@ const getStatusInVietnamese = (status) => {
 const OrderHistory = () => {
   const token = localStorage.getItem("accessToken");
   const navigate = useNavigate();
-
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["orderHistory", token],
-    queryFn: () => OrderService.getOrderHistory(token),
-    enabled: !!token,
-  });
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const formatCurrency = (value) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "decimal",
-      minimumFractionDigits: 0,
-    }).format(value || 0) + " VND";
+    new Intl.NumberFormat("vi-VN", { style: "decimal", minimumFractionDigits: 0 }).format(value || 0) + " VND";
 
   const formatDate = (dateString) => {
     if (!dateString) return "Không xác định";
@@ -45,39 +40,98 @@ const OrderHistory = () => {
     });
   };
 
-  return (
-    <div className="w-full bg-white px-6 py-6 mx-auto max-w-7xl min-h-[calc(100vh-120px)]">
-      {isLoading && <p className="text-[#a17455] text-center">Đang tải đơn hàng...</p>}
-      {isError && <p className="text-center text-red-600">Lỗi: {error.message}</p>}
-      {!isLoading && data?.data?.orders?.length === 0 && (
-        <p className="text-center text-gray-600">Bạn chưa có đơn hàng nào.</p>
-      )}
+  useEffect(() => {
+    if (!token) {
+      setError("Bạn chưa đăng nhập.");
+      setLoading(false);
+      return;
+    }
 
-      {!isLoading && (
-  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-    {data?.data?.orders?.map((order) => {
-      const status = getStatusInVietnamese(order.status);
-      return (
-        <div
-          key={order.orderId}
-          className="p-5 bg-white border border-[#eaded2] rounded-2xl shadow hover:shadow-lg transition duration-200"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-[#7b553c]">Đơn hàng</h3>
-            <span className={`text-xs font-semibold rounded-full px-3 py-1 ${status.bg} ${status.text}`}>
-              {status.label}
-            </span>
-          </div>
-          <div className="mb-3 space-y-1 text-sm text-gray-600">
-            <p>
-              Ngày đặt: <span className="text-[#5e5045]">{formatDate(order.createdAt)}</span>
-            </p>
-            <p>
-              Tổng thanh toán:{" "}
-              <span className="font-semibold text-[#d48d57]">
-                {formatCurrency(order.total)}
-              </span>
-            </p>
+    const fetchOrders = async () => {
+      try {
+        // 1️⃣ Lấy danh sách orderId từ lịch sử
+        const historyRes = await OrderService.getOrderHistory(token);
+        const orderList = historyRes?.data?.orders || [];
+
+        // 2️⃣ Promise.all gọi getOrderById cho từng orderId
+        const detailedOrders = await Promise.all(
+          orderList.map(async (order) => {
+            try {
+              const detailRes = await OrderService.getOrderById(order.orderId, token);
+              const detail = detailRes.data || detailRes;
+
+              // 3️⃣ Tính total chính xác
+              const total = (detail.subTotal || 0) + (detail.shippingFee || 0) - (detail.voucherDiscount || 0);
+
+              return {
+                ...order,
+                ...detail,
+                total, // ghi đè để frontend hiển thị đúng
+              };
+            } catch (err) {
+              console.error(`Lỗi lấy chi tiết đơn ${order.orderId}`, err);
+              return order; // fallback nếu lỗi
+            }
+          })
+        );
+
+        setOrders(detailedOrders);
+      } catch (err) {
+        console.error("Lỗi lấy lịch sử đơn hàng:", err);
+        setError("Không thể tải lịch sử đơn hàng.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [token]);
+
+  return (
+    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#FFF9F4] text-[#3d2e23]">
+      <Header />
+      <main className="w-full px-6 py-10 mx-auto max-w-7xl">
+        <h2 className="text-3xl font-bold mb-8 text-center text-[#a17455]">Lịch sử đơn hàng</h2>
+
+        {loading && <p className="text-center">Đang tải đơn hàng...</p>}
+        {error && <p className="text-center text-red-600">{error}</p>}
+        {!loading && orders.length === 0 && <p className="text-center">Bạn chưa có đơn hàng nào.</p>}
+
+        {!loading && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {orders.map((order) => {
+              const status = getStatusInVietnamese(order.status);
+              return (
+                <div
+                  key={order.orderId}
+                  className="p-5 bg-white border border-[#eaded2] rounded-2xl shadow hover:shadow-lg transition duration-200"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-[#7b553c]">Đơn hàng</h3>
+                    <span className={`text-xs font-semibold rounded-full px-3 py-1 ${status.bg} ${status.text}`}>
+                      {status.label}
+                    </span>
+                  </div>
+                  <div className="mb-3 space-y-1 text-sm text-gray-600">
+                    <p>
+                      Ngày đặt: <span className="text-[#5e5045]">{formatDate(order.createdAt)}</span>
+                    </p>
+                    <p>
+                      Tổng thanh toán:{" "}
+                      <span className="font-semibold text-[#d48d57]">{formatCurrency(order.total)}</span>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/order/${order.orderId}`)}
+                    className="w-full text-sm font-medium text-[#a17455] border border-[#d6a97e] px-4 py-2 rounded-lg hover:bg-[#f5e9dc] transition"
+                  >
+                    Xem chi tiết
+                  </button>
+                </div>
+              );
+            })}
+
+
           </div>
           <button
             onClick={() => navigate(`/order/${order.orderId}`)}

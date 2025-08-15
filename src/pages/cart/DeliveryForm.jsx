@@ -11,25 +11,18 @@ const DeliveryForm = ({
   handleSubmit,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [errors, setErrors] = useState({}); // Lưu lỗi validation
+  const [errors, setErrors] = useState({});
 
-  // Lấy token từ localStorage hoặc sessionStorage
   const token =
     localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
 
-  // Hàm lấy thời gian hiện tại dạng datetime-local
   const getCurrentDateTime = () => {
     const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // chuyển timezone về local ISO
+    return now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
   };
 
-  // Fetch dữ liệu người dùng
-  const {
-    data: userData,
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: userData, isLoading, error } = useQuery({
     queryKey: ["personalUser"],
     queryFn: () => UserService.getPersonalUser(token),
     enabled: !!token,
@@ -37,7 +30,6 @@ const DeliveryForm = ({
       console.error("Lỗi khi lấy dữ liệu người dùng:", err);
     },
   });
-
   // Cập nhật form với dữ liệu người dùng
   useEffect(() => {
     if (userData && userData.data) {
@@ -53,21 +45,19 @@ const DeliveryForm = ({
     }
   }, [userData, setForm, setAddressFromMap]);
 
-  // Tự động lưu số điện thoại vào localStorage
+  // Lưu phoneNumber khi đang edit
   useEffect(() => {
     if (isEditing && form.phoneNumber && token) {
       localStorage.setItem("phoneNumber", form.phoneNumber);
     }
   }, [form.phoneNumber, isEditing, token]);
 
-  // Xử lý thay đổi input
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" })); // Xóa lỗi khi nhập
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Xử lý submit form
   const onSubmit = (e) => {
     e.preventDefault();
     let newErrors = {};
@@ -84,10 +74,11 @@ const DeliveryForm = ({
     handleSubmit(e);
   };
 
-  // Xử lý trạng thái loading
-  if (isLoading) {
-    return <div>Loading user data...</div>;
-  }
+  if (isLoading) return <div>Loading user data...</div>;
+  if (error)
+    return (
+      <div>Error loading user data: {error.message}. Please try again.</div>
+    )
 
   // Xử lý lỗi khi fetch dữ liệu
   if (error) {
@@ -186,14 +177,14 @@ const DeliveryForm = ({
           />
         </div>
 
-        <div>
+       <div>
           <label className="block mb-1 text-sm font-medium text-sub">
             Thời gian giao hàng <span className="text-red-600">*</span>
           </label>
           <input
             type="datetime-local"
             name="deliveryTime"
-            value={form.deliveryTime}
+            value={form.deliveryTime || ""}
             onChange={handleInputChange}
             min={getCurrentDateTime()}
             required
@@ -212,6 +203,7 @@ const DeliveryForm = ({
           )}
         </div>
 
+        {/* Ghi chú */}
         <div>
           <label className="block mb-1 text-sm font-medium text-sub">Ghi chú</label>
           <textarea
@@ -226,10 +218,8 @@ const DeliveryForm = ({
             placeholder="Thêm ghi chú (tùy chọn)"
           />
         </div>
-
       </form>
     </div>
   );
 };
-
 export default DeliveryForm;
