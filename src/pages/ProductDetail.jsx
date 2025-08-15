@@ -7,11 +7,12 @@ import ProductService from "../services/ProductService";
 import ProductOptionService from "../services/ProductOption";
 import CartService from "../services/CartService";
 import RatingService from "../services/RatingService";
+import CategoryService from "../services/CategoryService";
 import { StarRating } from "./StarRating";
 import { RatingModal } from "./RatingModal";
 import { RatingForm } from "./RatingForm";
 import { SuggestedProducts } from "./SuggestedProducts";
-import ToastMessage from ".././components/ToastMessage";
+import ToastMessage from "../components/ToastMessage";
 import ChatPage from "./ChatPage";
 
 export function ProductDetailPage() {
@@ -42,7 +43,7 @@ export function ProductDetailPage() {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         setSelectedRating(null);
-        setCurrentImageIndex(0); // Reset image index when closing modal
+        setCurrentImageIndex(0);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -88,6 +89,16 @@ export function ProductDetailPage() {
       ProductService.getProductById(id).then((res) => res.data.data),
   });
 
+  // Fetch category data
+  const { data: category = {}, isLoading: isCategoryLoading } = useQuery({
+    queryKey: ["category", product.categoryId],
+    queryFn: () =>
+      CategoryService.getCategoryById(product.categoryId).then(
+        (res) => res.data.data
+      ),
+    enabled: !!product.categoryId,
+  });
+
   // Fetch product options
   const {
     data: optionGroups = [],
@@ -102,9 +113,11 @@ export function ProductDetailPage() {
         error.response?.data || error.message
       );
       setToast({
-      type: 'error',
-      message: `Lỗi khi tải tùy chọn sản phẩm: ${error.response?.data?.message || error.message}`,
-    });
+        type: "error",
+        message: `Lỗi khi tải tùy chọn sản phẩm: ${
+          error.response?.data?.message || error.message
+        }`,
+      });
     },
   });
 
@@ -124,8 +137,8 @@ export function ProductDetailPage() {
       if (typeof r.ratingPoint !== "number" || isNaN(r.ratingPoint)) {
         console.error("Invalid ratingPoint found in ratings data:", r);
         setToast({
-          type: 'error',
-          message: 'Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá.',
+          type: "error",
+          message: "Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá.",
         });
         return sum;
       }
@@ -134,17 +147,21 @@ export function ProductDetailPage() {
     return totalStars / ratingsData.data.length;
   }, [ratingsData]);
 
-  // Fetch suggested products
+  // Fetch all products for suggestions
   const { data: products = [] } = useQuery({
     queryKey: ["suggested"],
     queryFn: () => ProductService.getAllProducts().then((res) => res.data.data),
   });
 
+  // Filter suggestions by category
   const suggestions = useMemo(() => {
-    const otherProducts = products.filter((p) => p.productId !== id);
-    const shuffled = [...otherProducts].sort(() => 0.5 - Math.random());
+    if (!product.categoryId) return [];
+    const filteredProducts = products.filter(
+      (p) => p.categoryId === product.categoryId && p.productId !== id
+    );
+    const shuffled = [...filteredProducts].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 4);
-  }, [products, id]);
+  }, [products, id, product.categoryId]);
 
   // Mutation for posting a new rating with image upload
   const postRatingMutation = useMutation({
@@ -157,7 +174,7 @@ export function ProductDetailPage() {
       setComment("");
       setImages([]);
       setErrorMessage("");
-      setToast({ type: 'success', message: 'Đánh giá đã được gửi!' });
+      setToast({ type: "success", message: "Đánh giá đã được gửi!" });
       if (inputRef.current) {
         inputRef.current.value = null;
       }
@@ -168,10 +185,11 @@ export function ProductDetailPage() {
         ? JSON.stringify(error.response.data.errors)
         : "";
       setToast({
-        type: 'error',
-        message: `Lỗi khi gửi đánh giá: ${errorMsg}${detailedMsg ? ` - ${detailedMsg}` : ""}`,
+        type: "error",
+        message: `Lỗi khi gửi đánh giá: ${errorMsg}${
+          detailedMsg ? ` - ${detailedMsg}` : ""
+        }`,
       });
-      
       if (error.message.includes("Phiên đăng nhập hết hạn")) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
@@ -209,9 +227,9 @@ export function ProductDetailPage() {
   const handleAddToCart = async () => {
     if (!isLoggedIn) {
       setToast({
-        type: 'warning',
-        message: 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.',
-      });      
+        type: "warning",
+        message: "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.",
+      });
       navigate("/signin", { state: { from: `/products/${id}` } });
       return;
     }
@@ -271,11 +289,14 @@ export function ProductDetailPage() {
       }
       queryClient.invalidateQueries(["userCart"]);
       setErrorMessage("");
-      setToast({ type: 'success', message: 'Đã thêm vào giỏ hàng!' });
+      setToast({ type: "success", message: "Đã thêm vào giỏ hàng!" });
       setQuantity(1);
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message;
-      setToast({ type: 'error', message: `Lỗi khi thêm vào giỏ hàng: ${errorMsg}` });
+      setToast({
+        type: "error",
+        message: `Lỗi khi thêm vào giỏ hàng: ${errorMsg}`,
+      });
       if (error.message.includes("Phiên đăng nhập hết hạn")) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
@@ -292,34 +313,34 @@ export function ProductDetailPage() {
     setComment("");
     setImages([]);
     setErrorMessage("");
-    setCurrentImageIndex(0); // Reset image index on product change
+    setCurrentImageIndex(0);
   }, [id]);
+
   const getTotalAdditionalPrice = () => {
-  let total = 0;
-  optionGroups.forEach((group) => {
-    const selected = selectedOptions[group.optionGroupId];
-    if (!selected) return;
+    let total = 0;
+    optionGroups.forEach((group) => {
+      const selected = selectedOptions[group.optionGroupId];
+      if (!selected) return;
 
-    const items = Array.isArray(selected) ? selected : [selected];
-    items.forEach((id) => {
-      const item = group.optionItems.find(
-        (i) => i.optionItemId === id || i.optionItemId === Number(id)
-      );
-    if (item) total += quantity * Number(item.additionalPrice || 0);
+      const items = Array.isArray(selected) ? selected : [selected];
+      items.forEach((id) => {
+        const item = group.optionItems.find(
+          (i) => i.optionItemId === id || i.optionItemId === Number(id)
+        );
+        if (item) total += quantity * Number(item.additionalPrice || 0);
+      });
     });
-  });
-  return total;
-};
+    return total;
+  };
 
-// ⬇️ Tính tổng giá ở đây
-const finalTotalPrice =
-  Number(product.finalUnitPrice || 0) * quantity + getTotalAdditionalPrice();
+  const finalTotalPrice =
+    Number(product.finalUnitPrice || 0) * quantity + getTotalAdditionalPrice();
 
- return (
+  return (
     <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
       <Header />
       <div className="px-4 mx-auto my-12 space-y-16 max-w-7xl">
-        {isProductLoading || isOptionsLoading || isRatingsLoading ? (
+        {isProductLoading || isOptionsLoading || isRatingsLoading || isCategoryLoading ? (
           <p className="text-lg text-center text-amber-600">Đang tải...</p>
         ) : optionsError ? (
           <p className="text-center text-red-500">{errorMessage}</p>
@@ -327,184 +348,202 @@ const finalTotalPrice =
           <>
             {/* Product Details */}
             <div className="relative flex flex-col gap-8 p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-3xl hover:shadow-lg md:flex-row md:gap-12 lg:gap-20">
-  {/* Image Section */}
-  <div className="flex items-center justify-center w-full md:w-1/2">
-    <img
-      src={product.imgs?.[0] || "/images/placeholder.png"}
-      alt={product.name || "Sản phẩm"}
-      className="object-cover w-full h-[380px] rounded-2xl shadow-sm transition-transform duration-300 hover:scale-[1.02]"
-    />
-  </div>
+              {/* Image Section */}
+              <div className="flex items-center justify-center w-full md:w-1/2">
+                <img
+                  src={product.imgs?.[0] || "/images/placeholder.png"}
+                  alt={product.name || "Sản phẩm"}
+                  className="object-cover w-full h-[380px] rounded-2xl shadow-sm transition-transform duration-300 hover:scale-[1.02]"
+                />
+              </div>
 
-  {/* Details Section */}
-  <div className="w-full space-y-6 md:w-1/2">
-    <h2 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
-      {product.name}
-    </h2>
+              {/* Details Section */}
+              <div className="w-full space-y-6 md:w-1/2">
+                <h2 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                  {product.name}
+                </h2>
 
-    <div className="flex items-center gap-2">
-      <StarRating rating={averageRating} />
-      <span className="text-sm text-gray-500">
-        ({ratingsData.data.length} đánh giá)
-      </span>
-    </div>
-
-    <p className="text-base leading-relaxed text-gray-600">
-      {product.description}
-    </p>
-
-    <p className="text-2xl font-semibold text-amber-600">
-      {Number(product.finalUnitPrice).toLocaleString("vi-VN")}₫
-    </p>
-
-    <div className="space-y-1 text-sm text-gray-500">
-      <p>
-        <span className="font-medium text-gray-700">Trọng lượng:</span> 500g
-      </p>
-      <p>
-        <span className="font-medium text-gray-700">Hạn sử dụng:</span> 7 ngày kể từ ngày sản xuất
-      </p>
-      <p>
-        <span className="font-medium text-gray-700">Thành phần:</span> Bột mì, đường, trứng, bơ, sữa, dầu thực vật,...
-      </p>
-      <p>
-        <span className="font-medium text-gray-700">Ngày sản xuất:</span> {new Date().toLocaleDateString("vi-VN")}
-      </p>
-    </div>
-
-   
-  </div>
-</div>
-<div className="p-6 mt-10 bg-white border shadow-sm border-amber-200 rounded-2xl">
-  <h4 className="pb-3 mb-6 text-2xl font-semibold text-gray-800 border-b border-amber-100">
-    Tùy chọn sản phẩm
-  </h4>
-
-  {optionGroups.length > 0 ? (
-    <div className="grid gap-6 md:grid-cols-2">
-      {optionGroups.map((group) => (
-        <div
-          key={group.optionGroupId}
-          className="p-4 space-y-4 border border-gray-100 shadow-sm bg-gray-50 rounded-xl"
-        >
-          <div>
-            <p className="text-base font-medium text-gray-800">{group.name}</p>
-            {group.description && (
-              <p className="mt-1 text-sm italic text-gray-500">{group.description}</p>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            {group.isMultipleChoice
-              ? group.optionItems?.map((item) => (
-                  <label
-                    key={item.optionItemId}
-                    className="flex items-center p-3 transition bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm"
+                {/* Category Display */}
+                <div className="text-sm text-gray-500">
+                  <span className="font-medium text-gray-700">Danh mục:</span>{" "}
+                  <Link
+                    className="text-amber-600 hover:underline"
                   >
-                    <input
-                      type="checkbox"
-                      name={group.optionGroupId}
-                      value={item.optionItemId}
-                      onChange={handleCheckboxChange}
-                      className="w-4 h-4 mr-3 accent-amber-500"
-                    />
-                    <div className="text-sm text-gray-700">
-                      <span className="font-medium">{item.optionValue}</span>{" "}
-                      <span className="ml-1 text-gray-400">
-                        (+{Number(item.additionalPrice).toLocaleString("vi-VN")}₫)
-                      </span>
+                    {category.name || "Không xác định"}
+                  </Link>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <StarRating rating={averageRating} />
+                  <span className="text-sm text-gray-500">
+                    ({ratingsData.data.length} đánh giá)
+                  </span>
+                </div>
+
+                <p className="text-base leading-relaxed text-gray-600">
+                  {product.description}
+                </p>
+
+                <p className="text-2xl font-semibold text-amber-600">
+                  {Number(product.finalUnitPrice).toLocaleString("vi-VN")}₫
+                </p>
+
+                <div className="space-y-1 text-sm text-gray-500">
+                  <p>
+                    <span className="font-medium text-gray-700">Trọng lượng:</span>{" "}
+                    500g
+                  </p>
+                  <p>
+                    <span className="font-medium text-gray-700">Hạn sử dụng:</span>{" "}
+                    7 ngày kể từ ngày sản xuất
+                  </p>
+                  <p>
+                    <span className="font-medium text-gray-700">Thành phần:</span>{" "}
+                    Bột mì, đường, trứng, bơ, sữa, dầu thực vật,...
+                  </p>
+                  <p>
+                    <span className="font-medium text-gray-700">Ngày sản xuất:</span>{" "}
+                    {new Date().toLocaleDateString("vi-VN")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Product Options */}
+            <div className="p-6 mt-10 bg-white border shadow-sm border-amber-200 rounded-2xl">
+              <h4 className="pb-3 mb-6 text-2xl font-semibold text-gray-800 border-b border-amber-100">
+                Tùy chọn sản phẩm
+              </h4>
+
+              {optionGroups.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2">
+                  {optionGroups.map((group) => (
+                    <div
+                      key={group.optionGroupId}
+                      className="p-4 space-y-4 border border-gray-100 shadow-sm bg-gray-50 rounded-xl"
+                    >
+                      <div>
+                        <p className="text-base font-medium text-gray-800">
+                          {group.name}
+                        </p>
+                        {group.description && (
+                          <p className="mt-1 text-sm italic text-gray-500">
+                            {group.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        {group.isMultipleChoice
+                          ? group.optionItems?.map((item) => (
+                              <label
+                                key={item.optionItemId}
+                                className="flex items-center p-3 transition bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm"
+                              >
+                                <input
+                                  type="checkbox"
+                                  name={group.optionGroupId}
+                                  value={item.optionItemId}
+                                  onChange={handleCheckboxChange}
+                                  className="w-4 h-4 mr-3 accent-amber-500"
+                                />
+                                <div className="text-sm text-gray-700">
+                                  <span className="font-medium">
+                                    {item.optionValue}
+                                  </span>{" "}
+                                  <span className="ml-1 text-gray-400">
+                                    (+
+                                    {Number(item.additionalPrice).toLocaleString(
+                                      "vi-VN"
+                                    )}
+                                    ₫)
+                                  </span>
+                                </div>
+                              </label>
+                            ))
+                          : group.optionItems?.map((item) => (
+                              <label
+                                key={item.optionItemId}
+                                className="flex items-center p-3 transition bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm"
+                              >
+                                <input
+                                  type="radio"
+                                  name={group.optionGroupId}
+                                  value={item.optionItemId}
+                                  onChange={handleRadioChange}
+                                  className="w-4 h-4 mr-3 accent-amber-500"
+                                />
+                                <div className="text-sm text-gray-700">
+                                  <span className="font-medium">
+                                    {item.optionValue}
+                                  </span>{" "}
+                                  <span className="ml-1 text-gray-400">
+                                    (+
+                                    {Number(item.additionalPrice).toLocaleString(
+                                      "vi-VN"
+                                    )}
+                                    ₫)
+                                  </span>
+                                </div>
+                              </label>
+                            ))}
+                      </div>
                     </div>
-                  </label>
-                ))
-              : group.optionItems?.map((item) => (
-                  <label
-                    key={item.optionItemId}
-                    className="flex items-center p-3 transition bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-amber-400 hover:shadow-sm"
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Không có tùy chọn nào cho sản phẩm này.
+                </p>
+              )}
+
+              <div className="flex flex-col items-center justify-end w-full gap-4 mt-10 sm:flex-row sm:gap-6">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 text-lg font-bold text-gray-700 border-none rounded-full bg-gray-50 hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none active:border-none"
                   >
-                    <input
-                      type="radio"
-                      name={group.optionGroupId}
-                      value={item.optionItemId}
-                      onChange={handleRadioChange}
-                      className="w-4 h-4 mr-3 accent-amber-500"
-                    />
-                    <div className="text-sm text-gray-700">
-                      <span className="font-medium">{item.optionValue}</span>{" "}
-                      <span className="ml-1 text-gray-400">
-                        (+{Number(item.additionalPrice).toLocaleString("vi-VN")}₫)
-                      </span>
+                    −
+                  </button>
+                  <span className="text-xl font-medium">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 text-lg font-bold text-gray-700 border-none rounded-full bg-gray-50 hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none active:border-none"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="text-lg font-semibold text-amber-600 whitespace-nowrap">
+                  Tổng: {finalTotalPrice.toLocaleString("vi-VN")}₫
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-8">
+                <div className="relative flex items-center gap-4">
+                  <button
+                    onClick={handleAddToCart}
+                    className="px-5 py-3 font-medium text-white transition bg-amber-500 hover:bg-amber-600 rounded-xl"
+                  >
+                    Thêm vào giỏ hàng
+                  </button>
+
+                  <button
+                    className="px-4 py-2 text-sm font-medium transition border rounded-lg border-amber-300 text-amber-600 hover:border-amber-500 hover:bg-amber-50"
+                    title="Sao chép hoặc chia sẻ"
+                    onClick={handleCopy}
+                  >
+                    <i className="mr-2 fa-regular fa-share-from-square text-amber-500"></i>
+                    Chia sẻ
+                  </button>
+
+                  {copied && (
+                    <div className="absolute px-2 py-1 text-xs text-white -translate-x-1/2 rounded shadow bg-amber-600 left-1/2 -top-8">
+                      Đã sao chép!
                     </div>
-                  </label>
-                ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p className="text-sm text-gray-500">Không có tùy chọn nào cho sản phẩm này.</p>
-  )}
-
- <div className="flex flex-col items-center justify-end w-full gap-4 mt-10 sm:flex-row sm:gap-6">
-  {/* Quantity Control */}
-  <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
-    <button
-      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-      className="w-10 h-10 text-lg font-bold text-gray-700 border-none rounded-full bg-gray-50 hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none active:border-none"
-    >
-      −
-    </button>
-    <span className="text-xl font-medium">{quantity}</span>
-    <button
-      onClick={() => setQuantity(quantity + 1)}
-      className="w-10 h-10 text-lg font-bold text-gray-700 border-none rounded-full bg-gray-50 hover:bg-amber-100 focus:outline-none focus:ring-0 focus:border-none active:border-none"
-    >
-      +
-    </button>
-
-  
-
-  </div>
-  <div className="text-lg font-semibold text-amber-600 whitespace-nowrap">
-    Tổng: {finalTotalPrice.toLocaleString("vi-VN")}₫
-  </div>
-</div>
-
-  {/* CTA Buttons */}
-  <div className="flex justify-end pt-8">
-    <div className="relative flex items-center gap-4">
-      <button
-        onClick={handleAddToCart}
-        className="px-5 py-3 font-medium text-white transition bg-amber-500 hover:bg-amber-600 rounded-xl"
-      >
-        Thêm vào giỏ hàng
-      </button>
-
-      <button
-        className="px-4 py-2 text-sm font-medium transition border rounded-lg border-amber-300 text-amber-600 hover:border-amber-500 hover:bg-amber-50"
-        title="Sao chép hoặc chia sẻ"
-        onClick={() => {
-          const url = window.location.href;
-          if (navigator.share) {
-            navigator.share({ title: document.title, url });
-          } else {
-            navigator.clipboard.writeText(url);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }
-        }}
-      >
-        <i className="mr-2 fa-regular fa-share-from-square text-amber-500"></i>
-        Chia sẻ
-      </button>
-
-      {copied && (
-        <div className="absolute px-2 py-1 text-xs text-white -translate-x-1/2 rounded shadow bg-amber-600 left-1/2 -top-8">
-          Đã sao chép!
-        </div>
-      )}
-    </div>
-  </div>
-</div>
+                  )}
+                </div>
+              </div>
+            </div>
 
             {/* Ratings Section */}
             <div className="space-y-8">
@@ -609,7 +648,11 @@ const finalTotalPrice =
                 navigate={navigate}
               />
             </div>
-            <SuggestedProducts suggestions={suggestions} />
+            <SuggestedProducts
+              suggestions={suggestions}
+              categoryId={product.categoryId}
+              categoryName={category.name}
+            />
           </>
         )}
       </div>
