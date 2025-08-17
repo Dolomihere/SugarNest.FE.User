@@ -1,29 +1,34 @@
-// OrderDetailsPage.jsx
-import React from "react";
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
 import OrderService from "../services/OrderService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 import OrderDetailContent from "./OrderDetailContent";
 
-
 const OrderDetailsPage = () => {
+  const location = useLocation();
   const { orderId } = useParams();
-  const token = localStorage.getItem("accessToken");
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["orderDetail", orderId],
-    queryFn: () => OrderService.getOrderById(orderId, token),
-    enabled: !!orderId && !!token,
-  });
+  // Lấy dữ liệu từ state hoặc localStorage
+  const stateData = location.state;
+  const localData = localStorage.getItem("lastOrderData");
+  const initialData = stateData || (localData ? JSON.parse(localData) : null);
 
+  const [orderData, setOrderData] = useState(initialData);
+  const [loading, setLoading] = useState(!initialData);
+  const [error, setError] = useState("");
+
+  // Giả sử accessToken được lưu trong localStorage (thêm logic này để hỗ trợ fetch yêu cầu auth)
+  const accessToken = localStorage.getItem("accessToken");
+
+  // Hàm format tiền
   const formatCurrency = (value) =>
     new Intl.NumberFormat("vi-VN", {
       style: "decimal",
       minimumFractionDigits: 0,
     }).format(value || 0) + " VND";
 
+  // Hàm format ngày
   const formatDate = (dateString) => {
     if (!dateString) return "Không xác định";
     return new Date(dateString).toLocaleString("vi-VN", {
@@ -35,24 +40,23 @@ const OrderDetailsPage = () => {
     });
   };
 
-  const renderTable = (rows) => (
-    <div className="border border-[#e2d8c5] rounded-xl overflow-hidden bg-[#fffefb]">
-      <table className="w-full text-sm text-gray-700 font-light leading-relaxed tracking-wide">
-        <tbody className="divide-y divide-[#f0e6d9]">
-          {rows.map((item, index) => (
-            <tr key={index} className="hover:bg-[#fef9f1] transition duration-200">
-              <td className="w-1/3 p-4 font-medium text-[#7b553c] bg-[#fff7ec] border border-[#f0e6d9]">
-                {item.label}
-              </td>
-              <td className="p-4 font-normal text-gray-800 border border-[#f0e6d9] bg-white">
-                {item.value}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  // Fetch order khi chưa có dữ liệu
+  useEffect(() => {
+    if (!initialData && orderId) {
+      const fetchOrder = async () => {
+        try {
+          setLoading(true);
+          const res = await OrderService.getOrderById(orderId, accessToken);
+          setOrderData(res); // Sửa từ res.data thành res để khớp với return của service
+        } catch (err) {
+          setError(err.message || "Không thể tải thông tin đơn hàng.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchOrder();
+    }
+  }, [initialData, orderId, accessToken]);
 
   return (
     <div className="min-h-screen bg-[#fffaf3] text-gray-800">
@@ -63,26 +67,20 @@ const OrderDetailsPage = () => {
           Chi tiết đơn hàng
         </h2>
 
-        {isLoading && (
-          <div className="animate-pulse text-center text-lg font-medium bg-white p-4 rounded-xl shadow">
-            Đang tải dữ liệu...
-
-          </div>
+        {loading && (
+          <div className="text-lg text-center text-gray-500">Đang tải...</div>
         )}
 
-        {isError && (
-          <div className="p-4 text-center text-red-500 bg-red-50 border border-red-200 rounded-xl">
-            Lỗi: {error?.message || "Không thể tải dữ liệu."}
-          </div>
+        {error && (
+          <div className="text-lg text-center text-red-500">{error}</div>
         )}
 
-        {data && (
+        {orderData && (
           <OrderDetailContent
-            order={data}
+            order={orderData}
             formatCurrency={formatCurrency}
             formatDate={formatDate}
           />
-
         )}
       </main>
 

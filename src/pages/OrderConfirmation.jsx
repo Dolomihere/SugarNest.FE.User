@@ -65,11 +65,11 @@ const OrderConfirmation = () => {
         </h2>
 
         {loading && (
-          <div className="text-center text-gray-500 text-lg">Đang tải...</div>
+          <div className="text-lg text-center text-gray-500">Đang tải...</div>
         )}
 
         {error && (
-          <div className="text-center text-red-500 text-lg">{error}</div>
+          <div className="text-lg text-center text-red-500">{error}</div>
         )}
 
         {orderData && (

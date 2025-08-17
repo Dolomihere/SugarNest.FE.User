@@ -49,28 +49,19 @@ const OrderHistory = () => {
 
     const fetchOrders = async () => {
       try {
-        // 1️⃣ Lấy danh sách orderId từ lịch sử
         const historyRes = await OrderService.getOrderHistory(token);
         const orderList = historyRes?.data?.orders || [];
 
-        // 2️⃣ Promise.all gọi getOrderById cho từng orderId
         const detailedOrders = await Promise.all(
           orderList.map(async (order) => {
             try {
               const detailRes = await OrderService.getOrderById(order.orderId, token);
               const detail = detailRes.data || detailRes;
-
-              // 3️⃣ Tính total chính xác
               const total = (detail.subTotal || 0) + (detail.shippingFee || 0) - (detail.voucherDiscount || 0);
-
-              return {
-                ...order,
-                ...detail,
-                total, // ghi đè để frontend hiển thị đúng
-              };
+              return { ...order, ...detail, total };
             } catch (err) {
               console.error(`Lỗi lấy chi tiết đơn ${order.orderId}`, err);
-              return order; // fallback nếu lỗi
+              return order;
             }
           })
         );
@@ -88,7 +79,7 @@ const OrderHistory = () => {
   }, [token]);
 
   return (
-    <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#FFF9F4] text-[#3d2e23]">
+<div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#FFF9F4] text-[#3d2e23]">
       <Header />
       <main className="w-full px-6 py-10 mx-auto max-w-7xl">
         <h2 className="text-3xl font-bold mb-8 text-center text-[#a17455]">Lịch sử đơn hàng</h2>
@@ -97,7 +88,7 @@ const OrderHistory = () => {
         {error && <p className="text-center text-red-600">{error}</p>}
         {!loading && orders.length === 0 && <p className="text-center">Bạn chưa có đơn hàng nào.</p>}
 
-        {!loading && (
+        {!loading && orders.length > 0 && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {orders.map((order) => {
               const status = getStatusInVietnamese(order.status);
@@ -130,21 +121,10 @@ const OrderHistory = () => {
                 </div>
               );
             })}
-
-
           </div>
-          <button
-            onClick={() => navigate(`/order/${order.orderId}`)}
-            className="w-full text-sm font-medium text-[#a17455] border border-[#d6a97e] px-4 py-2 rounded-lg hover:bg-[#f5e9dc] transition"
-          >
-            Xem chi tiết
-          </button>
-        </div>
-      );
-    })}
-  </div>
-)}
-
+        )}
+      </main>
+      <Footer />
     </div>
   );
 };
