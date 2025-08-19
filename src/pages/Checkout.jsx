@@ -17,6 +17,14 @@ const CheckoutPage = () => {
   const queryClient = useQueryClient();
 
   const [addressFromMap, setAddressFromMap] = useState("");
+  const [longitude, setLongitude] = useState();
+  const [latitude, setLatitude] = useState();
+  const SetDeliveryAddress = (address, latitude, longitude)=> {
+
+    setAddressFromMap(address);
+    setLatitude(latitude);
+    setLongitude(longitude);
+  }
   const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
   const [shippingFee, setShippingFee] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -98,32 +106,30 @@ const CheckoutPage = () => {
   // Tính phí ship
   useEffect(() => {
     const fetchShipping = async () => {
-      if (!addressFromMap) {
-        setShippingFee(0);
-        return;
-      }
+      // if (!addressFromMap) {
+      //   setShippingFee(0);
+      //   return;
+      // }
       try {
+        // let lat, lng;
+        // const coordsMatch = addressFromMap.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+        // if (coordsMatch) {
+        //   lat = parseFloat(coordsMatch[1]);
+        //   lng = parseFloat(coordsMatch[2]);
+        // } else {
+        //   const res = await fetch(
+        //     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressFromMap)}`
 
-        let lat, lng;
-        const coordsMatch = addressFromMap.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
-        if (coordsMatch) {
-          lat = parseFloat(coordsMatch[1]);
-          lng = parseFloat(coordsMatch[2]);
-        } else {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressFromMap)}`
-
-          );
-          const data = await res.json();
-          if (data.length > 0) {
-            lat = parseFloat(data[0].lat);
-            lng = parseFloat(data[0].lon);
-          }
-        }
-        setCoordinates({ lat, lng });
-
-        if (lat && lng) {
-          const { shippingFee } = await OrderService.calculateShippingFee({ lat, lng });
+        //   );
+        //   const data = await res.json();
+        //   if (data.length > 0) {
+        //     lat = parseFloat(data[0].lat);
+        //     lng = parseFloat(data[0].lon);
+        //   }
+        // }
+        // setCoordinates({ lat, lng });
+        if (longitude && latitude) {
+          const { shippingFee } = await OrderService.calculateShippingFee({ lat:latitude, lng:longitude, subTotal:subtotal });
           setShippingFee(shippingFee || 0);
         }
       } catch (err) {
@@ -132,7 +138,7 @@ const CheckoutPage = () => {
       }
     };
     fetchShipping();
-  }, [addressFromMap]);
+  }, [addressFromMap, longitude, latitude]);
 
   const handleSetDiscountForProduct = (cartItemKey, discount) => {
     setProductDiscounts((prev) => ({
@@ -171,6 +177,8 @@ const handleSubmit = async () => {
       subTotal: subtotal,
       total: orderTotal,
       voucherDiscountAmount,
+      longitude,
+      latitude,
       paymentChannel: mapPaymentMethodToChannel(paymentMethod),
       orderItems: cartItems.map((item) => ({
         productId: item.id,
@@ -223,7 +231,7 @@ const handleSubmit = async () => {
       <Header />
       <main className="max-w-6xl px-4 py-8 mx-auto">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="sticky top-8 order-1 h-fit lg:order-none">
+          <div className="sticky order-1 top-8 h-fit lg:order-none">
             <OrderSummary
               cartItems={cartItems}
               selectedVouchers={selectedVouchers}
@@ -240,7 +248,7 @@ const handleSubmit = async () => {
             />
           </div>
           <div className="space-y-6 lg:col-span-2">
-            <div className="p-6 space-y-6 bg-white rounded-2xl shadow-md">
+            <div className="p-6 space-y-6 bg-white shadow-md rounded-2xl">
               <h2 className="text-xl font-semibold">Sản phẩm đã chọn</h2>
               {cartItems.length === 0 ? (
                 <p>Không có sản phẩm trong giỏ hàng</p>
@@ -253,11 +261,11 @@ const handleSubmit = async () => {
                         <img
                           src={item.imgs || "/images/placeholder.png"}
                           alt={item.productName}
-                          className="object-cover w-32 h-32 rounded-lg border"
+                          className="object-cover w-32 h-32 border rounded-lg"
                         />
                         <div>
                           <h3 className="font-semibold">{item.productName}</h3>
-                          <div className="text-primary font-bold mt-2">
+                          <div className="mt-2 font-bold text-primary">
                             {formatCurrency(item.total / item.quantity)}
                           </div>
                         </div>
@@ -283,15 +291,15 @@ const handleSubmit = async () => {
               )}
             </div>
             <DeliveryForm
-              form={form}
-              setForm={setForm}
-              addressFromMap={addressFromMap}
-              setAddressFromMap={setAddressFromMap}
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-              handleSubmit={handleSubmit}
-            />
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+  form={form}
+  setForm={setForm}
+  addressFromMap={addressFromMap}
+  onAddressSelect={SetDeliveryAddress} // 👈 đổi tên cho rõ ràng
+  paymentMethod={paymentMethod}
+  setPaymentMethod={setPaymentMethod}
+  handleSubmit={handleSubmit}
+/>
+            {error && <p className="text-sm text-red-600">{error}</p>}
 
           </div>
         </div>

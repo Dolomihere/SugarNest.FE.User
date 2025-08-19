@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useEffect, useRef } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const LeafletMap = ({ onAddressSelect }) => {
   const mapRef = useRef(null);
@@ -17,14 +17,14 @@ const LeafletMap = ({ onAddressSelect }) => {
       map.invalidateSize();
     }, 100);
 
-    const marker = L.marker([10.762622, 106.660172], { draggable: true }).addTo(map);
-    markerRef.current = marker;
-    fetchAddress(10.762622, 106.660172);
+    // const marker = L.marker([10.762622, 106.660172], { draggable: true }).addTo(map);
+    // markerRef.current = marker;
+    // fetchAddress(10.762622, 106.660172);
 
-    marker.on("dragend", (e) => {
-      const { lat, lng } = e.target.getLatLng();
-      fetchAddress(lat, lng);
-    });
+    // marker.on("dragend", (e) => {
+    //   const { lat, lng } = e.target.getLatLng();
+    //   fetchAddress(lat, lng);
+    // });
 
     map.on("click", (e) => {
       const { lat, lng } = e.latlng;
@@ -47,15 +47,17 @@ const LeafletMap = ({ onAddressSelect }) => {
           `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
         );
         const data = await res.json();
-        onAddressSelect(data.display_name || `${lat}, ${lng}`);
+        // Gọi callback với 3 tham số: địa chỉ, lat, lng
+        onAddressSelect(data.display_name, lat, lng);
       } catch (err) {
         console.error("Lỗi lấy địa chỉ:", err);
-        onAddressSelect(`${lat}, ${lng}`);
+
+        onAddressSelect("", lat, lng);
       }
     }
 
     return () => map.remove();
-  }, [onAddressSelect]);
+  }, []);
 
   return (
     <>

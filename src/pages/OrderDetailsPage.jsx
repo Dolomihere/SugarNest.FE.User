@@ -12,10 +12,10 @@ const OrderDetailsPage = () => {
   // Lấy dữ liệu từ state hoặc localStorage
   const stateData = location.state;
   const localData = localStorage.getItem("lastOrderData");
-  const initialData = stateData || (localData ? JSON.parse(localData) : null);
+  // const initialData = stateData || (localData ? JSON.parse(localData) : null);
 
-  const [orderData, setOrderData] = useState(initialData);
-  const [loading, setLoading] = useState(!initialData);
+  const [orderData, setOrderData] = useState();
+  const [loading, setLoading] = useState();
   const [error, setError] = useState("");
 
   // Giả sử accessToken được lưu trong localStorage (thêm logic này để hỗ trợ fetch yêu cầu auth)
@@ -42,7 +42,7 @@ const OrderDetailsPage = () => {
 
   // Fetch order khi chưa có dữ liệu
   useEffect(() => {
-    if (!initialData && orderId) {
+    if (orderId) {
       const fetchOrder = async () => {
         try {
           setLoading(true);
@@ -56,7 +56,7 @@ const OrderDetailsPage = () => {
       };
       fetchOrder();
     }
-  }, [initialData, orderId, accessToken]);
+  }, [orderId, accessToken]);
 
   return (
     <div className="min-h-screen bg-[#fffaf3] text-gray-800">

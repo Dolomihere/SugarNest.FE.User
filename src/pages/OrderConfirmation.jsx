@@ -12,11 +12,14 @@ const OrderConfirmation = () => {
   // Lấy dữ liệu từ state hoặc localStorage
   const stateData = location.state;
   const localData = localStorage.getItem("lastOrderData");
-  const initialData = stateData || (localData ? JSON.parse(localData) : null);
+  // const initialData = stateData || (localData ? JSON.parse(localData) : null);
 
-  const [orderData, setOrderData] = useState(initialData);
-  const [loading, setLoading] = useState(!initialData);
+  const [orderData, setOrderData] = useState();
+  const [loading, setLoading] = useState();
   const [error, setError] = useState("");
+
+  // Giả sử accessToken được lưu trong localStorage (thêm logic này để hỗ trợ fetch yêu cầu auth)
+  const accessToken = localStorage.getItem("accessToken");
 
   // Hàm format tiền
   const formatCurrency = (value) =>
@@ -39,21 +42,21 @@ const OrderConfirmation = () => {
 
   // Fetch order khi chưa có dữ liệu
   useEffect(() => {
-    if (!initialData && orderId) {
+    if (orderId) {
       const fetchOrder = async () => {
         try {
           setLoading(true);
-          const res = await OrderService.getOrderById(orderId);
-          setOrderData(res.data);
-        } catch {
-          setError("Không thể tải thông tin đơn hàng.");
+          const res = await OrderService.getOrderById(orderId, accessToken);
+          setOrderData(res); // Sửa từ res.data thành res để khớp với return của service
+        } catch (err) {
+          setError(err.message || "Không thể tải thông tin đơn hàng.");
         } finally {
           setLoading(false);
         }
       };
       fetchOrder();
     }
-  }, [initialData, orderId]);
+  }, [orderId, accessToken]);
 
   return (
     <div className="min-h-screen bg-[#fffaf3] text-gray-800">
@@ -61,7 +64,7 @@ const OrderConfirmation = () => {
 
       <main className="container max-w-5xl px-4 py-10 mx-auto">
         <h2 className="text-3xl font-bold text-center text-[#a17455] mb-8">
-          Xác nhận đơn hàng
+          Chi tiết đơn hàng
         </h2>
 
         {loading && (

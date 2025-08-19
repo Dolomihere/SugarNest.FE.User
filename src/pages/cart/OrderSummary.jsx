@@ -1,5 +1,5 @@
 import React from "react";
-import { getCartItemKey } from "../../utils/cart"; // thêm import
+import { getCartItemKey } from "../../utils/cart";
 
 const OrderSummary = ({
   cartItems,
@@ -57,7 +57,7 @@ const OrderSummary = ({
         <p className="text-sm text-gray-600">Giỏ hàng trống</p>
       ) : (
         productTotals.map((item, index) => (
-          <div key={index} className="text-sm border-b pb-2 mb-2">
+          <div key={index} className="pb-2 mb-2 text-sm border-b">
             <div className="flex justify-between">
               <span>{item.productName}</span>
               <span>{formatCurrency(item.totalAfterDiscount)}</span>
