@@ -1,8 +1,7 @@
-// TransactionService.js (with fixes for type error)
-
+// TransactionService.js
 import { publicApi, privateApi } from "../configs/AxiosConfig";
 
-// Hàm logout (định nghĩa trong file này để tránh phụ thuộc vòng)
+// Hàm logout
 const logout = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
@@ -10,10 +9,10 @@ const logout = () => {
 };
 
 class TransactionService {
-  // Lấy tất cả giao dịch với bộ lọc và phân trang (yêu cầu xác thực)
+  // Lấy tất cả giao dịch
   static async getAllTransactions(sortAndFilterRequest = {}, paginationRequest = {}) {
     try {
-      const response = await privateApi.get("/transactions", {  // Change to privateApi if auth required
+      const response = await privateApi.get("/transactions", {
         params: {
           ...sortAndFilterRequest,
           ...paginationRequest,
@@ -21,26 +20,37 @@ class TransactionService {
       });
       return response.data;
     } catch (error) {
-      console.error("Lỗi khi lấy tất cả giao dịch:", error);
+      console.error("Lỗi khi lấy tất cả giao dịch:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      if (error.response?.status === 401) {
+        logout();
+      }
       throw error;
     }
   }
 
-  // Lấy giao dịch theo ID (không yêu cầu xác thực)
+  // Lấy giao dịch theo ID
   static async getTransactionById(transactionId) {
     try {
       const response = await publicApi.get(`/transactions/${transactionId}`);
       return response.data;
     } catch (error) {
-      console.error(`Lỗi khi lấy giao dịch với ID ${transactionId}:`, error);
+      console.error(`Lỗi khi lấy giao dịch với ID ${transactionId}:`, {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       throw error;
     }
   }
 
-  // Lấy tất cả giao dịch theo Order ID với bộ lọc và phân trang (yêu cầu xác thực)
+  // Lấy tất cả giao dịch theo Order ID
   static async getAllTransactionsByOrder(orderId, sortAndFilterRequest = {}, paginationRequest = {}) {
     try {
-      const response = await privateApi.get(`/transactions/order/${orderId}`, {  // Change to privateApi
+      const response = await privateApi.get(`/transactions/order/${orderId}`, {
         params: {
           ...sortAndFilterRequest,
           ...paginationRequest,
@@ -48,67 +58,98 @@ class TransactionService {
       });
       return response.data;
     } catch (error) {
-      console.error(`Lỗi khi lấy giao dịch theo Order ID ${orderId}:`, error);
+      console.error(`Lỗi khi lấy giao dịch theo Order ID ${orderId}:`, {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      if (error.response?.status === 401) {
+        logout();
+      }
       throw error;
     }
   }
 
-  // Kiểm tra thông tin giao dịch VnPay (yêu cầu xác thực)
+  // Kiểm tra thông tin giao dịch VnPay
   static async checkVnPayTransaction(transactionId) {
     try {
-      const response = await privateApi.get(`/transactions/vnpay/${transactionId}`);  // Change to privateApi
+      const response = await privateApi.get(`/transactions/vnpay/${transactionId}`);
       return response.data;
     } catch (error) {
-      console.error(`Lỗi khi kiểm tra giao dịch VnPay ${transactionId}:`, error);
+      console.error(`Lỗi khi kiểm tra giao dịch VnPay ${transactionId}:`, {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      if (error.response?.status === 401) {
+        logout();
+      }
       throw error;
     }
   }
 
-  // Tạo giao dịch tiền mặt (yêu cầu xác thực)
-  static async createCashTransaction(orderId, model) {
-    try {
-      const response = await privateApi.post(`/transactions/cash/${orderId}`, model);  // Change to privateApi
-      return response.data;
-    } catch (error) {
-      console.error(`Lỗi khi tạo giao dịch tiền mặt cho Order ID ${orderId}:`, error);
-      throw error;
-    }
-  }
+  // Tạo giao dịch tiền mặt
+//  static async createCashTransaction(orderId, model) {
+//     try {
+//       if (!orderId) throw new Error("Order ID is undefined");
+//       const response = await privateApi.post(`/transactions/cash/${orderId}`, model);
+//       return response.data;
+//     } catch (error) {
+//       console.error(`❌ Lỗi khi tạo giao dịch tiền mặt cho Order ID ${orderId}:`, error);
+//       if (error.response?.status === 401) logout();
+//       throw error;
+//     }
+//   }
 
-  // Tạo giao dịch VnPay (không yêu cầu xác thực)
   static async createVnPayTransaction(orderId) {
     try {
+      if (!orderId) throw new Error("Order ID is undefined");
       const response = await publicApi.post(`/transactions/vnpay/${orderId}`);
+      console.log("data vnpay ", response.data)
       return response.data;
     } catch (error) {
-      console.error(`Lỗi khi tạo giao dịch VnPay cho Order ID ${orderId}:`, error);
+      console.error(`❌ Lỗi khi tạo giao dịch VnPay cho Order ID ${orderId}:`, error);
       throw error;
     }
   }
 
-  // Hoàn tiền giao dịch VnPay (yêu cầu xác thực)
+  // Hoàn tiền giao dịch VnPay
   static async refundVnPayTransaction(transactionId, model) {
     try {
-      const response = await privateApi.patch(`/transactions/vnpay/${transactionId}/refund`, model);  // Change to privateApi
+      const response = await privateApi.patch(`/transactions/vnpay/${transactionId}/refund`, model);
       return response.data;
     } catch (error) {
-      console.error(`Lỗi khi hoàn tiền giao dịch VnPay ${transactionId}:`, error);
+      console.error(`Lỗi khi hoàn tiền giao dịch VnPay ${transactionId}:`, {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      if (error.response?.status === 401) {
+        logout();
+      }
       throw error;
     }
   }
 
-  // Hoàn tiền giao dịch tiền mặt (yêu cầu xác thực)
+  // Hoàn tiền giao dịch tiền mặt
   static async refundCashTransaction(transactionId, model) {
     try {
-      const response = await privateApi.patch(`/transactions/cash/${transactionId}/refund`, model);  // Change to privateApi
+      const response = await privateApi.patch(`/transactions/cash/${transactionId}/refund`, model);
       return response.data;
     } catch (error) {
-      console.error(`Lỗi khi hoàn tiền giao dịch tiền mặt ${transactionId}:`, error);
+      console.error(`Lỗi khi hoàn tiền giao dịch tiền mặt ${transactionId}:`, {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      if (error.response?.status === 401) {
+        logout();
+      }
       throw error;
     }
   }
 
-  // Xử lý IPN của VnPay (không yêu cầu xác thực)
+  // Xử lý IPN của VnPay
   static async handleVnPayIPN(query) {
     try {
       const response = await publicApi.get("/transactions/vnpay/ipn", {
@@ -116,12 +157,16 @@ class TransactionService {
       });
       return response.data;
     } catch (error) {
-      console.error("Lỗi khi xử lý IPN của VnPay:", error);
+      console.error("Lỗi khi xử lý IPN của VnPay:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       throw error;
     }
   }
 
-  // Xử lý callback của VnPay (không yêu cầu xác thực)
+  // Xử lý callback của VnPay
   static async vnPayCallback(query) {
     try {
       const response = await publicApi.get("/transactions/vnpay/callback", {
@@ -129,28 +174,39 @@ class TransactionService {
       });
       return response.data;
     } catch (error) {
-      console.error("Lỗi khi xử lý callback của VnPay:", error);
+      console.error("Lỗi khi xử lý callback của VnPay:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       throw error;
     }
   }
 
-  // Cập nhật trạng thái giao dịch thủ công (yêu cầu xác thực)
+  // Cập nhật trạng thái giao dịch thủ công
   static async updateTransactionStatusManually(transactionId, model) {
     try {
-      const response = await privateApi.patch(`/transactions/${transactionId}/status`, model);  // Change to privateApi
+      const response = await privateApi.patch(`/transactions/${transactionId}/status`, model);
       return response.data;
     } catch (error) {
-      console.error(`Lỗi khi cập nhật trạng thái giao dịch ${transactionId}:`, error);
+      console.error(`Lỗi khi cập nhật trạng thái giao dịch ${transactionId}:`, {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      if (error.response?.status === 401) {
+        logout();
+      }
       throw error;
     }
   }
 
-  // Lấy tất cả thông báo (yêu cầu xác thực)
+  // Lấy tất cả thông báo
   static async getAllNotifications(sortAndFilterRequest = {}, paginationRequest = {}) {
     try {
       const filter = {
         ...sortAndFilterRequest,
-        status: ["Updated", "Pending"], // Điều chỉnh bộ lọc theo nhu cầu
+        status: ["Updated", "Pending"],
       };
       const response = await privateApi.get("/transactions", {
         params: {
@@ -158,13 +214,12 @@ class TransactionService {
           ...paginationRequest,
         },
       });
-      // Chuyển đổi dữ liệu giao dịch thành danh sách thông báo
       const notifications = response.data.data.map((transaction) => ({
         id: transaction.id,
         message: `Đơn hàng ${transaction.orderId} đã được ${String(transaction.status).toLowerCase()}!`,
         orderId: transaction.orderId,
-        timestamp: new Date(transaction.updatedAt || transaction.createdAt || Date.now()), // Fallback nếu không có updatedAt
-        isRead: false,  // Thêm flag để đánh dấu đã đọc
+        timestamp: new Date(transaction.updatedAt || transaction.createdAt || Date.now()),
+        isRead: false,
       }));
       return {
         isSuccess: true,
@@ -172,7 +227,14 @@ class TransactionService {
         total: response.data.total || notifications.length,
       };
     } catch (error) {
-      console.error("Lỗi khi lấy tất cả thông báo:", error);
+      console.error("Lỗi khi lấy tất cả thông báo:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      if (error.response?.status === 401) {
+        logout();
+      }
       throw error;
     }
   }
