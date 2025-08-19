@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import OrderService from "../services/OrderService";
+import TransactionService from "../services/TransactionService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 import OrderDetailContent from "./OrderDetailContent";
+import PaymentForm from "../components/PaymentComponent";
 
 const OrderConfirmation = () => {
   const location = useLocation();
   const { orderId } = useParams();
+  const navigate = useNavigate();
 
-  // Lấy dữ liệu từ state hoặc localStorage
   const stateData = location.state;
   const localData = localStorage.getItem("lastOrderData");
   // const initialData = stateData || (localData ? JSON.parse(localData) : null);
@@ -17,18 +19,14 @@ const OrderConfirmation = () => {
   const [orderData, setOrderData] = useState();
   const [loading, setLoading] = useState();
   const [error, setError] = useState("");
-
   // Giả sử accessToken được lưu trong localStorage (thêm logic này để hỗ trợ fetch yêu cầu auth)
   const accessToken = localStorage.getItem("accessToken");
-
-  // Hàm format tiền
   const formatCurrency = (value) =>
     new Intl.NumberFormat("vi-VN", {
       style: "decimal",
       minimumFractionDigits: 0,
     }).format(value || 0) + " VND";
 
-  // Hàm format ngày
   const formatDate = (dateString) => {
     if (!dateString) return "Không xác định";
     return new Date(dateString).toLocaleString("vi-VN", {
@@ -40,7 +38,26 @@ const OrderConfirmation = () => {
     });
   };
 
-  // Fetch order khi chưa có dữ liệu
+  const calculateTotal = (order) => {
+    if (!order) return 0;
+    const subTotal = order.subTotal || order.subtotal || order.totalAmount || 0;
+    const shippingFee =
+      order.shippingFee ||
+      order.shippingCost ||
+      order.shipping ||
+      order.shipFee ||
+      0;
+    const voucherDiscount =
+      order.voucherDiscountAmount ||
+      order.voucherDiscount ||
+      order.discountAmount ||
+      order.discount ||
+      order.voucherAmount ||
+      order.discountVoucher ||
+      0;
+    return subTotal + shippingFee - voucherDiscount;
+  };
+
   useEffect(() => {
     if (orderId) {
       const fetchOrder = async () => {
@@ -58,6 +75,7 @@ const OrderConfirmation = () => {
     }
   }, [orderId, accessToken]);
 
+
   return (
     <div className="min-h-screen bg-[#fffaf3] text-gray-800">
       <Header />
@@ -71,16 +89,21 @@ const OrderConfirmation = () => {
           <div className="text-lg text-center text-gray-500">Đang tải...</div>
         )}
 
-        {error && (
-          <div className="text-lg text-center text-red-500">{error}</div>
-        )}
+        {error && <div className="text-lg text-center text-red-500">{error}</div>}
 
         {orderData && (
-          <OrderDetailContent
-            order={orderData}
-            formatCurrency={formatCurrency}
-            formatDate={formatDate}
-          />
+          <>
+            <OrderDetailContent
+              order={orderData}
+              formatCurrency={formatCurrency}
+              formatDate={formatDate}
+            />
+            <PaymentForm
+              order={orderData}
+              formatCurrency={formatCurrency}
+              totalAmount={calculateTotal(orderData)}
+            />
+          </>
         )}
       </main>
 

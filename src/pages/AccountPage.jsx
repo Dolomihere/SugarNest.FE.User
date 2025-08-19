@@ -403,12 +403,7 @@ const AccountPage = () => {
       Lịch sử đơn hàng
     </button>
 
-    <button
-      onClick={handleLogout}
-      className="flex items-center gap-2 px-4 py-2 rounded-md text-sm text-gray-700 hover:bg-amber-50 transition-colors"
-    >
-      <FontAwesomeIcon icon={faSignOutAlt} /> Đăng xuất
-    </button>
+    
   </nav>
 
   {/* 👤 THÔNG TIN CÁ NHÂN */}
@@ -583,11 +578,7 @@ const AccountPage = () => {
       )}
     </div>
   )}
- {activeTab === 'orderHistory' && (
-  <div className="p-6 bg-white border rounded-xl shadow-md space-y-4">
-    <OrderHistory />
-  </div>
-)}
+ {activeTab === "orderHistory" && <OrderHistory embedded />}
 
 
 

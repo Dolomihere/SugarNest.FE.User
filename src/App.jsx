@@ -24,7 +24,7 @@ import { Footer } from "./pages/layouts/Footer.jsx";
 import OrderConfirmation from "./pages/OrderConfirmation.jsx";
 import OrderHistoryPage from "./pages/OrderHistory.jsx";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
-
+import OrderSuccess from "./pages/OrderSuccess";
 function App() {
   return (
     <>
@@ -46,7 +46,7 @@ function App() {
         <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
         <Route path="/order-history" element={<OrderHistoryPage />} />
         <Route path="/order/:orderId" element={<OrderDetailsPage />} />
-
+        <Route path="/order-success" element={<OrderSuccess />} />
         <Route
           path="/signin"
           element={

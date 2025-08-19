@@ -4,6 +4,7 @@ import OrderService from "../services/OrderService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 import OrderDetailContent from "./OrderDetailContent";
+import PaymentForm from "../components/PaymentComponent";
 
 const OrderDetailsPage = () => {
   const location = useLocation();
@@ -76,11 +77,18 @@ const OrderDetailsPage = () => {
         )}
 
         {orderData && (
-          <OrderDetailContent
-            order={orderData}
-            formatCurrency={formatCurrency}
-            formatDate={formatDate}
-          />
+          <div>
+            <OrderDetailContent
+              order={orderData}
+              formatCurrency={formatCurrency}
+              formatDate={formatDate}
+            />
+            <PaymentForm
+              order={orderData}
+              formatCurrency={formatCurrency}
+              totalAmount={orderData.total}
+            />
+          </div>
         )}
       </main>
 
