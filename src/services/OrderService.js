@@ -57,6 +57,8 @@ const OrderService = {
     const rawData = response.data?.data || response.data;
     const order = rawData.order || rawData; // nếu có field "order" thì lấy ra
 
+    console.log("Get order by ID response:", response.data);
+
     return {
       ...order,
       subTotal: order.subTotal || 0,
@@ -105,10 +107,12 @@ const OrderService = {
     }
   },
 
-  calculateShippingFee: async ({ lat, lng }) => {
+  calculateShippingFee: async ({ lat, lng, subTotal }) => {
     try {
+      // alert("longitude: " + lng + ", latitude: " + lat + ", subTotal: " + subTotal);
+      console.log("Gọi API tính phí vận chuyển:")
       const response = await publicApi.get(
-        `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}`,
+        `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}&subTotal=${subTotal}`,
         {
           params: {
             latitude: lat,
