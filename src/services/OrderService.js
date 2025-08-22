@@ -3,79 +3,73 @@ import { publicApi } from "../configs/AxiosConfig";
 const endpoint = "/orders";
 
 const OrderService = {
-  createOrder: async (orderData, accessToken, guestCartId) => {
+  getUserCart: async (accessToken) => {
     try {
-      let url = `${endpoint}`;
-      const config = {};
-
-      if (accessToken) {
-        config.headers = { Authorization: `Bearer ${accessToken}` };
-        const decodedToken = JSON.parse(atob(accessToken.split(".")[1]));
-        console.log("Decoded Token:", decodedToken);
-        const userId =
-          decodedToken.userId ||
-          decodedToken.sub ||
-          decodedToken[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
-          ];
-        console.log("Extracted UserId:", userId);
-      } else if (guestCartId) {
-        url += `?cartId=${guestCartId}`;
-      } else {
-        throw new Error("Không có accessToken hoặc guestCartId");
-      }
-
-      console.log("Request URL:", url);
-      console.log("Request Config:", config);
-      console.log("Request Data:", JSON.stringify(orderData, null, 2));
-
-      const response = await publicApi.post(url, orderData, config);
-      console.log("Create order response:", JSON.stringify(response.data, null, 2));
+      const response = await publicApi.get("/carts", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       return response.data;
     } catch (error) {
-      console.error("OrderService.createOrder error:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-      if (error.response?.status === 401) {
-        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-      }
-      throw new Error(
-        "Lỗi khi tạo đơn hàng: " +
-          (error.response?.data?.message || error.message)
-      );
+      console.error("OrderService.getUserCart error:", error.response?.data || error.message);
+      throw error;
     }
   },
 
-  getOrderById: async (orderId, accessToken) => {
-  try {
-    const response = await publicApi.get(`${endpoint}/${orderId}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+  getGuestCart: async (cartId) => {
+    try {
+      const response = await publicApi.get(`/carts/${cartId}`);
+      return response.data;
+    } catch (error) {
+      console.error("OrderService.getGuestCart error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
 
-    const rawData = response.data?.data || response.data;
-    const order = rawData.order || rawData; // nếu có field "order" thì lấy ra
+  createCart: async () => {
+    try {
+      const response = await publicApi.post("/carts", {});
+      return response.data;
+    } catch (error) {
+      console.error("OrderService.createCart error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
 
-    return {
-      ...order,
-      subTotal: order.subTotal || 0,
-      shippingFee: order.shippingFee || 0,
-      voucherDiscount: order.voucherDiscount || 0
-    };
-  } catch (error) {
-      console.error("OrderService.getOrderById error:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
+  getUserCartId: async (accessToken) => {
+    try {
+      const response = await publicApi.get("/carts/id", {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (error.response?.status === 401) {
-        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-      }
-      throw new Error(
-        "Không thể lấy thông tin đơn hàng: " +
-          (error.response?.data?.message || error.message)
+      return response.data.cartId;
+    } catch (error) {
+      console.error("OrderService.getUserCartId error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  calculateShippingFee: async ({ lat, lng }) => {
+    try {
+      const response = await publicApi.post("/shipping/calculate", { lat, lng });
+      return response.data;
+    } catch (error) {
+      console.error("OrderService.calculateShippingFee error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  createOrder: async (orderData, accessToken, cartId) => {
+    try {
+      const response = await publicApi.post(
+        "/orders",
+        orderData,
+        {
+          headers: { Authorization: `Bearer ${accessToken || cartId}` },
+        }
       );
+      return response.data;
+    } catch (error) {
+      console.error("OrderService.createOrder error:", error.response?.data || error.message);
+      throw error;
     }
   },
 
@@ -84,7 +78,6 @@ const OrderService = {
       const response = await publicApi.get(`${endpoint}/mine`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log("Get order history response:", response.data);
       return {
         data: {
           orders: response.data.data?.orders || response.data.data || [],
@@ -116,7 +109,6 @@ const OrderService = {
           },
         }
       );
-      console.log("Phản hồi phí vận chuyển:", JSON.stringify(response.data, null, 2));
       return { shippingFee: response.data.data };
     } catch (error) {
       console.error("Lỗi OrderService.calculateShippingFee:", {
@@ -136,10 +128,7 @@ const OrderService = {
   processPayment: async ({ orderId, amount }) => {
     try {
       const url = `${endpoint}/${orderId}/payment`;
-      console.log("Gọi API thanh toán:", url, { orderId, amount });
-
       const response = await publicApi.post(url, { amount });
-      console.log("Process payment response:", response.data);
       return response.data;
     } catch (error) {
       console.error("OrderService.processPayment error:", {
@@ -148,7 +137,7 @@ const OrderService = {
         data: error.response?.data,
       });
 
-      console.warn("API thanh toán chưa sẵn sàng, trả về dữ liệu giả.");
+      // fallback mock
       return new Promise((resolve) => {
         setTimeout(() => resolve({ status: "success", mock: true }), 1000);
       });
@@ -158,10 +147,7 @@ const OrderService = {
   sendOrderConfirmationEmail: async ({ email, orderId, orderData }) => {
     try {
       const url = `${endpoint}/${orderId}/send-confirmation-email`;
-      console.log("Gọi API gửi email:", url, { email, orderData });
-
       const response = await publicApi.post(url, { email, orderData });
-      console.log("Send confirmation email response:", response.data);
       return response.data;
     } catch (error) {
       console.error("OrderService.sendOrderConfirmationEmail error:", {
@@ -170,7 +156,7 @@ const OrderService = {
         data: error.response?.data,
       });
 
-      console.warn("API gửi email chưa sẵn sàng, thực hiện log giả lập.");
+      // fallback mock
       return new Promise((resolve) => {
         setTimeout(() => {
           console.log(`(Giả lập) Gửi email tới ${email} cho đơn hàng ${orderId}`);
@@ -183,7 +169,7 @@ const OrderService = {
 };
 
 const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; 
+  const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =

@@ -155,11 +155,89 @@ const handleSubmit = async () => {
   try {
     setLoading(true);
 
+    if (!cartItems || cartItems.length === 0) {
+      console.warn("Cart is empty");
+      setError("Giỏ hàng rỗng. Vui lòng thêm sản phẩm trước khi đặt hàng.");
+      return;
+    }
+
+    console.log("cartItems:", JSON.stringify(cartItems, null, 2));
+    console.log("selectedVouchers:", JSON.stringify(selectedVouchers, null, 2));
+    console.log("userVouchers:", JSON.stringify(userVouchers, null, 2));
+    console.log("guestCartId:", guestCartId);
+
     const voucherDiscountAmount = Object.values(productDiscounts).reduce(
       (sum, d) => sum + (d || 0),
       0
     );
     const orderTotal = subtotal + shippingFee - voucherDiscountAmount;
+
+    const now = new Date();
+    let validVoucher = null;
+    if (Object.values(selectedVouchers).length > 0) {
+      validVoucher = userVouchers.find((v) => {
+        const selectedVoucher = Object.values(selectedVouchers).find(
+          (sv) => sv?.voucherId === v.voucherId
+        );
+        if (!selectedVoucher) {
+          console.warn("No selected voucher found for ID:", v.voucherId);
+          return false;
+        }
+
+        const cartItem = cartItems.find(
+          (item) =>
+            item.productId && v.productId && item.productId.toString() === v.productId.toString()
+        );
+        if (!cartItem) {
+          console.warn("No matching cart item found for productId:", v.productId);
+          return false;
+        }
+
+        if (!v.isActive) {
+          console.warn("Voucher is not active:", v.voucherId);
+          return false;
+        }
+
+        const startTime = new Date(v.startTime);
+        const endTime = new Date(v.endTime);
+        if (now < startTime || now > endTime) {
+          console.warn("Voucher is out of valid time range:", v.voucherId);
+          return false;
+        }
+
+        if (cartItem.quantity < v.minQuantity || cartItem.quantity > v.maxQuantity) {
+          console.warn("Invalid quantity for voucher:", v.voucherId);
+          return false;
+        }
+
+        if (v.minPriceCondition && subtotal < v.minPriceCondition) {
+          console.warn("Subtotal does not meet voucher's minPriceCondition:", v.minPriceCondition);
+          setError(`Đơn hàng phải có giá trị tối thiểu ${formatCurrency(v.minPriceCondition)} để áp dụng voucher`);
+          return false;
+        }
+
+        return true;
+      });
+
+      if (!validVoucher) {
+        console.warn("Invalid voucher:", Object.values(selectedVouchers)[0]?.voucherId);
+        setError("Voucher không hợp lệ hoặc không áp dụng cho sản phẩm này");
+        return;
+      }
+    }
+
+    const userVoucherId = validVoucher ? validVoucher.voucherId : null;
+
+    // Lấy cartId nếu không có guestCartId
+    let finalCartId = guestCartId || localStorage.getItem("cartId");
+    if (!finalCartId && accessToken) {
+      finalCartId = await OrderService.getUserCartId(accessToken);
+      if (!finalCartId) {
+        setError("Không thể lấy thông tin giỏ hàng. Vui lòng thử lại.");
+        return;
+      }
+      localStorage.setItem("cartId", finalCartId); // Lưu cartId vào localStorage
+    }
 
     const orderData = {
       address: addressFromMap,
@@ -167,25 +245,29 @@ const handleSubmit = async () => {
       phoneNumber: form.phoneNumber,
       email: form.email,
       deliveryTime: form.deliveryTime ? new Date(form.deliveryTime).toISOString() : null,
+      latitude: coordinates.lat || null,
+      longitude: coordinates.lng || null,
       shippingFee,
       subTotal: subtotal,
       total: orderTotal,
       voucherDiscountAmount,
       paymentChannel: mapPaymentMethodToChannel(paymentMethod),
       orderItems: cartItems.map((item) => ({
-        productId: item.id,
+        productId: item.productId || item.id,
+        cartItemId: item.cartItemId, // Thêm cartItemId nếu có
         quantity: item.quantity,
-        price: item.price,
+        price: item.price || item.total / item.quantity,
         total: item.total,
       })),
       note: form.note || null,
+      userVoucherId,
+      cartId: finalCartId,
     };
 
-    console.log("📦 Order data gửi lên:", orderData);
+    console.log("📦 Order data gửi lên:", JSON.stringify(orderData, null, 2));
 
-
-    const res = await OrderService.createOrder(orderData, accessToken, guestCartId);
-    console.log("📩 Response từ createOrder:", res);
+    const res = await OrderService.createOrder(orderData, accessToken, finalCartId);
+    console.log("📩 Response từ createOrder:", JSON.stringify(res, null, 2));
 
     const orderFromServer = res?.data || res;
     const orderId = orderFromServer.orderId || orderFromServer.id;
@@ -194,12 +276,13 @@ const handleSubmit = async () => {
       throw new Error("Không nhận được orderId từ server. Response: " + JSON.stringify(res));
     }
 
-    // Lưu dữ liệu order đầy đủ (bao gồm dữ liệu server trả về)
     const fullOrderData = {
       ...orderFromServer,
       orderItems: orderData.orderItems,
       shippingFee: orderData.shippingFee,
       voucherDiscountAmount: orderData.voucherDiscountAmount,
+      userVoucherId,
+      selectedVouchers,
     };
 
     localStorage.setItem("lastOrderData", JSON.stringify(fullOrderData));
@@ -207,17 +290,12 @@ const handleSubmit = async () => {
 
     navigate(`/order-confirmation/${orderId}`, { state: fullOrderData });
   } catch (err) {
-    console.error("Order error:", err);
-    setError(err.message || "Lỗi khi đặt hàng");
+    console.error("Order error:", err.response?.data || err.message);
+    setError(err.response?.data?.message || err.message || "Lỗi khi đặt hàng");
   } finally {
     setLoading(false);
   }
 };
-
-
-
-  
-
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#fffaf3] text-gray-700">
       <Header />
@@ -262,7 +340,7 @@ const handleSubmit = async () => {
                           </div>
                         </div>
                       </div>
-                      <VoucherSection
+                      {/* <VoucherSection
                         product={item}
                         userVouchers={userVouchers}
                         selectedVoucher={selectedVouchers[cartItemKey]}
@@ -276,7 +354,7 @@ const handleSubmit = async () => {
                           handleSetDiscountForProduct(key, discount)
                         }
                         formatCurrency={formatCurrency}
-                      />
+                      /> */}
                     </div>
                   );
                 })

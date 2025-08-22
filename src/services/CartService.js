@@ -35,6 +35,7 @@ const CartService = {
   },
   addItemToCart: async (itemData, token = null) => {
     try {
+      alert(itemData.userItemVoucherId)
       const config = token
         ? { headers: { Authorization: `Bearer ${token}` } }
         : {};
@@ -133,6 +134,50 @@ const CartService = {
       throw error;
     }
   },
-};
+ updateItemVoucher: async ({ cartItemId, userItemVoucherId }, token, guestCartId) => {
+    try {
+      let url = `${endpoint}/items/${cartItemId}/voucher`;
+      const config = {
+        headers: { "Content-Type": "application/json" },
+      };
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else if (guestCartId) {
+        url += `?cartId=${guestCartId}`;
+      } else {
+        throw new Error("Không có accessToken hoặc guestCartId");
+      }
 
+      const payload = { userItemVoucher: userItemVoucherId || null };
+      const response = await publicApi.patch(url, payload, config);
+      console.log("Update item voucher response:", JSON.stringify(response.data, null, 2));
+      return {
+        ...response.data,
+        cartItem: response.data.data?.cartItem || null, // Mong đợi cartItem trong response
+      };
+    } catch (error) {
+      console.error("CartService.updateItem error:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      throw new Error(
+        error.response?.data?.message || "Lỗi khi cập nhật voucher"
+      );
+    }
+  },
+
+
+  createCart: async (token = null) => {
+    try {
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      const response = await publicApi.post(endpoint, {}, config);
+      console.log("Create cart response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Create cart error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+};
 export default CartService;
