@@ -10,7 +10,7 @@ function SuggestedProducts({ categoryId, categoryName }) {
       SortBy: "CreatedAt",
       SortDescending: true,
       Filter: { CategoryId: categoryId },
-      PageSize: 4, // Chỉ lấy 4 sản phẩm
+      PageSize: 1000, // Đặt PageSize lớn để lấy tất cả sản phẩm (hoặc bỏ PageSize nếu API hỗ trợ)
       PageIndex: 1,
     }),
     [categoryId]
@@ -22,6 +22,14 @@ function SuggestedProducts({ categoryId, categoryName }) {
   );
 
   const products = apiResponse?.data || [];
+
+  // Shuffle toàn bộ mảng products để hiển thị ngẫu nhiên
+  const shuffledProducts = useMemo(() => {
+    return [...products].sort(() => Math.random() - 0.5);
+  }, [products]);
+
+  // Lấy 4 sản phẩm đầu tiên từ danh sách đã shuffle
+  const displayedProducts = shuffledProducts.slice(0, 4);
 
   return (
     <div className="space-y-8">
@@ -35,9 +43,9 @@ function SuggestedProducts({ categoryId, categoryName }) {
         </div>
       ) : error ? (
         <p className="text-center text-[#A47449]">Lỗi: {error.message}</p>
-      ) : products.length > 0 ? (
+      ) : displayedProducts.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((p) => (
+          {displayedProducts.map((p) => (
             <Link
               key={p.productId}
               to={`/products/${p.productId}`}

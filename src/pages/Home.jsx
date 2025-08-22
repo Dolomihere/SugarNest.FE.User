@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 import { AboutAndReviews } from './layouts/home/AboutAndReview'
 import { ProductShowcase } from './layouts/home/ProductShowcase'
+import { TopProducts } from './layouts/home/TopProducts';
 import { Mailing } from './layouts/home/Mailing'
 import ChatPage from '../pages/ChatPage';
 import EmojiPopperMultiPosition from '../components/EmojiPopperMultiPosition';
@@ -93,11 +94,16 @@ export function HomePage() {
         <AboutAndReviews />
       </div>
 
+      {/* Top Products Section */}
+       <div className="p-5">
+      <TopProducts />
+      </div>
+
       {/* Mailing Section */}
       <div className="p-5">
         <Mailing />
       </div>
-
+      
       <Footer />
 
       <div className="fixed z-50 bottom-4 right-4">

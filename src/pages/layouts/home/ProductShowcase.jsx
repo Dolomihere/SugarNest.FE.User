@@ -144,20 +144,21 @@ export function ProductShowcase() {
                     : cat.imgs?.[0] || cat.imageUrls?.[0] || 'https://i.pinimg.com/736x/19/33/80/1933806d5ccb3e262fae2feadabe593a.jpg';
 
                 return (
-                  <div
-                    key={cat.categoryId}
-                    className="transition bg-white border border-orange-100 shadow-md rounded-xl hover:-translate-y-1"
-                  >
-                    <img
-                      src={imageUrl}
-                      alt={cat.name}
-                      className="object-cover object-center w-full h-40 rounded-t-xl"
-                    />
-                    <div className="p-4 text-center">
-                      <h4 className="text-base font-semibold truncate text-main">{cat.name}</h4>
-                      <p className="mt-1 text-sm text-sub">Khám phá ngay</p>
-                    </div>
+                 <Link to={`/category/${cat.categoryId}`} key={cat.categoryId}>
+                <div className="transition bg-white border border-orange-100 shadow-md rounded-xl hover:-translate-y-1">
+                  <img
+                    src={imageUrl}
+                    alt={cat.name}
+                    className="object-cover object-center w-full h-40 rounded-t-xl"
+                  />
+                  <div className="p-4 text-center">
+                    <h4 className="text-base font-semibold truncate text-main">{cat.name}</h4>
+                    <p className="mt-1 text-sm text-sub">Khám phá ngay</p>
                   </div>
+                </div>
+              </Link>
+
+
                 );
               })}
             </div>
