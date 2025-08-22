@@ -82,7 +82,7 @@ const OrderConfirmation = () => {
 
       <main className="container max-w-5xl px-4 py-10 mx-auto">
         <h2 className="text-3xl font-bold text-center text-[#a17455] mb-8">
-          Chi tiết đơn hàng
+          Xác nhận đơn hàng
         </h2>
 
         {loading && (

@@ -11,7 +11,7 @@ import CategoryService from "../services/CategoryService";
 import { StarRating } from "./StarRating";
 import { RatingModal } from "./RatingModal";
 import { RatingForm } from "./RatingForm";
-import { SuggestedProducts } from "./SuggestedProducts";
+import SuggestedProducts from "./SuggestedProducts.jsx";
 import ToastMessage from "../components/ToastMessage";
 import ChatPage from "./ChatPage";
 
