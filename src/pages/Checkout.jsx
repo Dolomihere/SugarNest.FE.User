@@ -251,8 +251,6 @@ const handleSubmit = async () => {
       phoneNumber: form.phoneNumber,
       email: form.email,
       deliveryTime: form.deliveryTime ? new Date(form.deliveryTime).toISOString() : null,
-      latitude: coordinates.lat || null,
-      longitude: coordinates.lng || null,
       shippingFee,
       subTotal: subtotal,
       total: orderTotal,
