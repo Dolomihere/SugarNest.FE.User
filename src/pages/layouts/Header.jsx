@@ -253,7 +253,7 @@ export function Header() {
         setNotifications((prev) => {
           const newNotif = {
             id: notificationId,
-            message: `Đơn hàng ${orderId} đã được cập nhật!`,
+            // message: `Đơn hàng ${orderId} đã được cập nhật!`,
             orderId,
             timestamp: new Date(),
             isRead: false,
@@ -430,67 +430,6 @@ export function Header() {
                 >
                   Tài khoản
                 </button>
-                <div className="relative">
-                  <button
-                    onClick={() => setNotificationsOpen(!notificationsOpen)}
-                    className="relative w-full px-4 py-2 text-left text-gray-600 transition-colors duration-200 hover:text-gray-700 hover:bg-gray-100"
-                    aria-label="Notifications"
-                  >
-                    Thông báo
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 right-2 bg-red-500 text-white text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center animate-bounce">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </button>
-                  {notificationsOpen && (
-                    <div className="absolute right-0 mt-2 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg w-72 max-h-80 dark:bg-gray-800 dark:border-gray-700">
-                      {notifications.length === 0 ? (
-                        <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          Chưa có thông báo mới
-                        </div>
-                      ) : (
-                        <>
-                          {notifications.map((notification) => (
-                            <div
-                              key={notification.id}
-                              className={`px-4 py-3 border-b border-gray-200 hover:bg-gray-100 transition-colors duration-200 dark:border-gray-700 dark:hover:bg-gray-700 ${notification.isRead ? "opacity-60" : ""}`}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <button
-                                  onClick={() => handleNotificationClick(notification)}
-                                  className="flex-1 text-sm text-left text-gray-600 hover:text-gray-700 dark:text-gray-200 dark:hover:text-gray-100"
-                                >
-                                  {notification.message}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setNotifications((prev) =>
-                                      prev.filter((n) => n.id !== notification.id)
-                                    );
-                                  }}
-                                  className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
-                                  aria-label="Delete notification"
-                                >
-                                  <FontAwesomeIcon icon={faTimes} size="sm" />
-                                </button>
-                              </div>
-                              <span className="text-xs text-gray-400 dark:text-gray-500">
-                                {formatRelativeTime(notification.timestamp)}
-                              </span>
-                            </div>
-                          ))}
-                          <button
-                            onClick={clearAllNotifications}
-                            className="w-full px-4 py-2 text-sm text-red-600 transition-colors duration-200 rounded-b-lg hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-700"
-                          >
-                            Xóa tất cả
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
                 <button
                   onClick={() => {
                     navigate("/order-history");
