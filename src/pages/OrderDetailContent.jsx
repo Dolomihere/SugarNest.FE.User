@@ -44,6 +44,7 @@ const OrderDetailContent = ({ order, formatCurrency, formatDate }) => {
               Thông tin người nhận
             </h3>
             <div className="grid grid-cols-1 gap-2 text-gray-700">
+              <p><strong>Mã đơn hàng:</strong> {order.orderId}</p>
               <p><strong>Tên:</strong> {order.recipientName || order.customerName || "-"}</p>
               <p><strong>SĐT:</strong> {order.recipientPhone || order.phoneNumber || "-"}</p>
               <p><strong>Email:</strong> {order.recipientEmail || order.email || "-"}</p>
@@ -81,20 +82,18 @@ const OrderDetailContent = ({ order, formatCurrency, formatDate }) => {
                 <li key={idx} className="flex items-start gap-4 py-4">
                   <img
                     src={
-                      item.productImage 
-                        ? `${baseURL}${item.productImage}` 
-                        : item.imgs?.[0] 
-                        ? `${baseURL}${item.imgs[0]}` 
+                      item.imgs?
+                        `${item.imgs[0]}` 
                         : "/images/placeholder.png"
                     }
                     alt={item.productName}
                     className="object-cover w-20 h-20 border rounded-md"
                   />
                   <div className="flex-1">
-                    <p className="font-medium text-gray-800">{item.productName}</p>
-                    {item.cartItemOptions?.length > 0 && (
+                    <div className="font-medium text-gray-800">{item.productName}</div>
+                    {item.orderItemOptions?.length > 0 && (
                       <p className="text-sm text-gray-500">
-                        {item.cartItemOptions.map(o => o.optionValue).join(", ")}
+                        {item.orderItemOptions.map(o => o.optionValue).join(", ")}
                       </p>
                     )}
                     <p className="text-sm text-gray-500">SL: {item.quantity}</p>

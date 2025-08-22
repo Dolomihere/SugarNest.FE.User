@@ -65,6 +65,7 @@ const OrderService = {
         {
           headers: { Authorization: `Bearer ${accessToken || cartId}` },
         }
+
       );
       return response.data;
     } catch (error) {
@@ -98,10 +99,12 @@ const OrderService = {
     }
   },
 
-  calculateShippingFee: async ({ lat, lng }) => {
+  calculateShippingFee: async ({ lat, lng, subTotal }) => {
     try {
+      // alert("longitude: " + lng + ", latitude: " + lat + ", subTotal: " + subTotal);
+      console.log("Gọi API tính phí vận chuyển:")
       const response = await publicApi.get(
-        `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}`,
+        `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}&subTotal=${subTotal}`,
         {
           params: {
             latitude: lat,

@@ -7,11 +7,6 @@ import { Footer } from "./layouts/Footer";
 import OrderDetailContent from "./OrderDetailContent";
 import PaymentForm from "../components/PaymentComponent";
 
-/**
- * Component thanh toán
- */
-
-
 const OrderConfirmation = () => {
   const location = useLocation();
   const { orderId } = useParams();
@@ -19,12 +14,13 @@ const OrderConfirmation = () => {
 
   const stateData = location.state;
   const localData = localStorage.getItem("lastOrderData");
-  const initialData = stateData || (localData ? JSON.parse(localData) : null);
+  // const initialData = stateData || (localData ? JSON.parse(localData) : null);
 
-  const [orderData, setOrderData] = useState(initialData);
-  const [loading, setLoading] = useState(!initialData);
+  const [orderData, setOrderData] = useState();
+  const [loading, setLoading] = useState();
   const [error, setError] = useState("");
-
+  // Giả sử accessToken được lưu trong localStorage (thêm logic này để hỗ trợ fetch yêu cầu auth)
+  const accessToken = localStorage.getItem("accessToken");
   const formatCurrency = (value) =>
     new Intl.NumberFormat("vi-VN", {
       style: "decimal",
@@ -63,33 +59,22 @@ const OrderConfirmation = () => {
   };
 
   useEffect(() => {
-    if (!initialData && orderId) {
+    if (orderId) {
       const fetchOrder = async () => {
         try {
           setLoading(true);
-          const res = await OrderService.getOrderById(orderId);
-          const data = res.data;
-          const normalizedData = { ...data, id: data.id || data.orderId };
-
-          console.log("✅ OrderData từ API:", normalizedData);
-
-          setOrderData(normalizedData);
-          localStorage.setItem("lastOrderData", JSON.stringify(normalizedData));
-        } catch (error) {
-          console.error("❌ Lỗi khi tải đơn hàng:", error);
-          setError(
-            `Không thể tải thông tin đơn hàng: ${
-              error.response?.data?.message || error.message
-            }`
-          );
-          navigate("/error");
+          const res = await OrderService.getOrderById(orderId, accessToken);
+          setOrderData(res); // Sửa từ res.data thành res để khớp với return của service
+        } catch (err) {
+          setError(err.message || "Không thể tải thông tin đơn hàng.");
         } finally {
           setLoading(false);
         }
       };
       fetchOrder();
     }
-  }, [initialData, orderId, navigate]);
+  }, [orderId, accessToken]);
+
 
   return (
     <div className="min-h-screen bg-[#fffaf3] text-gray-800">

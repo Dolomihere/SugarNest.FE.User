@@ -7,7 +7,7 @@ const DeliveryForm = ({
   form,
   setForm,
   addressFromMap,
-  setAddressFromMap,
+  onAddressSelect,
   handleSubmit,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -39,11 +39,11 @@ const DeliveryForm = ({
         phoneNumber: userData.data.phoneNumber || prev.phoneNumber,
         email: userData.data.email || prev.email,
       }));
-      if (userData.data.address) {
-        setAddressFromMap(userData.data.address);
-      }
+      // if (userData.data.address) {
+      //   setAddressFromMap(userData.data.address);
+      // }
     }
-  }, [userData, setForm, setAddressFromMap]);
+  }, [userData, setForm]);
 
   // Lưu phoneNumber khi đang edit
   useEffect(() => {
@@ -163,7 +163,7 @@ const DeliveryForm = ({
 
         <div>
           <label className="block mb-1 text-sm font-medium text-sub">Chọn vị trí trên bản đồ</label>
-          <LeafletMap onAddressSelect={setAddressFromMap} />
+          <LeafletMap onAddressSelect={onAddressSelect} />
         </div>
 
         <div>

@@ -1,14 +1,51 @@
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
+import useFetchList from "../core/hooks/useFetchList";
 
-function SuggestedProducts({ suggestions, categoryId, categoryName }) {
+function SuggestedProducts({ categoryId, categoryName }) {
+  // Memoize productQuery để tránh thay đổi không cần thiết
+  const productQuery = useMemo(
+    () => ({
+      SearchTerm: "",
+      SortBy: "CreatedAt",
+      SortDescending: true,
+      Filter: { CategoryId: categoryId },
+      PageSize: 1000, // Đặt PageSize lớn để lấy tất cả sản phẩm (hoặc bỏ PageSize nếu API hỗ trợ)
+      PageIndex: 1,
+    }),
+    [categoryId]
+  );
+
+  const { response: apiResponse, loading, error } = useFetchList(
+    "products/sellable",
+    productQuery
+  );
+
+  const products = apiResponse?.data || [];
+
+  // Shuffle toàn bộ mảng products để hiển thị ngẫu nhiên
+  const shuffledProducts = useMemo(() => {
+    return [...products].sort(() => Math.random() - 0.5);
+  }, [products]);
+
+  // Lấy 4 sản phẩm đầu tiên từ danh sách đã shuffle
+  const displayedProducts = shuffledProducts.slice(0, 4);
+
   return (
     <div className="space-y-8">
       <h3 className="text-2xl font-bold text-gray-800">
-        Tất cả sản phẩm {categoryName ? `trong danh mục ${categoryName}` : ""}
+        {categoryName ? `Sản phẩm liên quan trong danh mục ${categoryName}` : "Sản phẩm liên quan"}
       </h3>
-      {suggestions.length > 0 ? (
+      {loading ? (
+        <div className="text-center">
+          <div className="inline-block w-8 h-8 border-4 border-t-amber-600 border-gray-200 rounded-full animate-spin"></div>
+          <p className="mt-2 text-gray-500">Đang tải sản phẩm...</p>
+        </div>
+      ) : error ? (
+        <p className="text-center text-[#A47449]">Lỗi: {error.message}</p>
+      ) : displayedProducts.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {suggestions.map((p) => (
+          {displayedProducts.map((p) => (
             <Link
               key={p.productId}
               to={`/products/${p.productId}`}
@@ -44,11 +81,11 @@ function SuggestedProducts({ suggestions, categoryId, categoryName }) {
           to={`/categories/${categoryId || ""}`}
           className="inline-block px-6 py-3 text-white transition rounded-lg bg-amber-600 hover:bg-amber-700"
         >
-          Xem danh mục
+          Xem toàn bộ danh mục {categoryName || ""}
         </Link>
       </div>
     </div>
   );
 }
 
-export { SuggestedProducts };
+export default SuggestedProducts;

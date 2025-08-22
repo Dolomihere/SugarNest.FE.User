@@ -11,10 +11,11 @@ import CategoryService from "../services/CategoryService";
 import { StarRating } from "./StarRating";
 import { RatingModal } from "./RatingModal";
 import { RatingForm } from "./RatingForm";
-import { SuggestedProducts } from "./SuggestedProducts";
+import SuggestedProducts from "./SuggestedProducts.jsx";
 import ToastMessage from "../components/ToastMessage";
 import { VoucherSelect } from "./components/VoucherSelect";
 import VoucherService from "../services/VoucherService";
+
 
 export function ProductDetailPage() {
   const [toast, setToast] = useState(null);
@@ -35,6 +36,7 @@ export function ProductDetailPage() {
   const inputRef = useRef(null);
   const accessToken = localStorage.getItem("accessToken");
 
+
   const token =
     localStorage.getItem("accessToken") ||
     sessionStorage.getItem("accessToken");
@@ -54,20 +56,30 @@ export function ProductDetailPage() {
     };
   }, []);
 
-  // Fetch user data if logged in
+  // Fetch user data if logged in (sử dụng API như trong AccountPage)
   const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState(null);
   useEffect(() => {
     if (isLoggedIn) {
-      const decodeToken = () => {
+      const fetchUser = async () => {
         try {
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          setUserName(payload.name || "Người dùng");
+          const response = await AxiosInstance.get('/users/personal');
+          if (response.data.isSuccess && response.data.data) {
+            const userData = response.data.data;
+            setUserName(userData.fullname || userData.name || "Người dùng");
+            setUserId(userData.userId || userData.id); // Giả sử API trả về userId hoặc id
+          } else {
+            console.error("Error fetching user data:", response.data.message);
+            setUserName("Người dùng");
+            setUserId(null);
+          }
         } catch (e) {
-          console.error("Error decoding token:", e);
+          console.error("Error fetching user data:", e);
           setUserName("Người dùng");
+          setUserId(null);
         }
       };
-      decodeToken();
+      fetchUser();
     }
   }, [token, isLoggedIn]);
 
@@ -405,6 +417,44 @@ export function ProductDetailPage() {
     const total = basePrice + additionalPrice - discount;
     setFinalTotalPrice(total);
   }, [product, quantity, voucher, selectedOptions, checkChange]);
+
+useEffect(() => {
+  const fetchUsersForRatings = async () => {
+    if (!ratingsData.data) return;
+    const uniqueUserIds = [
+      ...new Set(
+        ratingsData.data
+          .map((r) => r.createdBy)
+          .filter((id) => id != null)
+      ),
+    ];
+
+    const newUserMap = { ...userMap };
+
+    await Promise.all(
+      uniqueUserIds.map(async (id) => {
+        if (!newUserMap[id]) {
+          try {
+            const res = await AxiosInstance.get(`/users/${id}/public`);
+            if (res.data.isSuccess && res.data.data) {
+              newUserMap[id] =
+                res.data.data.fullname || "Người dùng ẩn danh";
+            } else {
+              newUserMap[id] = "Người dùng ẩn danh";
+            }
+          } catch (e) {
+            console.error("Lỗi fetch user:", e);
+            newUserMap[id] = "Người dùng ẩn danh";
+          }
+        }
+      })
+    );
+
+    setUserMap(newUserMap);
+  };
+
+  fetchUsersForRatings();
+}, [ratingsData]);
 
   return (
     <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
@@ -747,11 +797,12 @@ export function ProductDetailPage() {
                           onClick={() => setSelectedRating(r)}
                         >
                           <div className="flex items-center gap-2">
-                            <StarRating rating={r.ratingPoint} />
-                            <span className="text-sm text-gray-500">
-                              bởi {r.userName || "Người dùng ẩn danh"}
-                            </span>
-                          </div>
+                          <StarRating rating={r.ratingPoint} />
+                          <span className="text-sm text-gray-500">
+                            bởi {userMap[r.createdBy] || "Người dùng ẩn danh"}
+                          </span>
+                        </div>
+
                           <p className="mt-2 text-sm text-gray-600">
                             {r.comment || "Không có nhận xét"}
                           </p>
@@ -799,6 +850,7 @@ export function ProductDetailPage() {
                   )
                 }
                 closeModal={() => setSelectedRating(null)}
+                 userMap={userMap}
               />
               <RatingForm
                 isLoggedIn={isLoggedIn}
@@ -814,6 +866,7 @@ export function ProductDetailPage() {
                 inputRef={inputRef}
                 productId={id}
                 navigate={navigate}
+                userId={userId}
               />
             </div>
             <SuggestedProducts
