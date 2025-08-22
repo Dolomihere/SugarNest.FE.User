@@ -44,7 +44,7 @@ const OrderSummary = ({
 });
 
   const subtotal = productTotals.reduce(
-    (sum, p) => sum + p.totalAfterDiscount,
+    (sum, p) => sum + p.total,
     0
   );
   const total = subtotal + (isFreeShipping ? 0 : shippingFee);
@@ -60,7 +60,7 @@ const OrderSummary = ({
           <div key={index} className="pb-2 mb-2 text-sm border-b">
             <div className="flex justify-between">
               <span>{item.productName}</span>
-              <span>{formatCurrency(item.totalAfterDiscount)}</span>
+              <span>{formatCurrency(item.total)}</span>
             </div>
             {item.appliedVoucher && (
               <div className="flex justify-between text-green-600">

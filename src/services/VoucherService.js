@@ -1,20 +1,29 @@
-// src/services/VoucherService.js
 import { publicApi } from "../configs/AxiosConfig";
 
-const endpoint = "/vouchers";
+const endpoint = "/itemvouchers";
 
 const VoucherService = {
-  // Lấy tất cả voucher
   getAllVouchers: async (accessToken) => {
     try {
       const res = await publicApi.get(endpoint, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      return res.data?.data || [];
-
-      
+      console.log("VoucherService.getAllVouchers response:", res.data);
+      return res.data?.data.map((v) => ({
+        voucherId: v.itemVoucherId,
+        name: v.name,
+        productId: v.productId,
+        productName: v.productName,
+        minQuantity: v.minQuantity,
+        maxQuantity: v.maxQuantity,
+        hardValue: v.hardValue,
+        percentValue: v.percentValue,
+        isActive: v.isActive,
+        startTime: v.startTime,
+        endTime: v.endTime,
+      })) || [];
     } catch (error) {
-      console.error("VoucherService.getAllVouchers error:", error);
+      console.error("VoucherService.getAllVouchers error:", error.response?.data || error.message);
       if (error.response?.status === 401) {
         throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
       }
@@ -25,86 +34,109 @@ const VoucherService = {
     }
   },
 
-  // Lấy voucher theo ID
   getVoucherById: async (voucherId, accessToken) => {
-    try {
-      const url = `${endpoint}/${voucherId}`;
-      const res = await publicApi.get(url, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      return res.data;
-    } catch (error) {
-      console.error("VoucherService.getVoucherById error:", error);
-      if (error.response?.status === 401) {
-        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-      }
-      throw new Error(
-        "Không thể lấy thông tin voucher: " +
-          (error.response?.data?.message || error.message)
-      );
-    }
-  },
-
-  // Lấy danh sách voucher item của user
- getUserItemVouchers: async (accessToken) => {
   try {
-    const res = await publicApi.get("/itemvouchers/mine", {
+    if (!accessToken) {
+      console.warn("No accessToken provided for getVoucherById");
+      return null;
+    }
+    const url = `${endpoint}/${voucherId}`;
+    const res = await publicApi.get(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!res?.data?.data) return [];
-    return res.data.data;
+    console.log("VoucherService.getVoucherById response:", JSON.stringify(res.data, null, 2));
+    return {
+      voucherId: res.data.itemVoucherId,
+      name: res.data.name,
+      productId: res.data.productId,
+      productName: res.data.productName,
+      minQuantity: res.data.minQuantity,
+      maxQuantity: res.data.maxQuantity,
+      hardValue: res.data.hardValue,
+      percentValue: res.data.percentValue,
+      isActive: res.data.isActive,
+      startTime: res.data.startTime,
+      endTime: res.data.endTime,
+    };
   } catch (error) {
-    console.error("getUserItemVouchers error:", error);
+    console.error("VoucherService.getVoucherById error:", error.response?.data || error.message);
+    if (error.response?.status === 401) {
+      throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+    }
+    throw new Error(
+      "Không thể lấy thông tin voucher: " +
+        (error.response?.data?.message || error.message)
+    );
+  }
+},
+
+getUserItemVouchers: async (accessToken) => {
+  try {
+    if (!accessToken) {
+      console.warn("No accessToken provided for getUserItemVouchers");
+      return [];
+    }
+    const res = await publicApi.get(endpoint+`/mine`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    console.log("VoucherService.getUserItemVouchers raw response:", JSON.stringify(res.data, null, 2));
+    if (!res?.data?.data) {
+      console.warn("No voucher data returned from API");
+      return [];
+    }
+    const vouchers = res.data.data.map((v) => ({
+      userItemVoucherId: v.userItemVoucherId,
+      itemVoucherId: v.itemVoucherId,
+      name: v.name,
+      productId: v.productId,
+      productName: v.productName,
+      minQuantity: v.minQuantity,
+      maxQuantity: v.maxQuantity,
+      hardValue: v.hardValue,
+      percentValue: v.percentValue,
+      isActive: v.isActive,
+      startTime: v.startTime,
+      endTime: v.endTime,
+    }));
+    console.log("Mapped vouchers:", JSON.stringify(vouchers, null, 2));
+    return vouchers;
+  } catch (error) {
+    console.error("VoucherService.getUserItemVouchers error:", error.response?.data || error.message);
     return [];
   }
 },
 
-
-  // Áp dụng voucher
-  applyVoucher: async ({ code, cartId, accessToken }) => {
+  getUserItemVoucherByCode: async (code, accessToken) => {
     try {
-      const url = `${endpoint}/apply`;
-      const res = await publicApi.post(
-        url,
-        { code, cartId },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      return res.data;
-    } catch (error) {
-      console.error("VoucherService.applyVoucher error:", error);
-      if (error.response?.status === 401) {
-        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-      }
-      // mock fallback nếu API chưa sẵn sàng
-      return new Promise((resolve) =>
-        setTimeout(() => {
-          resolve({
-            status: "success",
-            discount: 50000,
-            mock: true,
-          });
-        }, 1000)
-      );
-    }
-  },
-
-  // Kiểm tra voucher
-  validateVoucher: async (code, accessToken) => {
-    try {
-      const url = `${endpoint}/validate/${code}`;
+      const url = `${endpoint}/code?code=${encodeURIComponent(code)}`;
       const res = await publicApi.get(url, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      return res.data;
+      console.log("VoucherService.getUserItemVoucherByCode response:", res.data);
+      return {
+        voucherId: res.data.itemVoucherId,
+        name: res.data.name,
+        productId: res.data.productId,
+        productName: res.data.productName,
+        minQuantity: res.data.minQuantity,
+        maxQuantity: res.data.maxQuantity,
+        hardValue: res.data.hardValue,
+        percentValue: res.data.percentValue,
+        isActive: res.data.isActive,
+        startTime: res.data.startTime,
+        endTime: res.data.endTime,
+      };
     } catch (error) {
-      console.error("VoucherService.validateVoucher error:", error);
+      console.error("VoucherService.getUserItemVoucherByCode error:", error.response?.data || error.message);
+      const message = error.response?.data?.message || error.message;
       if (error.response?.status === 401) {
         throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      } else if (error.response?.status === 404) {
+        throw new Error("Mã voucher không tồn tại.");
+      } else if (error.response?.status === 400) {
+        throw new Error("Mã voucher không hợp lệ: " + message);
       }
-      throw new Error(
-        "Không thể kiểm tra voucher: " +
-          (error.response?.data?.message || error.message)
-      );
+      throw new Error("Không thể kiểm tra voucher: " + message);
     }
   },
 };
