@@ -27,7 +27,7 @@ const ToastMessage = ({ type, message, onClose }) => {
 
 const ChatBotModal = ({ isOpen, onClose, orderId }) => {
   const [message, setMessage] = useState("");
-  const [conversationIds, setConversationIds] = useState(null);
+  const [conversationIds, setConversationIds] = useState([]);
   const [conversationId, setConversationId] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [supportMessages, setSupportMessages] = useState([]);
@@ -38,8 +38,22 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
   const latestMessageRef = useRef(null);
 
   useEffect(() => {
-    if (isOpen) loadConversations();
-  }, [isOpen]);
+    if (isOpen) {
+      if (accessToken) {
+        loadConversations();
+      } else {
+        // Kiểm tra conversationId tạm thời trong localStorage cho người dùng chưa đăng nhập
+        const tempConversationId = localStorage.getItem("tempConversationId");
+        if (tempConversationId) {
+          setConversationId(tempConversationId);
+          setConversationIds([tempConversationId]);
+        } else {
+          setConversationIds([]);
+          setConversationId(null);
+        }
+      }
+    }
+  }, [isOpen, accessToken]);
 
   const loadConversations = async () => {
     try {
@@ -58,12 +72,13 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
     if (conversationIds?.length > 0) {
       setConversationId(conversationIds[0]);
     } else {
-      setConversationId(null); // Đảm bảo không có conversationId nếu không có cuộc trò chuyện
+      setConversationId(null);
     }
   }, [conversationIds]);
 
   useEffect(() => {
     const fetchMessages = async () => {
+      if (!conversationId) return;
       try {
         const messages = await ChatService.getMessages(
           accessToken,
@@ -87,14 +102,6 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
     const msg = messageToSend || message.trim();
     if (!msg) return;
 
-    if (!accessToken) {
-      setToast({
-        type: "error",
-        message: "Vui lòng đăng nhập để gửi tin nhắn!",
-      });
-      return;
-    }
-
     const userMessage = {
       cbMessageId: `temp-${Date.now()}`,
       userMessage: msg,
@@ -112,10 +119,9 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
       }, 0);
       return updatedMessages;
     });
-    if (!messageToSend) setMessage(""); // Chỉ reset nếu không phải từ suggestion
-    setIsTyping(true); // Show typing indicator
+    if (!messageToSend) setMessage("");
+    setIsTyping(true);
 
-    // Add typing indicator as a temporary message
     setChatMessages((prev) => {
       const typingMessage = {
         cbMessageId: `typing-${Date.now()}`,
@@ -142,7 +148,6 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
         conversationId
       );
 
-      // Remove typing indicator and add AI message
       setChatMessages((prev) => {
         const filteredMessages = prev.filter((msg) => !msg.isTyping);
         const aiMessage = {
@@ -163,23 +168,18 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
       setSupportMessages(fullResponse.meta?.supportMessages || []);
       setIsTyping(false);
 
-      // Tạo một conversationId mới nếu chưa có
       if (!conversationId && fullResponse.data.conversationId) {
         setConversationId(fullResponse.data.conversationId);
+        localStorage.setItem("tempConversationId", fullResponse.data.conversationId);
         setConversationIds((prev) => [fullResponse.data.conversationId, ...(prev || [])]);
       }
     } catch (error) {
       console.error("Failed to send message:", error.response?.data || error.message);
       setIsTyping(false);
-      // Remove typing indicator on error
       setChatMessages((prev) => prev.filter((msg) => !msg.isTyping));
-      const errorDetails = error.response?.data?.errors?.message?.[0] ||
-                           error.response?.data?.message ||
-                           error.response?.data?.title ||
-                           "Lỗi khi gửi tin nhắn. Vui lòng thử lại!";
       setToast({
         type: "error",
-        message: errorDetails,
+        message: error.response?.data?.message || error.response?.data?.title || "Lỗi khi gửi tin nhắn. Vui lòng thử lại!",
       });
     }
   };
@@ -205,9 +205,10 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
         type: "success",
         message: "Xóa cuộc trò chuyện thành công!",
       });
-      setChatMessages([]); // Xóa toàn bộ tin nhắn trên giao diện
-      setConversationId(null); // Reset conversationId
-      loadConversations(); // Tải lại danh sách conversations
+      setChatMessages([]);
+      setConversationId(null);
+      localStorage.removeItem("tempConversationId");
+      loadConversations();
     } catch (error) {
       console.error("Failed to delete conversation:", error.response?.data || error.message);
       setToast({
@@ -224,7 +225,6 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
     }
   };
 
-  // Auto-scroll to bottom when opening or messages change
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -245,14 +245,16 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
               Trò chuyện với AI
             </h4>
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleDeleteConversation}
-                className="p-1.5 text-gray-600 transition-all duration-200 bg-gray-100 rounded-full dark:text-red-300 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-700 dark:hover:text-red-100 hover:scale-105"
-                aria-label="Xóa cuộc trò chuyện"
-                title="Xóa toàn bộ cuộc trò chuyện"
-              >
-                <FontAwesomeIcon icon={faTrash} size="sm" />
-              </button>
+              {accessToken && (
+                <button
+                  onClick={handleDeleteConversation}
+                  className="p-1.5 text-gray-600 transition-all duration-200 bg-gray-100 rounded-full dark:text-red-300 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-700 dark:hover:text-red-100 hover:scale-105"
+                  aria-label="Xóa cuộc trò chuyện"
+                  title="Xóa toàn bộ cuộc trò chuyện"
+                >
+                  <FontAwesomeIcon icon={faTrash} size="sm" />
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className="p-1.5 text-gray-600 transition-all duration-200 bg-gray-100 rounded-full dark:text-gray-300 dark:bg-gray-700 hover:bg-amber-100 dark:hover:bg-amber-900 hover:text-amber-700 dark:hover:text-amber-100 hover:scale-105"
