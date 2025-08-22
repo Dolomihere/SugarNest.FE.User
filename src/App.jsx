@@ -18,6 +18,7 @@ import ScrollToTop from "./pages/layouts/ScrollToTopLayout.jsx";
 import { Header } from "./pages/layouts/Header";
 import AccountPage from './pages/AccountPage.jsx';
 import { ChatBotPage } from "./pages/ChatBot.jsx";
+import { CategoryPage } from "./pages/CategoryPage";
 
 
 import { Footer } from "./pages/layouts/Footer.jsx";
@@ -47,6 +48,7 @@ function App() {
         <Route path="/order-history" element={<OrderHistoryPage />} />
         <Route path="/order/:orderId" element={<OrderDetailsPage />} />
         <Route path="/order-success" element={<OrderSuccess />} />
+        <Route path="/category/:categoryId" element={<CategoryPage />} />
         <Route
           path="/signin"
           element={

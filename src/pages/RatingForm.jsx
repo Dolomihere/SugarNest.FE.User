@@ -14,13 +14,15 @@ function RatingForm({
   inputRef,
   productId,
   navigate,
+  userId,
 }) {
   const handleImageChange = (e) => {
     const files = [...e.target.files];
-    const maxSize = 1024 * 1024;
+    const maxSize = 1024 * 1024; // 1MB
     const validFiles = files.filter(
       (file) =>
-        file.size <= maxSize && ["image/jpeg", "image/png"].includes(file.type)
+        file.size <= maxSize &&
+        ["image/jpeg", "image/png", "image/jpg"].includes(file.type)
     );
     if (files.length !== validFiles.length) {
       setErrorMessage(
@@ -32,13 +34,21 @@ function RatingForm({
 
   const handleSubmitRating = (e) => {
     e.preventDefault();
+    setErrorMessage("");
+
     if (!isLoggedIn) {
       setErrorMessage("Vui lòng đăng nhập để gửi đánh giá.");
       navigate("/signin", { state: { from: `/products/${productId}` } });
       return;
     }
+
     if (rating < 1 || rating > 5) {
       setErrorMessage("Vui lòng chọn số sao từ 1 đến 5.");
+      return;
+    }
+
+    if (!userId) {
+      setErrorMessage("Không thể lấy thông tin người dùng. Vui lòng thử lại.");
       return;
     }
 
@@ -46,8 +56,17 @@ function RatingForm({
     formData.append("productId", productId);
     formData.append("ratingPoint", rating);
     formData.append("comment", comment);
+    formData.append("userId", userId); // giữ userId để backend lưu và hiển thị tên
     images.forEach((img) => formData.append("imgFiles", img));
-    postRatingMutation.mutate(formData);
+
+    postRatingMutation.mutate(formData, {
+      onSuccess: () => {
+        setRating(0);
+        setComment("");
+        setImages([]);
+        if (inputRef.current) inputRef.current.value = null;
+      },
+    });
   };
 
   return (
@@ -75,9 +94,8 @@ function RatingForm({
             htmlFor="file-upload"
             className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer hover:text-amber-600"
           >
-            {/* <i class="fa-solid fa-cloud-arrow-up"></i> */}
             <span className="flex items-center gap-2 px-4 py-2 text-white rounded-lg bg-amber-600 hover:bg-amber-700 font-cute">
-              <i className=" fa-solid fa-cloud-arrow-up"></i>
+              <i className="fa-solid fa-cloud-arrow-up"></i>
               Chọn ảnh (JPG/PNG, tối đa 1MB)
             </span>
           </label>
@@ -85,7 +103,7 @@ function RatingForm({
             id="file-upload"
             type="file"
             multiple
-            accept="image/*"
+            accept=".jpg,.jpeg,.png"
             ref={inputRef}
             onChange={handleImageChange}
             className="hidden"

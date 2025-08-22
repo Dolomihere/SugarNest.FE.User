@@ -7,6 +7,7 @@ function RatingModal({
   handlePrevImage,
   handleNextImage,
   closeModal,
+  userMap,
 }) {
   if (!selectedRating) return null;
 
@@ -31,7 +32,7 @@ className="w-11/12 max-w-lg p-6 border border-amber-300 rounded-xl shadow-xl bg-
                 />
               ) : (
                 <img
-                  src="/images/placeholder.png"
+                  src="/images/15.jpg"
                   alt="Hình ảnh mặc định"
                   className="object-cover w-full h-full"
                 />
@@ -60,9 +61,11 @@ className="w-11/12 max-w-lg p-6 border border-amber-300 rounded-xl shadow-xl bg-
           {/* Nội dung đánh giá */}
           <div className="w-full md:w-3/5 md:pl-4">
             <StarRating rating={selectedRating.ratingPoint} />
-            <span className="block mt-2 text-sm text-gray-500 font-cute">
-              bởi: {selectedRating.userName || "Người dùng ẩn danh"}
+           <span className="block mt-2 text-sm text-gray-500 font-cute">
+              bởi: {userMap[selectedRating?.createdBy] || "Người dùng ẩn danh"}
             </span>
+
+
             <p className="mt-1 text-sm text-gray-600 font-cute">
               Đánh giá: {selectedRating.comment || "Không có nhận xét"}
             </p>
