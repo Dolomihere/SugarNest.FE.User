@@ -251,8 +251,6 @@ const handleSubmit = async () => {
       phoneNumber: form.phoneNumber,
       email: form.email,
       deliveryTime: form.deliveryTime ? new Date(form.deliveryTime).toISOString() : null,
-      latitude: coordinates.lat || null,
-      longitude: coordinates.lng || null,
       shippingFee,
       subTotal: subtotal,
       total: orderTotal,
@@ -335,19 +333,24 @@ const handleSubmit = async () => {
                   const cartItemKey = getCartItemKey(item);
                   return (
                     <div key={cartItemKey} className="mb-6">
-                      <div className="flex gap-6">
-                        <img
-                          src={item.imgs || "/images/placeholder.png"}
-                          alt={item.productName}
-                          className="object-cover w-32 h-32 border rounded-lg"
-                        />
-                        <div>
-                          <h3 className="font-semibold">{item.productName}</h3>
-                          <div className="mt-2 font-bold text-primary">
-                            {formatCurrency(item.total / item.quantity)}
-                          </div>
+                     <div className="flex gap-6">
+                      <img
+                        src={item.imgs || "/images/placeholder.png"}
+                        alt={item.productName}
+                        className="object-cover w-32 h-32 border rounded-lg"
+                      />
+                      <div>
+                        <h3 className="font-semibold">{item.productName}</h3>
+
+                        {/* Hiển thị số lượng dưới tên sản phẩm */}
+                        <p className="text-sm text-gray-500">Số lượng: {item.quantity}</p>
+
+                        <div className="mt-2 font-bold text-primary">
+                          {formatCurrency(item.total)}
                         </div>
                       </div>
+                    </div>
+
                       {/* <VoucherSection
                         product={item}
                         userVouchers={userVouchers}
@@ -369,14 +372,14 @@ const handleSubmit = async () => {
               )}
             </div>
             <DeliveryForm
-  form={form}
-  setForm={setForm}
-  addressFromMap={addressFromMap}
-  onAddressSelect={SetDeliveryAddress} // 👈 đổi tên cho rõ ràng
-  paymentMethod={paymentMethod}
-  setPaymentMethod={setPaymentMethod}
-  handleSubmit={handleSubmit}
-/>
+              form={form}
+              setForm={setForm}
+              addressFromMap={addressFromMap}
+              onAddressSelect={SetDeliveryAddress} // 👈 đổi tên cho rõ ràng
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              handleSubmit={handleSubmit}
+            />
             {error && <p className="text-sm text-red-600">{error}</p>}
 
           </div>

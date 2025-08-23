@@ -15,6 +15,7 @@ import SuggestedProducts from "./SuggestedProducts.jsx";
 import ToastMessage from "../components/ToastMessage";
 import { VoucherSelect } from "./components/VoucherSelect";
 import VoucherService from "../services/VoucherService";
+import  UserMiniProfile  from "./components/UserMiniProfile.jsx"
 
 
 export function ProductDetailPage() {
@@ -798,9 +799,10 @@ useEffect(() => {
                         >
                           <div className="flex items-center gap-2">
                           <StarRating rating={r.ratingPoint} />
-                          <span className="text-sm text-gray-500">
+                          {/* <span className="text-sm text-gray-500">
                             bởi {userMap[r.createdBy] || "Người dùng ẩn danh"}
-                          </span>
+                          </span> */}
+                          <UserMiniProfile userId={r.userId}></UserMiniProfile>
                         </div>
 
                           <p className="mt-2 text-sm text-gray-600">
@@ -850,7 +852,7 @@ useEffect(() => {
                   )
                 }
                 closeModal={() => setSelectedRating(null)}
-                 userMap={userMap}
+                //  userMap={userMap}
               />
               <RatingForm
                 isLoggedIn={isLoggedIn}
