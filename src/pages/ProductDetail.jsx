@@ -17,6 +17,8 @@ import { VoucherSelect } from "./components/VoucherSelect";
 import VoucherService from "../services/VoucherService";
 import  UserMiniProfile  from "./components/UserMiniProfile.jsx"
 
+import ChatPage from "./ChatPage";
+import AxiosInstance from '../core/services/AxiosInstance'; // Thêm import AxiosInstance
 
 export function ProductDetailPage() {
   const [toast, setToast] = useState(null);
@@ -35,8 +37,7 @@ export function ProductDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const modalRef = useRef(null);
   const inputRef = useRef(null);
-  const accessToken = localStorage.getItem("accessToken");
-
+const [userMap, setUserMap] = useState({});
 
   const token =
     localStorage.getItem("accessToken") ||
@@ -153,8 +154,7 @@ export function ProductDetailPage() {
         console.error("Invalid ratingPoint found in ratings data:", r);
         setToast({
           type: "error",
-          message:
-            "Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá.",
+          message: "Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá.",
         });
         return sum;
       }
@@ -232,14 +232,12 @@ export function ProductDetailPage() {
     });
   };
 
-  const [checkChange, setCheckChange] = useState(true);
   const handleRadioChange = (e) => {
     const { name, value } = e.target;
     setSelectedOptions((prev) => ({
       ...prev,
       [name]: value,
     }));
-    setCheckChange(!checkChange);
   };
 
   const handleAddToCart = async () => {
@@ -269,20 +267,12 @@ export function ProductDetailPage() {
           a.optionItemId.localeCompare(b.optionItemId)
       );
 
-    let voucherId = null;
-    if (voucher && !checkVoucher()) {
-      voucherId = voucher.userItemVoucherId;
-    }
-
     const item = {
       productId: id,
       note: null,
       quantity: quantity,
-      userItemVoucherId: voucherId,
       productItemOptionModels: optionEntries,
     };
-
-    console.log(item);
 
     try {
       const normalizeOptions = (options) =>
@@ -304,18 +294,15 @@ export function ProductDetailPage() {
             JSON.stringify(normalizeOptions(item.productItemOptionModels))
       );
 
-      // if (existingItem) {
-      //   await CartService.updateQuantity(
-      //     existingItem.cartItemId,
-      //     existingItem.quantity + quantity,
-      //     token
-      //   );
-      // } else {
-      //   await CartService.addItemToCart(item, token);
-      // }
-
-      await CartService.addItemToCart(item, token);
-
+      if (existingItem) {
+        await CartService.updateQuantity(
+          existingItem.cartItemId,
+          existingItem.quantity + quantity,
+          token
+        );
+      } else {
+        await CartService.addItemToCart(item, token);
+      }
       queryClient.invalidateQueries(["userCart"]);
       setErrorMessage("");
       setToast({ type: "success", message: "Đã thêm vào giỏ hàng!" });
@@ -356,68 +343,14 @@ export function ProductDetailPage() {
         const item = group.optionItems.find(
           (i) => i.optionItemId === id || i.optionItemId === Number(id)
         );
-        if (item) total += Number(item.additionalPrice || 0);
+        if (item) total += quantity * Number(item.additionalPrice || 0);
       });
     });
     return total;
   };
 
-  // Lấy voucher người dùng
-  const { data: userVouchers = [] } = useQuery({
-    queryKey: ["userVouchers", accessToken],
-    queryFn: () =>
-      VoucherService.getUserItemVouchers(accessToken).then((data) =>
-        data.map((v) => ({
-          voucherId: v.itemVoucherId,
-          name: v.productName,
-          percentValue: v.percentValue,
-          hardValue: v.hardValue,
-          ...v,
-        }))
-      ),
-    enabled: isLoggedIn,
-  });
-  const [voucher, setVoucher] = useState();
-  const handleSelectItemVoucher = (value) => {
-    const selectedVoucher = userVouchers.find((v) => v.itemVoucherId === value);
-    setVoucher(selectedVoucher || undefined);
-  };
-  // State tổng tiền
-  const [finalTotalPrice, setFinalTotalPrice] = useState(0);
-
-  // Hàm kiểm tra voucher hợp lệ
-  function checkVoucher() {
-    if (!voucher) return false;
-    return (
-      voucher.productId !== product.productId ||
-      voucher.minQuantity > quantity ||
-      voucher.maxQuantity < quantity
-    );
-  }
-
-  // Tính lại tổng tiền khi product, quantity, voucher hoặc options thay đổi
-  useEffect(() => {
-    if (!product?.finalUnitPrice) return;
-
-    // Giá gốc (theo số lượng)
-    const basePrice = Number(product.finalUnitPrice) * quantity;
-
-    // Giá tăng thêm từ option
-    const additionalPrice = getTotalAdditionalPrice() * quantity;
-
-    // Tính giảm giá (nếu voucher hợp lệ)
-    let discount = 0;
-    if (voucher && !checkVoucher()) {
-      discount =
-        voucher.hardValue > 0
-          ? voucher.hardValue * quantity
-          : ((product.finalUnitPrice * voucher.percentValue) / 100) * quantity;
-    }
-
-    // Tổng tiền cuối cùng
-    const total = basePrice + additionalPrice - discount;
-    setFinalTotalPrice(total);
-  }, [product, quantity, voucher, selectedOptions, checkChange]);
+  const finalTotalPrice =
+    Number(product.finalUnitPrice || 0) * quantity + getTotalAdditionalPrice();
 
 useEffect(() => {
   const fetchUsersForRatings = async () => {
@@ -461,10 +394,7 @@ useEffect(() => {
     <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
       <Header />
       <div className="px-4 mx-auto my-12 space-y-16 max-w-7xl">
-        {isProductLoading ||
-        isOptionsLoading ||
-        isRatingsLoading ||
-        isCategoryLoading ? (
+        {isProductLoading || isOptionsLoading || isRatingsLoading || isCategoryLoading ? (
           <p className="text-lg text-center text-amber-600">Đang tải...</p>
         ) : optionsError ? (
           <p className="text-center text-red-500">{errorMessage}</p>
@@ -490,7 +420,9 @@ useEffect(() => {
                 {/* Category Display */}
                 <div className="text-sm text-gray-500">
                   <span className="font-medium text-gray-700">Danh mục:</span>{" "}
-                  <Link className="text-amber-600 hover:underline">
+                  <Link
+                    className="text-amber-600 hover:underline"
+                  >
                     {category.name || "Không xác định"}
                   </Link>
                 </div>
@@ -512,27 +444,19 @@ useEffect(() => {
 
                 <div className="space-y-1 text-sm text-gray-500">
                   <p>
-                    <span className="font-medium text-gray-700">
-                      Trọng lượng:
-                    </span>{" "}
+                    <span className="font-medium text-gray-700">Trọng lượng:</span>{" "}
                     500g
                   </p>
                   <p>
-                    <span className="font-medium text-gray-700">
-                      Hạn sử dụng:
-                    </span>{" "}
+                    <span className="font-medium text-gray-700">Hạn sử dụng:</span>{" "}
                     7 ngày kể từ ngày sản xuất
                   </p>
                   <p>
-                    <span className="font-medium text-gray-700">
-                      Thành phần:
-                    </span>{" "}
+                    <span className="font-medium text-gray-700">Thành phần:</span>{" "}
                     Bột mì, đường, trứng, bơ, sữa, dầu thực vật,...
                   </p>
                   <p>
-                    <span className="font-medium text-gray-700">
-                      Ngày sản xuất:
-                    </span>{" "}
+                    <span className="font-medium text-gray-700">Ngày sản xuất:</span>{" "}
                     {new Date().toLocaleDateString("vi-VN")}
                   </p>
                 </div>
@@ -583,9 +507,9 @@ useEffect(() => {
                                   </span>{" "}
                                   <span className="ml-1 text-gray-400">
                                     (+
-                                    {Number(
-                                      item.additionalPrice
-                                    ).toLocaleString("vi-VN")}
+                                    {Number(item.additionalPrice).toLocaleString(
+                                      "vi-VN"
+                                    )}
                                     ₫)
                                   </span>
                                 </div>
@@ -601,18 +525,17 @@ useEffect(() => {
                                   name={group.optionGroupId}
                                   value={item.optionItemId}
                                   onChange={handleRadioChange}
-                                  className="w-4 h-4 mr-3 accent-amber-500 appearance-none rounded-full border border-gray-300 checked:bg-amber-500 checked:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                  className="w-4 h-4 mr-3 accent-amber-500"
                                 />
-
                                 <div className="text-sm text-gray-700">
                                   <span className="font-medium">
                                     {item.optionValue}
                                   </span>{" "}
                                   <span className="ml-1 text-gray-400">
                                     (+
-                                    {Number(
-                                      item.additionalPrice
-                                    ).toLocaleString("vi-VN")}
+                                    {Number(item.additionalPrice).toLocaleString(
+                                      "vi-VN"
+                                    )}
                                     ₫)
                                   </span>
                                 </div>
@@ -628,90 +551,7 @@ useEffect(() => {
                 </p>
               )}
 
-              <div className="my-12">
-                <VoucherSelect
-                  list={userVouchers}
-                  onSelect={handleSelectItemVoucher}
-                ></VoucherSelect>
-                {voucher && (
-                  <div
-                    className={`mt-4 rounded-lg border relative border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200 ${
-                      (voucher.productId != product.productId ||
-                        voucher.minQuantity > quantity ||
-                        voucher.maxQuantity < quantity) &&
-                      "opacity-50 cursor-not-allowed"
-                    }`}
-                  >
-                    <button
-                      onClick={() => setVoucher(undefined)} // hoặc hàm xử lý bạn muốn
-                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-md 
-               bg-gray-100 dark:bg-gray-700 hover:bg-red-500 hover:text-white 
-               text-gray-600 dark:text-gray-300 shadow transition"
-                    >
-                      {/* SVG Icon */}
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                        🎁 Voucher cho:{" "}
-                        {voucher.productName ?? "Sản phẩm bất kỳ"}
-                      </div>
-                    </div>
-
-                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      📅 Hiệu lực: {voucher.startTime.toLocaleString("vi-VN")}
-                      <span> đến </span>
-                      {voucher.endTime.toLocaleString("vi-VN")}
-                    </div>
-
-                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      <span>📦 Áp dụng nếu mua </span>
-                      {voucher.minQuantity == voucher.maxQuantity ? (
-                        <span>{voucher.minQuantity} sản phẩm</span>
-                      ) : (
-                        <span>
-                          từ {voucher.minQuantity} đến {voucher.maxQuantity} sản
-                          phẩm
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      💸 Giảm giá:{" "}
-                      {voucher.hardValue > 0 ? (
-                        <>
-                          <span className="font-semibold text-blue-600 dark:text-blue-400">
-                            {voucher.hardValue.toLocaleString()}
-                          </span>
-                          <span> / sản phẩm</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="font-semibold text-purple-600 dark:text-purple-400">
-                            {voucher.percentValue}% giá trị
-                          </span>
-                          <span> / sản phẩm</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}{" "}
-              </div>
-
-              <div className="flex flex-col items-center justify-start w-full gap-4 mt-10 sm:flex-row sm:gap-6">
+              <div className="flex flex-col items-center justify-end w-full gap-4 mt-10 sm:flex-row sm:gap-6">
                 <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -729,11 +569,10 @@ useEffect(() => {
                 </div>
                 <div className="text-lg font-semibold text-amber-600 whitespace-nowrap">
                   Tổng: {finalTotalPrice.toLocaleString("vi-VN")}₫
-                  {/* Tổng: {finalTotalPrice}₫ */}
                 </div>
               </div>
 
-              <div className="flex justify-start pt-8">
+              <div className="flex justify-end pt-8">
                 <div className="relative flex items-center gap-4">
                   <button
                     onClick={handleAddToCart}
@@ -839,16 +678,12 @@ useEffect(() => {
                 currentImageIndex={currentImageIndex}
                 handlePrevImage={() =>
                   setCurrentImageIndex((prev) =>
-                    prev === 0
-                      ? (selectedRating.imgs?.length || 1) - 1
-                      : prev - 1
+                    prev === 0 ? (selectedRating.imgs?.length || 1) - 1 : prev - 1
                   )
                 }
                 handleNextImage={() =>
                   setCurrentImageIndex((prev) =>
-                    prev === (selectedRating.imgs?.length || 1) - 1
-                      ? 0
-                      : prev + 1
+                    prev === (selectedRating.imgs?.length || 1) - 1 ? 0 : prev + 1
                   )
                 }
                 closeModal={() => setSelectedRating(null)}

@@ -84,6 +84,11 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* Top Products Section */}
+       <div className="p-5">
+      <TopProducts />
+      </div>
+
       {/* Showcase Section */}
       <div className="p-5">
         <ProductShowcase />
@@ -92,11 +97,6 @@ export function HomePage() {
       {/* About and Review Section */}
       <div className="p-5">
         <AboutAndReviews />
-      </div>
-
-      {/* Top Products Section */}
-       <div className="p-5">
-      <TopProducts />
       </div>
 
       {/* Mailing Section */}

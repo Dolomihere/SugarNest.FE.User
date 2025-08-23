@@ -202,42 +202,6 @@ class TransactionService {
   }
 
   // Lấy tất cả thông báo
-  static async getAllNotifications(sortAndFilterRequest = {}, paginationRequest = {}) {
-    try {
-      const filter = {
-        ...sortAndFilterRequest,
-        status: ["Updated", "Pending"],
-      };
-      const response = await privateApi.get("/transactions", {
-        params: {
-          ...filter,
-          ...paginationRequest,
-        },
-      });
-      const notifications = response.data.data.map((transaction) => ({
-        id: transaction.id,
-        message: `Đơn hàng ${transaction.orderId} đã được ${String(transaction.status).toLowerCase()}!`,
-        orderId: transaction.orderId,
-        timestamp: new Date(transaction.updatedAt || transaction.createdAt || Date.now()),
-        isRead: false,
-      }));
-      return {
-        isSuccess: true,
-        data: notifications,
-        total: response.data.total || notifications.length,
-      };
-    } catch (error) {
-      console.error("Lỗi khi lấy tất cả thông báo:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      if (error.response?.status === 401) {
-        logout();
-      }
-      throw error;
-    }
-  }
 }
 
 export default TransactionService;
