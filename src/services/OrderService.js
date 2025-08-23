@@ -99,6 +99,27 @@ const OrderService = {
     }
   },
 
+  getOrderById: async (orderId, accessToken) => {
+    try {
+      const response = await publicApi.get(`${endpoint}/${orderId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error(
+        "OrderService.getOrderById error:",
+        error.response?.data || error.message
+      );
+      if (error.response?.status === 401) {
+        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      }
+      throw new Error(
+        "Không thể tải đơn hàng: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  },
+
   calculateShippingFee: async ({ lat, lng, subTotal }) => {
     try {
       // alert("longitude: " + lng + ", latitude: " + lat + ", subTotal: " + subTotal);
