@@ -2,6 +2,8 @@ import { StarRating } from "./StarRating";
 
 function RatingForm({
   isLoggedIn,
+  username,
+  userAvatar,
   rating,
   setRating,
   comment,
@@ -54,13 +56,15 @@ function RatingForm({
     isLoggedIn && (
       <form
         onSubmit={handleSubmitRating}
-        className="p-6 space-y-4 transition-shadow duration-300 bg-white border rounded-lg shadow border-amber-200 hover:shadow-md"
+        className="p-6 space-y-4 bg-white border rounded-lg shadow border-amber-200 hover:shadow-md"
       >
         <h4 className="text-lg font-semibold text-gray-800 font-cute">
           Gửi đánh giá của bạn
         </h4>
         {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
+
         <div>
+          {/* Ngôi sao đánh giá */}
           <StarRating rating={rating} interactive={true} onChange={setRating} />
         </div>
         <textarea
@@ -70,14 +74,14 @@ function RatingForm({
           className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600"
           rows={4}
         />
+
         <div className="relative">
           <label
             htmlFor="file-upload"
             className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer hover:text-amber-600"
           >
-            {/* <i class="fa-solid fa-cloud-arrow-up"></i> */}
             <span className="flex items-center gap-2 px-4 py-2 text-white rounded-lg bg-amber-600 hover:bg-amber-700 font-cute">
-              <i className=" fa-solid fa-cloud-arrow-up"></i>
+              <i className="fa-solid fa-cloud-arrow-up"></i>
               Chọn ảnh (JPG/PNG, tối đa 1MB)
             </span>
           </label>
@@ -91,6 +95,7 @@ function RatingForm({
             className="hidden"
           />
         </div>
+
         {images.length > 0 && (
           <div className="flex gap-2 overflow-x-auto">
             {images.map((image, idx) => (
@@ -103,6 +108,7 @@ function RatingForm({
             ))}
           </div>
         )}
+
         <button
           type="submit"
           className="px-4 py-2 text-white rounded-lg bg-amber-600 hover:bg-amber-700 font-cute"

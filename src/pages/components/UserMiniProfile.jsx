@@ -1,50 +1,50 @@
-import UserService from "../../services/UserService"
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect } from "react";
+import UserService from "../../services/UserService";
 
 const UserMiniProfile = ({ userId }) => {
-  const [avatarImg, setAvatarImg] = useState(
-    "https://res.cloudinary.com/dwlvd5lxt/image/upload/v1750868725/user1_tym9ts.jpg"
-  );
-  const [name, setName] = useState("Không xác định");
-  const [email, setEmail] = useState();
-
-  // load user public informations
-  const { response } = UserService.getPersonalUser(userId);
+  const [avatarImg, setAvatarImg] = useState("/images/default-avatar.png");
+  const [name, setName] = useState("Người dùng ẩn danh");
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
-    if (response?.data) {
-      const userInfo = response.data;
-      setAvatarImg(userInfo.avatar || userInfo.externalAvatar || avatarImg);
-      if (userInfo.fullname) setName(userInfo.fullname);
-      if (userInfo.email) setEmail(userInfo.email);
+  if (!userId) return;
+
+  const fetchUser = async () => {
+    try {
+      const res = await UserService.getPublicUser(userId);
+      if (res.isSuccess && res.data) {
+        const userInfo = res.data;
+        setAvatarImg(
+          userInfo.avatar ||
+          userInfo.externalAvatar ||
+          "/images/default-avatar.png"
+        );
+        setName(userInfo.fullname || "Người dùng ẩn danh");
+        setEmail(userInfo.email || "");
+      }
+    } catch (err) {
+      console.error("Lỗi fetch public user:", err);
     }
-  }, [response]);
+  };
+
+  fetchUser();
+}, [userId]);
+
 
   return (
-    <div className={""}>
-      <div className="flex items-center gap-2">
-        {/* Avatar */}
-        <div
-          className={` rounded-full border border-gray-200 dark:border-gray-800 overflow-hidden`}
-        >
-          <img
-            src={avatarImg}
-            alt="User Avatar"
-            className="w-6 h-6 object-cover rounded-full"
-          />
-        </div>
+    <div className="flex items-center gap-2">
+      {/* Avatar */}
+      <img
+        src={avatarImg}
+        alt="User Avatar"
+        className="w-8 h-8 rounded-full border border-gray-200 object-cover"
+        onError={(e) => (e.target.src = "/images/default-avatar.png")}
+      />
 
-        {/* Info */}
-        <div className="flex flex-col font-[Roboto]">
-          <span
-            className={`font-medium text-gray-700 dark:text-gray-200`}
-          >
-            {name}
-          </span>
-          <span className={` text-gray-500 dark:text-gray-500`}>
-            {email}
-          </span>
-        </div>
+      {/* Info */}
+      <div className="flex flex-col leading-tight">
+        <span className="text-sm font-medium text-gray-700">{name}</span>
+        {email && <span className="text-xs text-gray-500">{email}</span>}
       </div>
     </div>
   );
