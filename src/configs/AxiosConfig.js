@@ -1,17 +1,14 @@
-import axios from 'axios';
+// src/configs/AxiosConfig.js
+import axios from "axios";
 
 export const publicApi = axios.create({
   baseURL: "https://sugarnest-api.io.vn/",
-
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
 export const privateApi = axios.create({
-  baseURL: 'https://sugarnest-api.io.vn/',
-  headers: { 'Content-Type': 'application/json' },
-
+  baseURL: "https://sugarnest-api.io.vn/",
+  headers: { "Content-Type": "application/json" },
 });
 
 let isRefreshing = false;
@@ -28,24 +25,29 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// ✅ Request Interceptor: Gắn accessToken nếu có
+// ✅ Request Interceptor: luôn gắn accessToken
 privateApi.interceptors.request.use((config) => {
   if (config.skipAuth) return config;
 
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken");
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+    config.headers["Authorization"] = `Bearer ${token}`;
   }
   return config;
 });
 
-// ✅ Response Interceptor: Tự động refresh token nếu accessToken hết hạn (401)
+// ✅ Response Interceptor: refresh token nếu 401
 privateApi.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Chặn loop nếu chính request refresh-token cũng fail
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/auth/refresh-token")
+    ) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
@@ -53,35 +55,33 @@ privateApi.interceptors.response.use(
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            originalRequest.headers["Authorization"] = `Bearer ${token}`;
             return privateApi(originalRequest);
           })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
+          .catch((err) => Promise.reject(err));
       }
 
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post('https://sugarnest-api.io.vn/auth/refresh-token', {
-          refreshToken
+        const refreshToken = localStorage.getItem("refreshToken");
+        const response = await publicApi.post("/auth/refresh-token", {
+          refreshToken,
         });
 
+        const newAccessToken = response.data?.data?.accessToken;
+        if (!newAccessToken) throw new Error("Không lấy được accessToken mới");
 
-        const newAccessToken = res.data.data.accessToken;
-        localStorage.setItem('accessToken', newAccessToken);
-
+        localStorage.setItem("accessToken", newAccessToken);
         processQueue(null, newAccessToken);
 
-        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         return privateApi(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        logout(); // Chuyển hướng hoặc xóa session
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login"; // 👉 redirect login
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

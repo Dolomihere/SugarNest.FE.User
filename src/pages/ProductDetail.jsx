@@ -8,17 +8,14 @@ import ProductOptionService from "../services/ProductOption";
 import CartService from "../services/CartService";
 import RatingService from "../services/RatingService";
 import CategoryService from "../services/CategoryService";
-import { StarRating } from "./StarRating";
-import { RatingModal } from "./RatingModal";
-import { RatingForm } from "./RatingForm";
+import { StarRating } from "./rating/StarRating";
+import { RatingModal } from "./rating/RatingModal";
+import { RatingForm } from "./rating/RatingForm";
 import SuggestedProducts from "./SuggestedProducts.jsx";
 import ToastMessage from "../components/ToastMessage";
 import { VoucherSelect } from "./components/VoucherSelect";
 import VoucherService from "../services/VoucherService";
-import  UserMiniProfile  from "./components/UserMiniProfile.jsx"
-
-import ChatPage from "./ChatPage";
-import AxiosInstance from '../core/services/AxiosInstance'; // Thêm import AxiosInstance
+import UserMiniProfile from "../pages/components/UserMiniProfile.jsx";
 
 export function ProductDetailPage() {
   const [toast, setToast] = useState(null);
@@ -37,12 +34,18 @@ export function ProductDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const modalRef = useRef(null);
   const inputRef = useRef(null);
-const [userMap, setUserMap] = useState({});
+  const accessToken = localStorage.getItem("accessToken");
 
   const token =
     localStorage.getItem("accessToken") ||
     sessionStorage.getItem("accessToken");
   const isLoggedIn = token && token !== "undefined" && token !== "null";
+
+  // Add state for userId, userAvatar, and email
+  const [userId, setUserId] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState("");
+  const [email, setEmail] = useState("");
 
   // Handle click outside to close modal
   useEffect(() => {
@@ -58,30 +61,25 @@ const [userMap, setUserMap] = useState({});
     };
   }, []);
 
-  // Fetch user data if logged in (sử dụng API như trong AccountPage)
-  const [userName, setUserName] = useState("");
-  const [userId, setUserId] = useState(null);
+  // Fetch user data if logged in
   useEffect(() => {
     if (isLoggedIn) {
-      const fetchUser = async () => {
+      const decodeToken = () => {
         try {
-          const response = await AxiosInstance.get('/users/personal');
-          if (response.data.isSuccess && response.data.data) {
-            const userData = response.data.data;
-            setUserName(userData.fullname || userData.name || "Người dùng");
-            setUserId(userData.userId || userData.id); // Giả sử API trả về userId hoặc id
-          } else {
-            console.error("Error fetching user data:", response.data.message);
-            setUserName("Người dùng");
-            setUserId(null);
-          }
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          setUserId(payload.userId || payload.sub || payload.id || "");
+          setUserName(payload.name || "Người dùng");
+          setUserAvatar(payload.avatar || "/images/default-avatar.png");
+          setEmail(payload.email || "");
         } catch (e) {
-          console.error("Error fetching user data:", e);
+          console.error("Error decoding token:", e);
+          setUserId("");
           setUserName("Người dùng");
-          setUserId(null);
+          setUserAvatar("/images/default-avatar.png");
+          setEmail("");
         }
       };
-      fetchUser();
+      decodeToken();
     }
   }, [token, isLoggedIn]);
 
@@ -154,7 +152,8 @@ const [userMap, setUserMap] = useState({});
         console.error("Invalid ratingPoint found in ratings data:", r);
         setToast({
           type: "error",
-          message: "Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá.",
+          message:
+            "Lỗi: Giá trị ratingPoint không hợp lệ trong dữ liệu đánh giá.",
         });
         return sum;
       }
@@ -232,95 +231,93 @@ const [userMap, setUserMap] = useState({});
     });
   };
 
+  const [checkChange, setCheckChange] = useState(true);
   const handleRadioChange = (e) => {
     const { name, value } = e.target;
     setSelectedOptions((prev) => ({
       ...prev,
       [name]: value,
     }));
+    setCheckChange(!checkChange);
   };
 
-  const handleAddToCart = async () => {
-    if (!isLoggedIn) {
-      setToast({
-        type: "warning",
-        message: "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.",
-      });
-      navigate("/signin", { state: { from: `/products/${id}` } });
-      return;
-    }
+ const handleAddToCart = async () => {
+  if (!accessToken) {
+    setShowDialog(true);
+    return;
+  }
 
-    const optionEntries = Object.entries(selectedOptions)
-      .flatMap(([groupId, values]) => {
-        if (Array.isArray(values)) {
-          return values.map((v) => ({
-            optionGroupId: groupId,
-            optionItemId: v,
-          }));
-        } else {
-          return [{ optionGroupId: groupId, optionItemId: values }];
-        }
-      })
-      .sort(
-        (a, b) =>
-          a.optionGroupId.localeCompare(b.optionGroupId) ||
-          a.optionItemId.localeCompare(b.optionItemId)
-      );
+  let voucherId = null;
+  if (voucher && !checkVoucher()) {
+    voucherId = voucher.userItemVoucherId; 
+  }
 
-    const item = {
-      productId: id,
-      note: null,
-      quantity: quantity,
-      productItemOptionModels: optionEntries,
-    };
-
-    try {
-      const normalizeOptions = (options) =>
-        options
-          ?.map((opt) => ({
-            optionGroupId: opt.optionGroupId || opt.option_group_id,
-            optionItemId: opt.optionItemId || opt.option_item_id,
-          }))
-          ?.sort(
-            (a, b) =>
-              a.optionGroupId.localeCompare(b.optionGroupId) ||
-              a.optionItemId.localeCompare(b.optionItemId)
-          ) || [];
-
-      const existingItem = cartData?.cartItems?.find(
-        (cartItem) =>
-          cartItem.productId === id &&
-          JSON.stringify(normalizeOptions(cartItem.cartItemOptions)) ===
-            JSON.stringify(normalizeOptions(item.productItemOptionModels))
-      );
-
-      if (existingItem) {
-        await CartService.updateQuantity(
-          existingItem.cartItemId,
-          existingItem.quantity + quantity,
-          token
-        );
+  const optionEntries = Object.entries(selectedOptions)
+    .flatMap(([groupId, values]) => {
+      if (Array.isArray(values)) {
+        return values.map((v) => ({
+          optionGroupId: groupId,
+          optionItemId: v,
+        }));
       } else {
-        await CartService.addItemToCart(item, token);
+        return [{ optionGroupId: groupId, optionItemId: values }];
       }
-      queryClient.invalidateQueries(["userCart"]);
-      setErrorMessage("");
-      setToast({ type: "success", message: "Đã thêm vào giỏ hàng!" });
-      setQuantity(1);
-    } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message;
-      setToast({
-        type: "error",
-        message: `Lỗi khi thêm vào giỏ hàng: ${errorMsg}`,
-      });
-      if (error.message.includes("Phiên đăng nhập hết hạn")) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        sessionStorage.removeItem("accessToken");
-        navigate("/signin", { state: { from: `/products/${id}` } });
-      }
-    }
+    })
+    .sort(
+      (a, b) =>
+        a.optionGroupId.localeCompare(b.optionGroupId) ||
+        a.optionItemId.localeCompare(b.optionItemId)
+    );
+
+  const item = {
+    productId: id,
+    note: null,
+    quantity: quantity,
+    userItemVoucherId: voucherId,
+    productItemOptionModels: optionEntries,
   };
+
+  try {
+    // normalize options to detect duplicates
+    const normalizeOptions = (options) =>
+      options
+        ?.map((opt) => ({
+          optionGroupId: opt.optionGroupId || opt.option_group_id,
+          optionItemId: opt.optionItemId || opt.option_item_id,
+        }))
+        ?.sort(
+          (a, b) =>
+            a.optionGroupId.localeCompare(b.optionGroupId) ||
+            a.optionItemId.localeCompare(b.optionItemId)
+        ) || [];
+
+    const existingItem = cartData?.cartItems?.find(
+      (cartItem) =>
+        cartItem.productId === id &&
+        JSON.stringify(normalizeOptions(cartItem.cartItemOptions)) ===
+          JSON.stringify(normalizeOptions(item.productItemOptionModels))
+    );
+
+    await CartService.addItemToCart(item, token);
+
+    queryClient.invalidateQueries(["userCart"]);
+    setErrorMessage("");
+    setToast({ type: "success", message: "Đã thêm vào giỏ hàng!" });
+    setQuantity(1);
+  } catch (error) {
+    const errorMsg = error.response?.data?.message || error.message;
+    setToast({
+      type: "error",
+      message: `Lỗi khi thêm vào giỏ hàng: ${errorMsg}`,
+    });
+    if (error.message.includes("Phiên đăng nhập hết hạn")) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      navigate("/signin", { state: { from: `/products/${id}` } });
+    }
+  }
+};
 
   useEffect(() => {
     setQuantity(1);
@@ -343,58 +340,67 @@ const [userMap, setUserMap] = useState({});
         const item = group.optionItems.find(
           (i) => i.optionItemId === id || i.optionItemId === Number(id)
         );
-        if (item) total += quantity * Number(item.additionalPrice || 0);
+        if (item) total += Number(item.additionalPrice || 0);
       });
     });
     return total;
   };
 
-  const finalTotalPrice =
-    Number(product.finalUnitPrice || 0) * quantity + getTotalAdditionalPrice();
-
-useEffect(() => {
-  const fetchUsersForRatings = async () => {
-    if (!ratingsData.data) return;
-    const uniqueUserIds = [
-      ...new Set(
-        ratingsData.data
-          .map((r) => r.createdBy)
-          .filter((id) => id != null)
+  const { data: userVouchers = [] } = useQuery({
+    queryKey: ["userVouchers", accessToken],
+    queryFn: () =>
+      VoucherService.getUserItemVouchers(accessToken).then((data) =>
+        data.map((v) => ({
+          voucherId: v.itemVoucherId,
+          name: v.productName,
+          percentValue: v.percentValue,
+          hardValue: v.hardValue,
+          ...v,
+        }))
       ),
-    ];
-
-    const newUserMap = { ...userMap };
-
-    await Promise.all(
-      uniqueUserIds.map(async (id) => {
-        if (!newUserMap[id]) {
-          try {
-            const res = await AxiosInstance.get(`/users/${id}/public`);
-            if (res.data.isSuccess && res.data.data) {
-              newUserMap[id] =
-                res.data.data.fullname || "Người dùng ẩn danh";
-            } else {
-              newUserMap[id] = "Người dùng ẩn danh";
-            }
-          } catch (e) {
-            console.error("Lỗi fetch user:", e);
-            newUserMap[id] = "Người dùng ẩn danh";
-          }
-        }
-      })
-    );
-
-    setUserMap(newUserMap);
+    enabled: isLoggedIn,
+  });
+  const [voucher, setVoucher] = useState();
+  const handleSelectItemVoucher = (value) => {
+    const selectedVoucher = userVouchers.find((v) => v.itemVoucherId === value);
+    setVoucher(selectedVoucher || undefined);
   };
 
-  fetchUsersForRatings();
-}, [ratingsData]);
+  const [finalTotalPrice, setFinalTotalPrice] = useState(0);
+
+  function checkVoucher() {
+    if (!voucher) return false;
+    return (
+      voucher.productId !== product.productId ||
+      voucher.minQuantity > quantity ||
+      voucher.maxQuantity < quantity
+    );
+  }
+
+  useEffect(() => {
+    if (!product?.finalUnitPrice) return;
+
+    const basePrice = Number(product.finalUnitPrice) * quantity;
+    const additionalPrice = getTotalAdditionalPrice() * quantity;
+    let discount = 0;
+    if (voucher && !checkVoucher()) {
+      discount =
+        voucher.hardValue > 0
+          ? voucher.hardValue * quantity
+          : ((product.finalUnitPrice * voucher.percentValue) / 100) * quantity;
+    }
+    const total = basePrice + additionalPrice - discount;
+    setFinalTotalPrice(total);
+  }, [product, quantity, voucher, selectedOptions, checkChange]);
 
   return (
     <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-gray-800">
       <Header />
       <div className="px-4 mx-auto my-12 space-y-16 max-w-7xl">
-        {isProductLoading || isOptionsLoading || isRatingsLoading || isCategoryLoading ? (
+        {isProductLoading ||
+        isOptionsLoading ||
+        isRatingsLoading ||
+        isCategoryLoading ? (
           <p className="text-lg text-center text-amber-600">Đang tải...</p>
         ) : optionsError ? (
           <p className="text-center text-red-500">{errorMessage}</p>
@@ -402,7 +408,6 @@ useEffect(() => {
           <>
             {/* Product Details */}
             <div className="relative flex flex-col gap-8 p-6 transition-shadow duration-300 bg-white border border-gray-100 shadow-sm rounded-3xl hover:shadow-lg md:flex-row md:gap-12 lg:gap-20">
-              {/* Image Section */}
               <div className="flex items-center justify-center w-full md:w-1/2">
                 <img
                   src={product.imgs?.[0] || "/images/placeholder.png"}
@@ -410,38 +415,28 @@ useEffect(() => {
                   className="object-cover w-full h-[380px] rounded-2xl shadow-sm transition-transform duration-300 hover:scale-[1.02]"
                 />
               </div>
-
-              {/* Details Section */}
               <div className="w-full space-y-6 md:w-1/2">
                 <h2 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
                   {product.name}
                 </h2>
-
-                {/* Category Display */}
                 <div className="text-sm text-gray-500">
                   <span className="font-medium text-gray-700">Danh mục:</span>{" "}
-                  <Link
-                    className="text-amber-600 hover:underline"
-                  >
+                  <Link className="text-amber-600 hover:underline">
                     {category.name || "Không xác định"}
                   </Link>
                 </div>
-
                 <div className="flex items-center gap-2">
                   <StarRating rating={averageRating} />
                   <span className="text-sm text-gray-500">
                     ({ratingsData.data.length} đánh giá)
                   </span>
                 </div>
-
                 <p className="text-base leading-relaxed text-gray-600">
                   {product.description}
                 </p>
-
                 <p className="text-2xl font-semibold text-amber-600">
                   {Number(product.finalUnitPrice).toLocaleString("vi-VN")}₫
                 </p>
-
                 <div className="space-y-1 text-sm text-gray-500">
                   <p>
                     <span className="font-medium text-gray-700">Trọng lượng:</span>{" "}
@@ -468,7 +463,6 @@ useEffect(() => {
               <h4 className="pb-3 mb-6 text-2xl font-semibold text-gray-800 border-b border-amber-100">
                 Tùy chọn sản phẩm
               </h4>
-
               {optionGroups.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2">
                   {optionGroups.map((group) => (
@@ -486,7 +480,6 @@ useEffect(() => {
                           </p>
                         )}
                       </div>
-
                       <div className="space-y-3">
                         {group.isMultipleChoice
                           ? group.optionItems?.map((item) => (
@@ -502,15 +495,9 @@ useEffect(() => {
                                   className="w-4 h-4 mr-3 accent-amber-500"
                                 />
                                 <div className="text-sm text-gray-700">
-                                  <span className="font-medium">
-                                    {item.optionValue}
-                                  </span>{" "}
+                                  <span className="font-medium">{item.optionValue}</span>{" "}
                                   <span className="ml-1 text-gray-400">
-                                    (+
-                                    {Number(item.additionalPrice).toLocaleString(
-                                      "vi-VN"
-                                    )}
-                                    ₫)
+                                    (+{Number(item.additionalPrice).toLocaleString("vi-VN")}₫)
                                   </span>
                                 </div>
                               </label>
@@ -525,18 +512,12 @@ useEffect(() => {
                                   name={group.optionGroupId}
                                   value={item.optionItemId}
                                   onChange={handleRadioChange}
-                                  className="w-4 h-4 mr-3 accent-amber-500"
+                                  className="w-4 h-4 mr-3 accent-amber-500 appearance-none rounded-full border border-gray-300 checked:bg-amber-500 checked:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
                                 />
                                 <div className="text-sm text-gray-700">
-                                  <span className="font-medium">
-                                    {item.optionValue}
-                                  </span>{" "}
+                                  <span className="font-medium">{item.optionValue}</span>{" "}
                                   <span className="ml-1 text-gray-400">
-                                    (+
-                                    {Number(item.additionalPrice).toLocaleString(
-                                      "vi-VN"
-                                    )}
-                                    ₫)
+                                    (+{Number(item.additionalPrice).toLocaleString("vi-VN")}₫)
                                   </span>
                                 </div>
                               </label>
@@ -550,8 +531,80 @@ useEffect(() => {
                   Không có tùy chọn nào cho sản phẩm này.
                 </p>
               )}
-
-              <div className="flex flex-col items-center justify-end w-full gap-4 mt-10 sm:flex-row sm:gap-6">
+              <div className="my-12">
+                <VoucherSelect
+                  list={userVouchers}
+                  onSelect={handleSelectItemVoucher}
+                />
+                {voucher && (
+                  <div
+                    className={`mt-4 rounded-lg border relative border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200 ${
+                      (voucher.productId !== product.productId ||
+                        voucher.minQuantity > quantity ||
+                        voucher.maxQuantity < quantity) &&
+                      "opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    <button
+                      onClick={() => setVoucher(undefined)}
+                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-red-500 hover:text-white text-gray-600 dark:text-gray-300 shadow transition"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                        🎁 Voucher cho: {voucher.productName ?? "Sản phẩm bất kỳ"}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+                      📅 Hiệu lực: {new Date(voucher.startTime).toLocaleString("vi-VN")} <span>đến</span>{" "}
+                      {new Date(voucher.endTime).toLocaleString("vi-VN")}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+                      <span>📦 Áp dụng nếu mua </span>
+                      {voucher.minQuantity === voucher.maxQuantity ? (
+                        <span>{voucher.minQuantity} sản phẩm</span>
+                      ) : (
+                        <span>
+                          từ {voucher.minQuantity} đến {voucher.maxQuantity} sản phẩm
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+                      💸 Giảm giá:{" "}
+                      {voucher.hardValue > 0 ? (
+                        <>
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">
+                            {voucher.hardValue.toLocaleString()}
+                          </span>
+                          <span> / sản phẩm</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-semibold text-purple-600 dark:text-purple-400">
+                            {voucher.percentValue}% giá trị
+                          </span>
+                          <span> / sản phẩm</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col items-center justify-start w-full gap-4 mt-10 sm:flex-row sm:gap-6">
                 <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -571,8 +624,7 @@ useEffect(() => {
                   Tổng: {finalTotalPrice.toLocaleString("vi-VN")}₫
                 </div>
               </div>
-
-              <div className="flex justify-end pt-8">
+              <div className="flex justify-start pt-8">
                 <div className="relative flex items-center gap-4">
                   <button
                     onClick={handleAddToCart}
@@ -580,7 +632,6 @@ useEffect(() => {
                   >
                     Thêm vào giỏ hàng
                   </button>
-
                   <button
                     className="px-4 py-2 text-sm font-medium transition border rounded-lg border-amber-300 text-amber-600 hover:border-amber-500 hover:bg-amber-50"
                     title="Sao chép hoặc chia sẻ"
@@ -589,7 +640,6 @@ useEffect(() => {
                     <i className="mr-2 fa-regular fa-share-from-square text-amber-500"></i>
                     Chia sẻ
                   </button>
-
                   {copied && (
                     <div className="absolute px-2 py-1 text-xs text-white -translate-x-1/2 rounded shadow bg-amber-600 left-1/2 -top-8">
                       Đã sao chép!
@@ -602,9 +652,7 @@ useEffect(() => {
             {/* Ratings Section */}
             <div className="space-y-8">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold text-gray-800">
-                  Đánh giá sản phẩm
-                </h3>
+                <h3 className="text-2xl font-bold text-gray-800">Đánh giá sản phẩm</h3>
                 <button
                   onClick={() => setShowRatings(!showRatings)}
                   className="px-4 py-2 text-white rounded-lg bg-amber-600 hover:bg-amber-700"
@@ -617,16 +665,12 @@ useEffect(() => {
                   <div className="flex items-center gap-2">
                     <StarRating rating={averageRating} />
                     <span className="text-sm text-gray-500">
-                      {averageRating.toFixed(1)} ({ratingsData.data.length} đánh
-                      giá)
+                      {averageRating.toFixed(1)} ({ratingsData.data.length} đánh giá)
                     </span>
                   </div>
                   <div className="space-y-4">
                     {ratingsData.data.map((r) => {
-                      if (
-                        typeof r.ratingPoint !== "number" ||
-                        isNaN(r.ratingPoint)
-                      ) {
+                      if (typeof r.ratingPoint !== "number" || isNaN(r.ratingPoint)) {
                         console.error("Invalid ratingPoint for rating:", r);
                         return null;
                       }
@@ -636,28 +680,20 @@ useEffect(() => {
                           className="p-4 transition-shadow duration-300 bg-white border rounded-lg shadow cursor-pointer border-amber-200 hover:shadow-md"
                           onClick={() => setSelectedRating(r)}
                         >
-                          <div className="flex items-center gap-2">
-                          <StarRating rating={r.ratingPoint} />
-                          {/* <span className="text-sm text-gray-500">
-                            bởi {userMap[r.createdBy] || "Người dùng ẩn danh"}
-                          </span> */}
-                          <UserMiniProfile userId={r.userId}></UserMiniProfile>
-                        </div>
-
-                          <p className="mt-2 text-sm text-gray-600">
-                            {r.comment || "Không có nhận xét"}
-                          </p>
+                          <div className="flex items-center gap-3 mb-2">
+                            <UserMiniProfile userId={r.createdBy} showName />
+                            <StarRating rating={r.ratingPoint} />
+                          </div>
+                          <p className="text-sm text-gray-600">{r.comment || "Không có nhận xét"}</p>
                           {r.imgs && r.imgs.length > 0 && (
                             <div className="flex gap-2 mt-2 overflow-x-auto">
                               {r.imgs.map((img, idx) => (
                                 <img
                                   key={idx}
-                                  src={img}
+                                  src={img || "/images/placeholder.png"}
                                   alt={`Hình ảnh đánh giá ${idx + 1}`}
                                   className="object-cover w-24 h-24 rounded"
-                                  onError={(e) =>
-                                    (e.target.src = "/images/placeholder.png")
-                                  }
+                                  onError={(e) => (e.target.src = "/public/images/owner.png")}
                                 />
                               ))}
                             </div>
@@ -668,12 +704,11 @@ useEffect(() => {
                   </div>
                 </div>
               ) : showRatings ? (
-                <p className="text-sm text-gray-500">
-                  Chưa có đánh giá nào cho sản phẩm này.
-                </p>
+                <p className="text-sm text-gray-500">Chưa có đánh giá nào cho sản phẩm này.</p>
               ) : null}
               <RatingModal
                 selectedRating={selectedRating}
+                product={product}
                 modalRef={modalRef}
                 currentImageIndex={currentImageIndex}
                 handlePrevImage={() =>
@@ -687,7 +722,6 @@ useEffect(() => {
                   )
                 }
                 closeModal={() => setSelectedRating(null)}
-                //  userMap={userMap}
               />
               <RatingForm
                 isLoggedIn={isLoggedIn}
@@ -704,8 +738,13 @@ useEffect(() => {
                 productId={id}
                 navigate={navigate}
                 userId={userId}
+                username={userName}
+                userAvatar={userAvatar}
+                email={email}
               />
             </div>
+
+            {/* Suggested Products */}
             <SuggestedProducts
               suggestions={suggestions}
               categoryId={product.categoryId}
@@ -713,15 +752,14 @@ useEffect(() => {
             />
           </>
         )}
+        {toast && (
+          <ToastMessage
+            type={toast.type}
+            message={toast.message}
+            onClose={() => setToast(null)}
+          />
+        )}
       </div>
-
-      {toast && (
-        <ToastMessage
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
       <Footer />
     </div>
   );
