@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import { signinWithGoogle } from "../../core/services/AuthService";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
-const GoogleLoginButton = ({ returnUrl }) => {
+export default function GoogleLoginButton({ returnUrl }) {
   const navigate = useNavigate();
 
-  const hasPromptedRef = useRef(false); // ✅ đảm bảo giữ giá trị giữa các re-render
+  const hasPromptedRef = useRef(false); // ✅ giữ giá trị giữa các re-render
 
   useEffect(() => {}, []);
 
@@ -19,32 +19,13 @@ const GoogleLoginButton = ({ returnUrl }) => {
   };
 
   const handleSigninByGoogle = () => {
-    const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount?response_type=code&response_mode=query&scope=email%20profile&prompt=consent";
+    const baseUrl =
+      "https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount?response_type=code&response_mode=query&scope=email%20profile&prompt=consent";
     const clientId = `client_id=1084075727869-8dl016bmprkgl9v3o1bcusvggmdp7l9o.apps.googleusercontent.com`;
     const redirectUri = `redirect_uri=${window.location.origin}/signin-google/v2`;
 
-    window.location.href = (`${baseUrl}&${clientId}&${redirectUri}`);
+    window.location.href = `${baseUrl}&${clientId}&${redirectUri}`;
 
-    // googleLoginWindowRef = null;
-    // googleLoginWindowRef = window.google.accounts.id.initialize({
-    //   client_id:
-    //     "1084075727869-8dl016bmprkgl9v3o1bcusvggmdp7l9o.apps.googleusercontent.com",
-    //   callback: handleCredentialResponse,
-    // });
-    // if (window.google) {
-    //   window.google.accounts.id.initialize({
-    //     client_id: "1084075727869-8dl016bmprkgl9v3o1bcusvggmdp7l9o.apps.googleusercontent.com",
-    //     callback: handleCredentialResponse,
-    //   });
-    // }
-
-    // if (!window.google || hasPromptedRef.current) return;
-    // if (hasPromptedRef.current) return;
-
-    // hasPromptedRef.current = true;
-    // window.google.accounts.id.prompt();
-
-    // Cho phép đăng nhập lại sau 5s nếu cần
     setTimeout(() => {
       hasPromptedRef.current = false;
     }, 5000);
@@ -86,6 +67,4 @@ const GoogleLoginButton = ({ returnUrl }) => {
       {/* <div id="googleButton" /> */}
     </>
   );
-};
-
-export default GoogleLoginButton;
+}
