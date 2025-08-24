@@ -3,20 +3,27 @@ import { publicApi } from "../configs/AxiosConfig";
 const endpoint = "/orders";
 
 const OrderService = {
-  // Lấy cart của user đã đăng nhập
-getUserCart: async (accessToken) => {
-  const response = await publicApi.get("/carts/mine", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return response.data;
-},
+  getUserCart: async (accessToken) => {
+    try {
+      const response = await publicApi.get("/carts", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("OrderService.getUserCart error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
 
-// Lấy cart guest theo cartId
-getGuestCart: async (cartId) => {
-  const response = await publicApi.get(`/carts/guest/${cartId}`);
-  return response.data;
-},
-
+  getGuestCart: async (cartId) => {
+    try {
+      const response = await publicApi.get(`/carts/${cartId}`);
+      return response.data;
+    } catch (error) {
+      console.error("OrderService.getGuestCart error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
 
   createCart: async () => {
     try {
@@ -28,15 +35,17 @@ getGuestCart: async (cartId) => {
     }
   },
 
- getUserCartId: async (accessToken) => {
-  try {
-    const cart = await OrderService.getUserCart(accessToken);
-    return cart.id; // vì backend sẽ trả về cart object có id
-  } catch (error) {
-    console.error("OrderService.getUserCartId error:", error.response?.data || error.message);
-    throw error;
-  }
-},
+  getUserCartId: async (accessToken) => {
+    try {
+      const response = await publicApi.get("/carts/id", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      return response.data.cartId;
+    } catch (error) {
+      console.error("OrderService.getUserCartId error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
 
   calculateShippingFee: async ({ lat, lng }) => {
     try {
