@@ -18,14 +18,15 @@ import ScrollToTop from "./pages/layouts/ScrollToTopLayout.jsx";
 import { Header } from "./pages/layouts/Header";
 import AccountPage from './pages/AccountPage.jsx';
 import { ChatBotPage } from "./pages/ChatBot.jsx";
-import { CategoryPage } from "./pages/CategoryPage";
-
-
+import ResetPassword from "./pages/auth/ResetPassword.jsx";
+import VerifyAccount from "./pages/auth/VerifyAccount";
 import { Footer } from "./pages/layouts/Footer.jsx";
 import OrderConfirmation from "./pages/OrderConfirmation.jsx";
 import OrderHistoryPage from "./pages/OrderHistory.jsx";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import OrderSuccess from "./pages/OrderSuccess";
+import RequestResetPassword from "./pages/auth/RequestResetPassword.jsx";
+
 function App() {
   return (
     <>
@@ -48,7 +49,11 @@ function App() {
         <Route path="/order-history" element={<OrderHistoryPage />} />
         <Route path="/order/:orderId" element={<OrderDetailsPage />} />
         <Route path="/order-success" element={<OrderSuccess />} />
-        <Route path="/category/:categoryId" element={<CategoryPage />} />
+        <Route path="/request-reset-password" element={<RequestResetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify" element={<VerifyAccount />} />
+        <Route path="/signin-google/v2" element={<SignInForm />} />
+
         <Route
           path="/signin"
           element={

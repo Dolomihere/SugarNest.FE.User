@@ -5,24 +5,36 @@ import axios from "axios";
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
-// Lưu token
+/**
+ * Lưu access & refresh token vào localStorage
+ */
 const storeTokens = (tokenResponse) => {
   localStorage.setItem(ACCESS_TOKEN_KEY, tokenResponse.accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, tokenResponse.refreshToken);
 };
 
-// Xóa token
+/**
+ * Xóa token khỏi localStorage
+ */
 const clearTokens = () => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// Trợ năng
 export const showTokens = () => {
-  console.log("access:", getAccessToken(), "refresh:", getRefreshToken());
+  console.log(
+    "access: " + getAccessToken() + ". refresh: " + getRefreshToken()
+  );
 };
 
+/**
+ * Lấy access token từ localStorage
+ */
 export const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
+
+/**
+ * Lấy refresh token từ localStorage
+ */
 export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
 
 /**
@@ -30,30 +42,35 @@ export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
  */
 export const login = async (data) => {
   try {
-    const response = await AxiosInstance.post("/auth/signin", data);
+    clearTokens();
+    const response = await AxiosInstance.post("/auth/signin/employee", data);
     const result = response.data;
 
     if (result?.isSuccess && result.data) {
       storeTokens(result.data);
-      return { success: true, data: result.data };
+      return true;
     }
 
     const errMsg =
       result.message ||
       result.errors?.join(", ") ||
       "Đăng nhập không thành công. Vui lòng thử lại.";
-
-    return { success: false, message: errMsg };
+    throw new Error(errMsg);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response) {
-        return {
-          success: false,
-          message: error.response.data?.message || "Lỗi máy chủ. Vui lòng thử lại.",
-        };
+        const status = error.response.status;
+        return false;
+
+        if (status === 400) {
+          // return "Tài khoản không tồn tại hoặc sai mật khẩu";
+        }
+        alert(error);
+        return false;
       }
     }
-    return { success: false, message: "Không thể kết nối tới máy chủ." };
+    alert(error);
+    return false;
   }
 };
 
@@ -63,26 +80,18 @@ export const login = async (data) => {
 export const register = async (data) => {
   try {
     const response = await AxiosInstance.post("/auth/signup", data);
-    const result = response.data;
-
-    if (result?.isSuccess && result.data) {
-      storeTokens(result.data);
-      return { success: true, data: result.data };
+    if (response.data) {
+      storeTokens(response.data);
+      return true;
     }
-
-    const errMsg =
-      result.message ||
-      result.errors?.join(", ") ||
-      "Đăng ký không thành công. Vui lòng thử lại.";
-
-    return { success: false, message: errMsg };
   } catch (error) {
-    return { success: false, message: "Lỗi không xác định khi đăng ký." };
+    console.error("Register failed:", error);
   }
+  return false;
 };
 
 /**
- * Làm mới access token bằng refresh token
+ * Refresh token khi access token hết hạn
  */
 export const refreshToken = async () => {
   try {
@@ -91,22 +100,26 @@ export const refreshToken = async () => {
 
     const RawAxios = axios.create({
       baseURL: "https://sugarnest-api.io.vn/",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
-    const response = await RawAxios.post("/auth/refresh-token", { refreshToken });
-    const result = response.data;
+    const response = await RawAxios.post("/auth/refresh-token", {
+      refreshToken,
+    });
 
-    if (result?.isSuccess && result.data) {
-      storeTokens(result.data);
-      return result.data.accessToken;
+    if (response.data) {
+      const result = response.data;
+      if (result.data) {
+        storeTokens(result.data);
+        return result.data.accessToken;
+      }
     }
-
-    return null;
   } catch (error) {
     console.error("Refresh token failed:", error);
-    return null;
   }
+  return null;
 };
 
 /**
@@ -116,50 +129,79 @@ export const logout = () => {
   clearTokens();
 };
 
-/**
- * Đăng nhập với Google v1
- */
 export const signinWithGoogle = async (idToken) => {
-  try {
-    const response = await AxiosInstance.post("/auth/signin-google", { idToken });
-    const result = response.data;
+  const response = await AxiosInstance.post("/auth/signin-google", {
+    idToken,
+  });
+  const result = response.data;
 
-    if (result?.isSuccess && result.data) {
-      storeTokens(result.data);
-      return { success: true, data: result.data };
-    }
-
+  if (result?.isSuccess && result.data) {
+    storeTokens(result.data);
+    alert("Đăng nhập thành công");
+    return true;
+  } else {
     const errMsg =
       result.message ||
       result.errors?.join(", ") ||
-      "Đăng nhập Google thất bại. Vui lòng thử lại.";
-    return { success: false, message: errMsg };
-  } catch (error) {
-    return { success: false, message: "Lỗi kết nối khi đăng nhập với Google." };
+      "Đăng nhập không thành công. Vui lòng thử lại.";
+    alert(errMsg);
+    return false;
   }
 };
 
-/**
- * Đăng nhập với Google v2 (OAuth)
- */
 export const signinWithGoogleV2 = async (authorizationCode) => {
-  try {
-    const response = await AxiosInstance.post("/auth/signin-google/v2", {
-      authorizationCode,
-    });
-    const result = response.data;
+  const tempClient = axios.create({
+    baseURL: "https://sugarnest-api.io.vn/",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const response = await tempClient.post("/auth/signin-google/v2", {
+    authorizationCode,
+    isCustomer: false,
+  });
+  const result = response.data;
 
-    if (result?.isSuccess && result.data) {
-      storeTokens(result.data);
-      return { success: true, data: result.data };
-    }
-
+  if (result?.isSuccess && result.data) {
+    storeTokens(result.data);
+    return true;
+  } else {
     const errMsg =
       result.message ||
       result.errors?.join(", ") ||
-      "Đăng nhập Google thất bại. Vui lòng thử lại.";
-    return { success: false, message: errMsg };
-  } catch (error) {
-    return { success: false, message: "Lỗi kết nối khi đăng nhập với Google." };
+      "Đăng nhập không thành công. Vui lòng thử lại.";
+    alert(errMsg);
+    return false;
+  }
+};
+
+export const getUserProfile = async () => {
+  const response = await AxiosInstance.post("/users/profile");
+  const result = response.data;
+
+  if (result?.isSuccess && result.data) {
+    storeTokens(result.data);
+    alert("Đăng nhập thành công");
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export const checkTokenValidity = async (token) => {
+  try {
+    const tempClient = axios.create({
+      baseURL: "https://sugarnest-api.io.vn/",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const res = await tempClient.get("/users/personal");
+
+    if (res.data.data) return true;
+    return false;
+  } catch {
+    return false;
   }
 };
