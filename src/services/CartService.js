@@ -35,6 +35,7 @@ const CartService = {
   },
   addItemToCart: async (itemData, token = null) => {
     try {
+      alert(2)
       alert(itemData.userItemVoucherId)
       const config = token
         ? { headers: { Authorization: `Bearer ${token}` } }

@@ -123,18 +123,28 @@ const PaymentForm = ({ order, formatCurrency, totalAmount }) => {
             </div>
           </div>
         )}
+<div className="grid grid-cols-2 gap-4 mt-4">
+  {/* Button Hủy đơn */}
+  <button
+    className="w-full py-2 rounded-xl border border-[#d6a97e] text-[#a17455] font-medium hover:bg-[#f5e9dc] transition"
+  >
+    Hủy đơn
+  </button>
 
-        <button
-          type="submit"
-          className="mt-4 w-full bg-[#a17455] text-white py-2 px-4 rounded-md hover:bg-[#8c5e42] transition disabled:bg-gray-400"
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? "Đang xử lý..."
-            : paymentMethod === "cash"
-            ? "Xác nhận thanh toán"
-            : "Chuyển đến trang thanh toán"}
-        </button>
+  {/* Button Thanh toán */}
+  <button
+    type="submit"
+    disabled={isSubmitting}
+    className="w-full bg-[#a17455] text-white py-2 px-4 rounded-xl hover:bg-[#8c5e42] transition disabled:bg-gray-400"
+  >
+    {isSubmitting
+      ? "Đang xử lý..."
+      : paymentMethod === "cash"
+      ? "Xác nhận thanh toán"
+      : "Chuyển đến trang thanh toán"}
+  </button>
+</div>
+
       </form>
     </div>
   );

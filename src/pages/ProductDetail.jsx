@@ -268,7 +268,7 @@ export function ProductDetailPage() {
         a.optionGroupId.localeCompare(b.optionGroupId) ||
         a.optionItemId.localeCompare(b.optionItemId)
     );
-
+    alert (voucherId)
   const item = {
     productId: id,
     note: null,
@@ -351,7 +351,7 @@ export function ProductDetailPage() {
     queryFn: () =>
       VoucherService.getUserItemVouchers(accessToken).then((data) =>
         data.map((v) => ({
-          voucherId: v.itemVoucherId,
+          voucherId: v.userItemVoucherId,
           name: v.productName,
           percentValue: v.percentValue,
           hardValue: v.hardValue,
