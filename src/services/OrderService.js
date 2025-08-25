@@ -11,7 +11,6 @@ const OrderService = {
     return response.data;
   },
 
-  // Lấy cart guest theo cartId
   getGuestCart: async (cartId) => {
     const response = await publicApi.get(`/carts/guest/${cartId}`);
     return response.data;
@@ -39,26 +38,75 @@ const OrderService = {
 
   calculateShippingFee: async ({ lat, lng }) => {
     try {
-      const response = await publicApi.post("/shipping/calculate", { lat, lng });
-      return response.data;
+      const cart = await OrderService.getUserCart(accessToken);
+      return cart.id;
     } catch (error) {
-      console.error("OrderService.calculateShippingFee error:", error.response?.data || error.message);
+      console.error("OrderService.getUserCartId error:", error.response?.data || error.message);
       throw error;
     }
   },
+  calculateShippingFee: async ({ lat, lng, subtotal }) => {
+  try {
+    console.log("Gọi API tính phí vận chuyển:", { lat, lng, subtotal });
 
-  createOrder: async (orderData, accessToken, cartId) => {
+    const response = await publicApi.get(`/orders/shippingfee`, {
+      params: {
+        latitude: lat,
+        longitude: lng,
+        subTotal: subtotal,
+      },
+    });
+
+    return { shippingFee: response.data.data };
+  } catch (error) {
+    console.error("Lỗi OrderService.calculateShippingFee:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      params: error.config?.params,
+    });
+    throw new Error(
+      "Không thể tính phí vận chuyển: " +
+        (error.response?.data?.message || error.message)
+    );
+  }
+},
+  createOrder: async (orderData, accessToken = null, guestCartId = null) => {
     try {
+      const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+
+      const payload = {
+        Address: orderData.Address,
+        CustomerName: orderData.CustomerName,
+        PhoneNumber: orderData.PhoneNumber,
+        Email: orderData.Email,
+        DeliveryTime: orderData.DeliveryTime,
+        RecipientName: orderData.RecipientName,
+        RecipientEmail: orderData.RecipientEmail,
+        RecipientPhone: orderData.RecipientPhone,
+        Note: orderData.Note,
+        UserVoucher: orderData.UserVoucher || null,
+        Latitude: orderData.Latitude || null,
+        Longitude: orderData.Longitude || null,
+      };
+
+      console.log("📦 Sending order payload to backend:", JSON.stringify(payload, null, 2));
+
       const response = await publicApi.post(
-        "/orders",
-        orderData,
-        {
-          headers: { Authorization: `Bearer ${accessToken || cartId}` },
-        }
+        guestCartId ? `${endpoint}?cartId=${guestCartId}` : endpoint,
+        payload,
+        { headers }
       );
+
+      console.log("📩 Backend response:", JSON.stringify(response.data, null, 2));
+
       return response.data;
     } catch (error) {
-      console.error("OrderService.createOrder error:", error.response?.data || error.message);
+      console.error(
+        "OrderService.createOrder error:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -108,6 +156,9 @@ const OrderService = {
       );
     }
   },
+cancelOrder: async (orderId, reason, accessToken = null) => {
+  try {
+    const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
 
   calculateShippingFee: async ({ lat, lng, subTotal }) => {
     try {
@@ -148,8 +199,6 @@ const OrderService = {
         status: error.response?.status,
         data: error.response?.data,
       });
-
-      // fallback mock
       return new Promise((resolve) => {
         setTimeout(() => resolve({ status: "success", mock: true }), 1000);
       });
@@ -167,8 +216,6 @@ const OrderService = {
         status: error.response?.status,
         data: error.response?.data,
       });
-
-      // fallback mock
       return new Promise((resolve) => {
         setTimeout(() => {
           console.log(`(Giả lập) Gửi email tới ${email} cho đơn hàng ${orderId}`);
@@ -221,6 +268,7 @@ const OrderService = {
     }
   },
 };
+
 
 const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
