@@ -1,20 +1,22 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { getCartItemKey } from "../../utils/cart";
 
 const OrderSummary = ({
   cartItems,
   selectedVouchers,
   discounts = {},
+  discountAmount,
   shippingFee,
   formatCurrency,
   handleSubmit,
   error,
   loading,
+  selectedOrderVoucher,
+  orderDiscount,
 }) => {
-  const isFreeShipping = shippingFee <= 0;
+ const isFreeShipping = shippingFee <= 0;
 
-  // Hàm tính giá trị giảm
-  const getVoucherValue = (unitPrice, voucher) => {
+   const getVoucherValue = (unitPrice, voucher) => {
     if (!voucher) return 0;
     let discount = 0;
 
@@ -28,22 +30,24 @@ const OrderSummary = ({
     return Math.min(discount, unitPrice);
   };
 
-  // Tính tổng và giảm giá
+  // Tính tổng giảm giá và subtotal sau giảm giá sản phẩm
   let totalDiscount = 0;
- const productTotals = cartItems.map((item) => {
-  const cartItemKey = getCartItemKey(item);
-  const itemDiscount = discounts?.[cartItemKey] || 0;
-  totalDiscount += itemDiscount;
+  const productTotals = cartItems.map((item) => {
+    const cartItemKey = getCartItemKey(item);
+    const itemVoucher = selectedVouchers?.[cartItemKey] || null;
+    const itemDiscount = discounts?.[cartItemKey] || getVoucherValue(item.unitPrice || item.price, itemVoucher);
 
-   return {
-    ...item,
-    discount: itemDiscount,
-    totalAfterDiscount: Math.max(item.unitPrice * item.quantity - itemDiscount, 0),
-    appliedVoucher: selectedVouchers?.[cartItemKey] || null,
-  };
-});
+    totalDiscount += itemDiscount ;
 
-  const subtotal = productTotals.reduce(
+    return {
+      ...item,
+      discount: itemDiscount ,
+      totalAfterDiscount: Math.max((item.total) * item.quantity - itemDiscount * item.quantity, 0),
+      appliedVoucher: itemVoucher,
+    };
+  });
+
+   const subtotal = productTotals.reduce(
     (sum, p) => sum + p.total,
     0
   );
@@ -53,46 +57,54 @@ const OrderSummary = ({
     <div className="p-6 space-y-4 bg-white shadow-md rounded-2xl">
       <h2 className="text-xl font-semibold text-heading">Đơn hàng của bạn</h2>
 
-      {productTotals.length === 0 ? (
-        <p className="text-sm text-gray-600">Giỏ hàng trống</p>
-      ) : (
-        productTotals.map((item, index) => (
-          <div key={index} className="pb-2 mb-2 text-sm border-b">
-            <div className="flex justify-between">
-              <span>{item.productName}</span>
-              <span>{formatCurrency(item.total)}</span>
-            </div>
-            {item.appliedVoucher && (
-              <div className="flex justify-between text-green-600">
-                <span>Giảm ({item.appliedVoucher.name}):</span>
-                <span>-{formatCurrency(item.discount)}</span>
-              </div>
-            )}
+      {productTotals.map((item, idx) => (
+        <div key={idx} className="pb-2 mb-2 text-sm border-b">
+          <div className="flex justify-between">
+            <span>{item.productName || "Sản phẩm không xác định"}</span>
+            <span>{formatCurrency((item.finalUnitPrice + item.itemAdditionalPrice) * item.quantity)}</span>
           </div>
-        ))
-      )}
+          {item.appliedVoucher && (
+            <div className="flex justify-between text-green-600">
+              <span>Giảm ({item.appliedVoucher.name || "Voucher"}):</span>
+              <span>-{formatCurrency(item.discount)}</span>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div className="flex justify-between mt-2 text-sm">
+        <span>Tạm tính:</span>
+        <span>{formatCurrency(subtotal)}</span>
+      </div>
 
       <div className="flex justify-between mt-2 text-sm">
         <span>Phí vận chuyển:</span>
         <span>{isFreeShipping ? "Miễn phí" : formatCurrency(shippingFee)}</span>
       </div>
 
-      {totalDiscount > 0 && (
-        <div className="flex justify-between text-sm text-green-600">
-          <span>Tổng giảm giá:</span>
-          <span>-{formatCurrency(totalDiscount)}</span>
+      {discountAmount > 0 && (
+        <div className="flex justify-between mt-2 text-sm text-green-600">
+          <span>Tổng chiết khấu sản phẩm:</span>
+          <span>-{formatCurrency(discountAmount)}</span>
         </div>
       )}
 
-      <div className="flex justify-between pt-2 text-base font-bold border-t text-amber-600">
-        <span>Tổng thanh toán:</span>
+      {selectedOrderVoucher && (
+        <div className="flex justify-between mt-2 text-sm text-green-600">
+          <span>Chiết khấu toàn đơn:</span>
+          <span>-{formatCurrency(orderDiscount)}</span>
+        </div>
+      )}
+
+      <div className="flex justify-between mt-2 font-bold text-lg">
+        <span>Tổng cộng:</span>
         <span>{formatCurrency(total)}</span>
       </div>
 
       <button
         type="button"
         onClick={handleSubmit}
-        className="w-full text-center btn-primary"
+        className={`w-full text-center btn-primary ${loading || productTotals.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
         disabled={loading || productTotals.length === 0}
       >
         {loading ? "Đang xử lý..." : "Đặt mua ngay"}
@@ -102,5 +114,6 @@ const OrderSummary = ({
     </div>
   );
 };
+
 
 export default OrderSummary;

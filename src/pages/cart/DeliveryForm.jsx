@@ -12,6 +12,7 @@ const DeliveryForm = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState({});
+  // const [isBuyNow, setIsBuyNow] = useState("now");
 
   const token =
     localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
@@ -161,12 +162,33 @@ const DeliveryForm = ({
           />
         </div>
 
-        <div>
+          <select
+    name="isBuyInShop"
+    value={form.isBuyInShop}
+    onChange={handleInputChange}
+    disabled={!isEditing}
+    className={`w-full p-3 border rounded-lg ${
+      !isEditing
+        ? "bg-gray-100 cursor-not-allowed"
+        : errors.orderType
+        ? "border-red-600"
+        : "border-gray-300"
+    }`}
+  >
+    <option value="0">Giao Hàng đến địa chỉ</option>
+    <option value="1">Nhận tại cửa hàng</option>
+  </select>
+
+{form.isBuyInShop == "0" && (
+<div>
           <label className="block mb-1 text-sm font-medium text-sub">Chọn vị trí trên bản đồ</label>
           <LeafletMap onAddressSelect={onAddressSelect} />
         </div>
-
-        <div>
+)}
+        
+{
+  form.IsBuyInShop == "0" && (
+<div>
           <label className="block mb-1 text-sm font-medium text-sub">Địa chỉ chi tiết</label>
           <textarea
             value={addressFromMap}
@@ -176,8 +198,38 @@ const DeliveryForm = ({
             placeholder="Địa chỉ tự động từ bản đồ"
           />
         </div>
+  )
+}
+        
 
-       <div>
+        <div>
+  <label className="block mb-1 text-sm font-medium text-sub">
+    Hình thức đặt hàng <span className="text-red-600">*</span>
+  </label>
+  <select
+    name="isBuyNow"
+    value={form.isBuyNow}
+    onChange={handleInputChange}
+    disabled={!isEditing}
+    className={`w-full p-3 border rounded-lg ${
+      !isEditing
+        ? "bg-gray-100 cursor-not-allowed"
+        : errors.orderType
+        ? "border-red-600"
+        : "border-gray-300"
+    }`}
+  >
+    <option value="0">Mua ngay</option>
+    <option value="1">Đặt trước</option>
+  </select>
+  {/* {errors.is && (
+    <p className="mt-1 text-sm text-red-600">{errors.orderType}</p>
+  )} */}
+</div>
+      {
+        form.isBuyNow == "1" && (
+<div>
+            
           <label className="block mb-1 text-sm font-medium text-sub">
             Thời gian giao hàng <span className="text-red-600">*</span>
           </label>
@@ -202,6 +254,9 @@ const DeliveryForm = ({
             <p className="mt-1 text-sm text-red-600">{errors.deliveryTime}</p>
           )}
         </div>
+        )
+      }
+       
 
         {/* Ghi chú */}
         <div>
