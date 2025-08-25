@@ -3,6 +3,7 @@ import { publicApi } from "../configs/AxiosConfig";
 const endpoint = "/orders";
 
 const OrderService = {
+  // Lấy cart của user đã đăng nhập
   getUserCart: async (accessToken) => {
     const response = await publicApi.get("/carts/mine", {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -26,6 +27,16 @@ const OrderService = {
   },
 
   getUserCartId: async (accessToken) => {
+    try {
+      const cart = await OrderService.getUserCart(accessToken);
+      return cart.id; // vì backend sẽ trả về cart object có id
+    } catch (error) {
+      console.error("OrderService.getUserCartId error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  calculateShippingFee: async ({ lat, lng }) => {
     try {
       const cart = await OrderService.getUserCart(accessToken);
       return cart.id;
@@ -149,32 +160,33 @@ cancelOrder: async (orderId, reason, accessToken = null) => {
   try {
     const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
 
-    const payload = {
-      reason: reason || null,
-    };
-
-    console.log(
-      "🚫 Cancel order request:",
-      JSON.stringify({ orderId, payload }, null, 2)
-    );
-
-    const response = await publicApi.patch(
-      `https://sugarnest-api.io.vn/orders/${orderId}/cancel`,
-      payload,
-      { headers }
-    );
-
-    console.log("✅ Cancel order response:", JSON.stringify(response.data, null, 2));
-
-    return response.data;
-  } catch (error) {
-    console.error(
-      "OrderService.cancelOrder error:",
-      error.response?.data || error.message
-    );
-    throw error;
-  }
-},
+  calculateShippingFee: async ({ lat, lng, subTotal }) => {
+    try {
+      console.log("Gọi API tính phí vận chuyển:");
+      const response = await publicApi.get(
+        `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}&subTotal=${subTotal}`,
+        {
+          params: {
+            latitude: lat,
+            longitude: lng,
+          },
+        }
+      );
+      return { shippingFee: response.data.data };
+    } catch (error) {
+      console.error("Lỗi OrderService.calculateShippingFee:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+        params: error.config?.params,
+      });
+      throw new Error(
+        "Không thể tính phí vận chuyển: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  },
 
   processPayment: async ({ orderId, amount }) => {
     try {
@@ -211,6 +223,48 @@ cancelOrder: async (orderId, reason, accessToken = null) => {
           resolve({ status: "email_sent", mock: true });
         }, 1000);
       });
+    }
+  },
+  getOrderStatusHistory: async (accessToken) => {
+    try {
+      const response = await publicApi.get(`${endpoint}/mine/stats`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("OrderService.getOrderStatusHistory error:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.response?.status === 401) {
+        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      }
+      throw new Error(
+        "Không thể tải lịch sử trạng thái đơn hàng: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  },
+  getOrderStatusChanges: async (orderId, accessToken) => {
+    try {
+      const response = await publicApi.get(`${endpoint}/${orderId}/status-history`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      return response.data; // Giả sử response.data là mảng các thay đổi trạng thái
+    } catch (error) {
+      console.error("OrderService.getOrderStatusChanges error:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      if (error.response?.status === 401) {
+        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      }
+      throw new Error(
+        "Không thể tải lịch sử thay đổi trạng thái: " +
+          (error.response?.data?.message || error.message)
+      );
     }
   },
 };

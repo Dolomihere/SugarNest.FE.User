@@ -26,6 +26,8 @@ import OrderHistoryPage from "./pages/OrderHistory.jsx";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import OrderSuccess from "./pages/OrderSuccess";
 import RequestResetPassword from "./pages/auth/RequestResetPassword.jsx";
+import { CategoryPage } from "./pages/CategoryPage.jsx";
+import { OrderStatusPage } from "./pages/OrderStatusPage.jsx";
 
 function App() {
   return (
@@ -53,7 +55,9 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify" element={<VerifyAccount />} />
         <Route path="/signin-google/v2" element={<SignInForm />} />
-
+          <Route path="/category/:categoryId" element={<CategoryPage />} />
+          <Route path="*" element={<div>Not Found</div>} />
+          <Route path="/order-status" element={<OrderStatusPage />}/>
         <Route
           path="/signin"
           element={

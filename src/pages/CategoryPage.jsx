@@ -1,31 +1,369 @@
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import ProductService from "../services/ProductService";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProductCard } from "../components/ProductCard";
+import CategoryService from "../services/CategoryService";
+import FavoriteService from "../services/FavoriteService";
+import useFetchList from "../core/hooks/useFetchList";
+import { useDebouncedSearch } from "../core/hooks/useDebouncedSearch";
+import { Header } from "./layouts/Header";
+import { Footer } from "./layouts/Footer";
 
 export function CategoryPage() {
   const { categoryId } = useParams();
+  const queryClient = useQueryClient();
+  const [categories, setCategories] = useState([]);
+  const [viewMode, setViewMode] = useState("grid");
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [totalPrice, setTotalPrice] = useState(0);
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["categoryProducts", categoryId],
-    queryFn: () =>
-      ProductService.getProductsByCategory(categoryId).then((res) => res.data.data),
+  // Debug categoryId
+  console.log("Category ID:", categoryId);
+
+  // Fetch favorites
+  const {
+    data: favoritesData,
+    isLoading: favoritesLoading,
+  } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: () => FavoriteService.getFavorites().then((res) => res.data.data),
   });
 
-  if (isLoading) return <p className="text-center">Đang tải sản phẩm...</p>;
+  // Mutations for favorites
+  const addFavoriteMutation = useMutation({
+    mutationFn: (productId) => FavoriteService.addFavorites([productId]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["favorites"]);
+    },
+  });
+
+  const removeFavoriteMutation = useMutation({
+    mutationFn: (productId) => FavoriteService.removeFavorites([productId]),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["favorites"]);
+    },
+  });
+
+  const isFavorite = (productId) =>
+    favoritesData?.some((fav) => fav.productId === productId) || false;
+
+  const addToFavorites = (productId) => {
+    addFavoriteMutation.mutate(productId);
+  };
+
+  const removeFromFavorites = (productId) => {
+    removeFavoriteMutation.mutate(productId);
+  };
+
+  // Fetch categories
+  const { data: allCategories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () =>
+      CategoryService.getAllCategories().then((res) =>
+        res.data.data.map((cat) => ({
+          value: cat.categoryId,
+          label: cat.name,
+        }))
+      ),
+  });
+
+  useEffect(() => {
+    setCategories(allCategories);
+  }, [allCategories]);
+
+  // Default query
+  const DEFAULT_QUERY = {
+    SearchTerm: "",
+    SortBy: "CreatedAt",
+    SortDescending: true,
+    Filter: { CategoryId: categoryId || "" },
+    PageSize: 16,
+    PageIndex: 1,
+  };
+
+  const [selectedSort, setSelectedSort] = useState("0");
+  const [selectedCategory, setSelectedCategory] = useState(categoryId || "");
+  const [productQuery, setProductQuery] = useState(DEFAULT_QUERY);
+  const [reloadTrigger, setReloadTrigger] = useState(false);
+
+  // Debug productQuery
+  console.log("Product Query:", productQuery);
+
+  // Search hook
+  const { inputValue, setInputValue } = useDebouncedSearch(500, (value) => {
+    setProductQuery((prev) => ({
+      ...prev,
+      SearchTerm: value,
+      PageIndex: 1,
+    }));
+  });
+
+  // Clear filters
+  const handleClearFilters = () => {
+    setProductQuery({ ...DEFAULT_QUERY, Filter: { CategoryId: categoryId || "" } });
+    setSelectedSort("0");
+    setSelectedCategory(categoryId || "");
+    setInputValue("");
+    setShowFavoritesOnly(false);
+    if (apiResponse?.data) {
+      const total = apiResponse.data.reduce((sum, p) => sum + (p.UnitPrice || 0), 0);
+      setTotalPrice(total);
+    }
+  };
+
+  // Fetch products
+  const { response: apiResponse, loading, error } = useFetchList(
+    "products/sellable",
+    productQuery,
+    { reloadTrigger }
+  );
+
+  // Debug API response
+  console.log("API Response:", apiResponse);
+  console.log("Loading:", loading, "Error:", error);
+
+  // Calculate total price
+  useEffect(() => {
+    if (apiResponse?.data) {
+      const total = apiResponse.data.reduce((sum, p) => sum + (p.UnitPrice || 0), 0);
+      setTotalPrice(total);
+    }
+  }, [apiResponse?.data]);
+
+  // Pagination
+  const meta = apiResponse?.meta ?? {};
+  const totalPages = Math.ceil((meta.totalCount ?? 0) / (meta.pageSize ?? 12));
+  const currentPage = productQuery.PageIndex;
+  const isFirstPage = currentPage === 1;
+  const isLastPage = currentPage === totalPages;
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setProductQuery((prev) => ({
+      ...prev,
+      PageIndex: newPage,
+    }));
+  };
+
+  // Sort options
+  const sortOptions = [
+    { value: "0", label: "Tất cả giá" },
+    { value: "1", label: "Giá (thấp - cao)" },
+    { value: "2", label: "Giá (cao - thấp)" },
+    { value: "3", label: "Tên (a - z)" },
+    { value: "4", label: "Tên (z - a)" },
+  ];
+
+  const handleSortChange = (value) => {
+    setSelectedSort(value);
+    let sortBy = "CreatedAt";
+    let sortDescending = true;
+    switch (value) {
+      case "1":
+        sortBy = "UnitPrice";
+        sortDescending = false;
+        break;
+      case "2":
+        sortBy = "UnitPrice";
+        sortDescending = true;
+        break;
+      case "3":
+        sortBy = "Name";
+        sortDescending = false;
+        break;
+      case "4":
+        sortBy = "Name";
+        sortDescending = true;
+        break;
+      default:
+        break;
+    }
+    setProductQuery((prev) => ({
+      ...prev,
+      SortBy: sortBy,
+      SortDescending: sortDescending,
+      PageIndex: 1,
+    }));
+  };
+
+  const handleCategoryChange = (id) => {
+    setSelectedCategory(id);
+    setProductQuery((prev) => ({
+      ...prev,
+      Filter: { ...prev.Filter, CategoryId: id },
+      PageIndex: 1,
+    }));
+  };
 
   return (
-    <section className="px-4 py-16 space-y-8 text-base md:px-24">
-      <h2 className="mb-6 text-3xl font-bold text-amber-600">Sản Phẩm Danh Mục</h2>
-      {products.length === 0 ? (
-        <p className="text-center">Chưa có sản phẩm nào trong danh mục này.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.productId} product={product} viewMode="grid" />
-          ))}
+    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-[#5A3E2B]">
+      <Header />
+
+      {/* Banner */}
+      <div className="bg-gradient-to-r from-[#FFD9B3] to-[#F4A261] py-12 text-center shadow-md">
+        <h1 className="text-4xl font-extrabold text-white drop-shadow">
+          Sản Phẩm Danh Mục
+        </h1>
+        <p className="mt-2 text-lg text-[#FFF9F4] opacity-90">
+          Hương vị ngọt ngào - Phong cách hiện đại
+        </p>
+      </div>
+
+      <main className="w-full px-6 py-10 mx-auto max-w-7xl">
+        {/* Bộ lọc */}
+        <div className="p-6 bg-white rounded-2xl shadow-md mb-8">
+          <div className="grid grid-cols-12 gap-4">
+            <div className="relative col-span-12 lg:col-span-4">
+              <i className="fa-solid fa-magnifying-glass absolute left-3 top-3 text-[#A47449]"></i>
+              <input
+                type="text"
+                placeholder="Tìm kiếm sản phẩm..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className="w-full pl-10 p-3 border border-[#F4C78A] rounded-xl shadow-sm bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
+              />
+            </div>
+            <select
+              className="col-span-12 p-3 border border-[#F4C78A] rounded-xl shadow-sm lg:col-span-4 bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+            >
+              <option value="">Tất cả danh mục</option>
+              {categories.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <select
+              className="col-span-12 p-3 border border-[#F4C78A] rounded-xl shadow-sm lg:col-span-4 bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
+              value={selectedSort}
+              onChange={(e) => handleSortChange(e.target.value)}
+            >
+              {sortOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-wrap justify-between gap-3 mt-6">
+            <div className="flex gap-2">
+              <button
+                onClick={handleClearFilters}
+                className="px-5 py-2 bg-[#FFEBD2] border border-[#F4C78A] rounded-2xl hover:bg-[#FFD9B3] transition shadow-sm flex items-center gap-2"
+              >
+                <i className="fa-solid fa-rotate-left"></i> Bỏ lọc
+              </button>
+              <button className="px-5 py-2 bg-[#FFEBD2] border border-[#F4C78A] rounded-2xl hover:bg-[#FFD9B3] transition shadow-sm flex items-center gap-2">
+                <i className="fa-solid fa-sliders"></i> Lọc & Sắp xếp
+              </button>
+              <button
+                onClick={() => setShowFavoritesOnly((prev) => !prev)}
+                className={`px-5 py-2 rounded-2xl shadow-sm transition flex items-center gap-2 ${
+                  showFavoritesOnly
+                    ? "bg-[#F4A261] text-white shadow-md"
+                    : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
+                }`}
+              >
+                <i className="fa-solid fa-heart"></i> Yêu thích
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`px-5 py-2 rounded-2xl transition shadow-sm flex items-center gap-2 ${
+                  viewMode === "grid"
+                    ? "bg-[#F4A261] text-white shadow-md"
+                    : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
+                }`}
+              >
+                <i className="fa-solid fa-grip"></i> Lưới
+              </button>
+              <button
+                onClick={() => setViewMode("blog")}
+                className={`px-5 py-2 rounded-2xl transition shadow-sm flex items-center gap-2 ${
+                  viewMode === "blog"
+                    ? "bg-[#F4A261] text-white shadow-md"
+                    : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
+                }`}
+              >
+                <i className="fa-solid fa-bars"></i> Blog
+              </button>
+            </div>
+          </div>
         </div>
-      )}
-    </section>
+
+        {/* Tổng giá floating */}
+        {totalPrice > 0 && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="px-6 py-3 bg-[#FFD9B3] text-[#5A3E2B] font-bold rounded-full shadow-lg flex items-center gap-2">
+              <i className="fa-solid fa-sack-dollar"></i>
+              Tổng giá: {totalPrice.toLocaleString()} VNĐ
+            </div>
+          </div>
+        )}
+
+        {/* Product List */}
+        {loading || favoritesLoading ? (
+          <p>Đang tải sản phẩm...</p>
+        ) : error ? (
+          <p className="text-[#A47449]">Lỗi: {error.message}</p>
+        ) : apiResponse?.data?.length > 0 ? (
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8"
+                : "flex flex-col gap-6 mb-8"
+            }
+          >
+            {(showFavoritesOnly
+              ? apiResponse.data.filter((p) => isFavorite(p.productId))
+              : apiResponse.data
+            ).map((p) => (
+              <ProductCard
+                key={p.productId}
+                product={p}
+                viewMode={viewMode}
+                isFavorite={isFavorite(p.productId)}
+                onAddFavorite={() =>
+                  isFavorite(p.productId)
+                    ? removeFromFavorites(p.productId)
+                    : addToFavorites(p.productId)
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <p>Không có sản phẩm nào trong danh mục này.</p>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-16 mb-10">
+            <button
+              disabled={isFirstPage}
+              onClick={() => handlePageChange(currentPage - 1)}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FFEBD2] border border-[#F4C78A] shadow-sm disabled:opacity-50 hover:bg-[#FFD9B3]"
+            >
+              <i className="fa-solid fa-chevron-left"></i>
+            </button>
+            <span className="px-4 py-2 rounded-full bg-[#F4A261] text-white font-semibold shadow">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              disabled={isLastPage}
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FFEBD2] border border-[#F4C78A] shadow-sm disabled:opacity-50 hover:bg-[#FFD9B3]"
+            >
+              <i className="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        )}
+      </main>
+      <Footer />
+    </div>
   );
 }

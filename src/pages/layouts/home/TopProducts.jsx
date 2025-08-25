@@ -36,7 +36,7 @@ export function TopProducts() {
   const removeFromFavorites = (productId) => removeFavoriteMutation.mutate(productId);
 
   return (
-    <section className="px-4 py-16 space-y-10 text-base md:px-24 bg-[#FFF9F4] text-[#5A3E2B]">
+    <section className="px-4 py-8 space-y-10 text-base md:px-24 bg-[#FFF9F4] text-[#5A3E2B]">
       <div className="mb-10 text-center">
         <h2 className="mb-3 text-3xl font-extrabold md:text-4xl text-red-500">Top Sản Phẩm</h2>
         <p className="max-w-xl mx-auto text-[#5A3E2B]">

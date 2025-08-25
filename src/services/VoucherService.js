@@ -77,35 +77,37 @@ const VoucherService = {
       console.error("VoucherService.getUserItemVouchers error:", error);
       return [];
     }
-  },
-
-  // Áp dụng voucher
-  applyVoucher: async ({ code, cartId, accessToken }) => {
-    try {
-      const url = `${endpoint}/apply`;
-      const res = await publicApi.post(
-        url,
-        { code, cartId },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      return res.data;
-    } catch (error) {
-      console.error("VoucherService.applyVoucher error:", error);
-      if (error.response?.status === 401) {
-        throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-      }
-      // Mock fallback nếu API chưa sẵn sàng
-      return new Promise((resolve) =>
-        setTimeout(() => {
-          resolve({
-            status: "success",
-            discount: 50000,
-            mock: true,
-          });
-        }, 1000)
-      );
+    const res = await publicApi.get(endpoint+`/mine?SortBy=ProductName`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    console.log("VoucherService.getUserItemVouchers raw response:", JSON.stringify(res.data, null, 2));
+    if (!res?.data?.data) {
+      console.warn("No voucher data returned from API");
+      return [];
     }
-  },
+    let vouchers = res.data.data.map((v) => ({
+      userItemVoucherId: v.userItemVoucherId,
+      itemVoucherId: v.itemVoucherId,
+      name: v.name,
+      productId: v.productId,
+      productName: v.productName,
+      minQuantity: v.minQuantity,
+      maxQuantity: v.maxQuantity,
+      hardValue: v.hardValue,
+      percentValue: v.percentValue,
+      isActive: v.isActive,
+      startTime: v.startTime,
+      endTime: v.endTime,
+    }));
+    vouchers = vouchers.sort((a, b) => b.productName.localeCompare(a.productName));
+    console.log("Mapped vouchers:", JSON.stringify(vouchers, null, 2));
+    return vouchers;
+  } catch (error) {
+    console.error("VoucherService.getUserItemVouchers error:", error.response?.data || error.message);
+    return [];
+  }
+},
+
 
   // Kiểm tra voucher
   validateVoucher: async (code, accessToken) => {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthService } from "../../services/AuthService";
 import GoogleSignUpButton from "../../components/buttons/GoogleLoginButton";
 
@@ -11,12 +11,16 @@ export default function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(""); // New state for success message
+  const location = useLocation();
 
+  // Lấy email từ query param (nếu có từ Mailing)
+  const params = new URLSearchParams(location.search);
+  const emailFromMailing = params.get("email") || "";
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     username: "",
-    email: "",
+    email: emailFromMailing,
     phoneNumber: "",
     password: "",
     confirmPassword: "",
