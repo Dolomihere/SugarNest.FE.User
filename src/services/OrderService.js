@@ -159,34 +159,40 @@ const OrderService = {
 cancelOrder: async (orderId, reason, accessToken = null) => {
   try {
     const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+    const response = await publicApi.post(
+      `${endpoint}/${orderId}/cancel`,
+      { reason },
+      { headers }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("OrderService.cancelOrder error:", error.response?.data || error.message);
+    throw error;
+  }
+},
 
-  calculateShippingFee: async ({ lat, lng, subTotal }) => {
-    try {
-      console.log("Gọi API tính phí vận chuyển:");
-      const response = await publicApi.get(
-        `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}&subTotal=${subTotal}`,
-        {
-          params: {
-            latitude: lat,
-            longitude: lng,
-          },
-        }
-      );
-      return { shippingFee: response.data.data };
-    } catch (error) {
-      console.error("Lỗi OrderService.calculateShippingFee:", {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        url: error.config?.url,
-        params: error.config?.params,
-      });
-      throw new Error(
-        "Không thể tính phí vận chuyển: " +
-          (error.response?.data?.message || error.message)
-      );
-    }
-  },
+calculateShippingFee: async ({ lat, lng, subTotal }) => {
+  try {
+    console.log("Gọi API tính phí vận chuyển:");
+    const response = await publicApi.get(
+      `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}&subTotal=${subTotal}`
+    );
+    return { shippingFee: response.data.data };
+  } catch (error) {
+    console.error("Lỗi OrderService.calculateShippingFee:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      params: error.config?.params,
+    });
+    throw new Error(
+      "Không thể tính phí vận chuyển: " +
+        (error.response?.data?.message || error.message)
+    );
+  }
+},
+
 
   processPayment: async ({ orderId, amount }) => {
     try {

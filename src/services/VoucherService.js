@@ -3,7 +3,9 @@ import { publicApi } from "../configs/AxiosConfig";
 const endpoint = "/vouchers";
 
 const VoucherService = {
-  // Lấy tất cả voucher
+  /**
+   * Lấy tất cả voucher
+   */
   getAllVouchers: async (accessToken) => {
     try {
       const res = await publicApi.get(endpoint, {
@@ -22,13 +24,18 @@ const VoucherService = {
     }
   },
 
-  // Lấy voucher toàn đơn của người dùng
+  /**
+   * Lấy voucher toàn đơn của người dùng
+   */
   getOrderVouchers: async (accessToken) => {
     try {
-      const res = await publicApi.get("/vouchers/mine", {
+      const res = await publicApi.get(`${endpoint}/mine`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log("Order Vouchers API response:", JSON.stringify(res.data, null, 2));
+      console.log(
+        "Order Vouchers API response:",
+        JSON.stringify(res.data, null, 2)
+      );
       return res.data?.data || [];
     } catch (error) {
       console.error("VoucherService.getOrderVouchers error:", error);
@@ -42,7 +49,9 @@ const VoucherService = {
     }
   },
 
-  // Lấy voucher theo ID
+  /**
+   * Lấy voucher theo ID
+   */
   getVoucherById: async (voucherId, accessToken) => {
     try {
       const url = `${endpoint}/${voucherId}`;
@@ -62,54 +71,58 @@ const VoucherService = {
     }
   },
 
-  // Lấy danh sách voucher item của user
+  /**
+   * Lấy danh sách voucher item của user
+   */
   getUserItemVouchers: async (accessToken) => {
     try {
       const res = await publicApi.get("/itemvouchers/mine", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log("User Item Vouchers API response:", JSON.stringify(res.data, null, 2));
-      if (!res?.data?.data) return [];
-      let vouchers = res?.data?.data ?? [];
-      vouchers = vouchers.sort((a, b) => b.productName.localeCompare(a.productName));
+      console.log(
+        "User Item Vouchers API response:",
+        JSON.stringify(res.data, null, 2)
+      );
+
+      if (!res?.data?.data) {
+        console.warn("Không có dữ liệu voucher item từ API");
+        return [];
+      }
+
+      let vouchers = res.data.data.map((v) => ({
+        userItemVoucherId: v.userItemVoucherId,
+        itemVoucherId: v.itemVoucherId,
+        name: v.name,
+        productId: v.productId,
+        productName: v.productName,
+        minQuantity: v.minQuantity,
+        maxQuantity: v.maxQuantity,
+        hardValue: v.hardValue,
+        percentValue: v.percentValue,
+        isActive: v.isActive,
+        startTime: v.startTime,
+        endTime: v.endTime,
+      }));
+
+      // Sắp xếp theo tên sản phẩm (giảm dần)
+      vouchers = vouchers.sort((a, b) =>
+        b.productName.localeCompare(a.productName)
+      );
+
+      console.log("Mapped vouchers:", JSON.stringify(vouchers, null, 2));
       return vouchers;
     } catch (error) {
-      console.error("VoucherService.getUserItemVouchers error:", error);
+      console.error(
+        "VoucherService.getUserItemVouchers error:",
+        error.response?.data || error.message
+      );
       return [];
     }
-    const res = await publicApi.get(endpoint+`/mine?SortBy=ProductName`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    console.log("VoucherService.getUserItemVouchers raw response:", JSON.stringify(res.data, null, 2));
-    if (!res?.data?.data) {
-      console.warn("No voucher data returned from API");
-      return [];
-    }
-    let vouchers = res.data.data.map((v) => ({
-      userItemVoucherId: v.userItemVoucherId,
-      itemVoucherId: v.itemVoucherId,
-      name: v.name,
-      productId: v.productId,
-      productName: v.productName,
-      minQuantity: v.minQuantity,
-      maxQuantity: v.maxQuantity,
-      hardValue: v.hardValue,
-      percentValue: v.percentValue,
-      isActive: v.isActive,
-      startTime: v.startTime,
-      endTime: v.endTime,
-    }));
-    vouchers = vouchers.sort((a, b) => b.productName.localeCompare(a.productName));
-    console.log("Mapped vouchers:", JSON.stringify(vouchers, null, 2));
-    return vouchers;
-  } catch (error) {
-    console.error("VoucherService.getUserItemVouchers error:", error.response?.data || error.message);
-    return [];
-  }
-},
+  },
 
-
-  // Kiểm tra voucher
+  /**
+   * Kiểm tra voucher
+   */
   validateVoucher: async (code, accessToken) => {
     try {
       const url = `${endpoint}/validate/${code}`;
