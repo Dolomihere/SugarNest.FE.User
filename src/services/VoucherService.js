@@ -76,7 +76,7 @@ getUserItemVouchers: async (accessToken) => {
       console.warn("No accessToken provided for getUserItemVouchers");
       return [];
     }
-    const res = await publicApi.get(endpoint+`/mine`, {
+    const res = await publicApi.get(endpoint+`/mine?SortBy=ProductName`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     console.log("VoucherService.getUserItemVouchers raw response:", JSON.stringify(res.data, null, 2));
@@ -84,7 +84,7 @@ getUserItemVouchers: async (accessToken) => {
       console.warn("No voucher data returned from API");
       return [];
     }
-    const vouchers = res.data.data.map((v) => ({
+    let vouchers = res.data.data.map((v) => ({
       userItemVoucherId: v.userItemVoucherId,
       itemVoucherId: v.itemVoucherId,
       name: v.name,
@@ -98,6 +98,7 @@ getUserItemVouchers: async (accessToken) => {
       startTime: v.startTime,
       endTime: v.endTime,
     }));
+    vouchers = vouchers.sort((a, b) => b.productName.localeCompare(a.productName));
     console.log("Mapped vouchers:", JSON.stringify(vouchers, null, 2));
     return vouchers;
   } catch (error) {

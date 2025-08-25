@@ -185,6 +185,29 @@ const GameService = {
       throw error;
     }
   },
+
+  getCurrentLeaderBoard: async (token = null) => {
+    try {
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      const url = "/games/leaderboard/current";
+      console.log("Fetching current leaderboard - URL:", url, "Config:", config);
+      const response = await publicApi.get(url, config);
+      console.log("Current leaderboard response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Get current leaderboard failed:",
+        {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          url: error.config?.url,
+          headers: error.config?.headers,
+        }
+      );
+      throw error;
+    }
+  },
 };
 
 export default GameService;

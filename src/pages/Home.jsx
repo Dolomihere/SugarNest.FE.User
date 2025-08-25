@@ -1,8 +1,6 @@
 import { Header } from './layouts/Header'
 import { Footer } from './layouts/Footer'
 import { Link } from "react-router-dom";
-
-import { AboutAndReviews } from './layouts/home/AboutAndReview'
 import { ProductShowcase } from './layouts/home/ProductShowcase'
 import { TopProducts } from './layouts/home/TopProducts';
 import { Mailing } from './layouts/home/Mailing'
@@ -84,19 +82,15 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Top Products Section */}
-       <div className="p-5">
-      <TopProducts />
-      </div>
 
       {/* Showcase Section */}
       <div className="p-5">
         <ProductShowcase />
       </div>
 
-      {/* About and Review Section */}
-      <div className="p-5">
-        <AboutAndReviews />
+      {/* Top Products Section */}
+       <div className="p-5">
+        <TopProducts />
       </div>
 
       {/* Mailing Section */}

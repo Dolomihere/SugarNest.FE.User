@@ -185,7 +185,7 @@ export function ProductPage() {
     {/* Banner */}
     <div className="bg-gradient-to-r from-[#FFD9B3] to-[#F4A261] py-12 text-center shadow-md">
       <h1 className="text-4xl font-extrabold text-white drop-shadow">
-        Khám Phá Sản Phẩm Trà Sữa
+        Khám Phá Sản Phẩm Bánh Ngọt
       </h1>
       <p className="mt-2 text-lg text-[#FFF9F4] opacity-90">
         Hương vị ngọt ngào - Phong cách hiện đại
