@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TransactionService from "../services/TransactionService";
+import { formatToVietnamTime } from "../helpers/dateTimeHelper";
+import { getAccessToken } from "../core/services/AuthService";
+import { isOrderCompleted } from "../helpers/orderValidChecker";
 
 const PaymentForm = ({ order, formatCurrency, totalAmount }) => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -24,50 +27,50 @@ const PaymentForm = ({ order, formatCurrency, totalAmount }) => {
     setIsSubmitting(true);
     try {
       if (paymentMethod === "cash") {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-          navigate("/signin");
-          return;
-        }
-
-        const parsedAmount = parseFloat(receivedAmount);
-        if (!receivedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-          alert("Vui lòng nhập số tiền nhận hợp lệ (lớn hơn 0).");
-          return;
-        }
-        if (parsedAmount < totalAmount) {
-          alert("Số tiền nhận phải lớn hơn hoặc bằng tổng thanh toán.");
-          return;
-        }
-
-        console.log("📤 Gửi thanh toán tiền mặt:", orderId, {
-          recievedAmount: parsedAmount,
-        });
-
-        const res = await TransactionService.createCashTransaction(orderId, {
-          recievedAmount: parsedAmount, // ✅ khớp backend
-        });
-
-        console.log("✅ Phản hồi từ API (Cash):", res);
-
-        if (!res || !res.isSuccess) {
-          throw new Error("Backend không trả về dữ liệu giao dịch hợp lệ!");
-        }
-
-        alert("Thanh toán tiền mặt thành công!");
-        navigate("/order-success");
+        // const token = localStorage.getItem("accessToken");
+        // if (!token) {
+        //   alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        //   navigate("/signin");
+        //   return;
+        // }
+        // const parsedAmount = parseFloat(receivedAmount);
+        // if (!receivedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        //   alert("Vui lòng nhập số tiền nhận hợp lệ (lớn hơn 0).");
+        //   return;
+        // }
+        // if (parsedAmount < totalAmount) {
+        //   alert("Số tiền nhận phải lớn hơn hoặc bằng tổng thanh toán.");
+        //   return;
+        // }
+        // console.log("📤 Gửi thanh toán tiền mặt:", orderId, {
+        //   recievedAmount: parsedAmount,
+        // });
+        // const res = await TransactionService.createCashTransaction(orderId, {
+        //   recievedAmount: parsedAmount, // ✅ khớp backend
+        // });
+        // console.log("✅ Phản hồi từ API (Cash):", res);
+        // if (!res || !res.isSuccess) {
+        //   throw new Error("Backend không trả về dữ liệu giao dịch hợp lệ!");
+        // }
+        // alert("Thanh toán tiền mặt thành công!");
+        // navigate("/order-success");
       } else {
         console.log("📤 Tạo giao dịch VNPAY:", orderId);
-        const response = await TransactionService.createVnPayTransaction(orderId);
+        const token = localStorage.getItem("accessToken");
+        const response = await TransactionService.createVnPayTransaction(
+          orderId,
+          token
+        );
         console.log("✅ Phản hồi từ API (VNPAY):", response);
 
         const url = response?.data; // ✅ lấy đúng field
         if (!url) {
-          throw new Error("Không nhận được URL thanh toán từ VnPay.");
+          // throw new Error("Không nhận được URL thanh toán từ VnPay.");
+          alert("Không thể tạo giao dịch! Vui lòng thử lại sau ít phút.");
+        } else {
+          // window.location.href = url;
+          window.open(url, "_blank", "noopener,noreferrer");
         }
-
-        window.location.href = url;
       }
     } catch (error) {
       console.error("❌ Lỗi khi xử lý thanh toán:", error);
@@ -81,9 +84,33 @@ const PaymentForm = ({ order, formatCurrency, totalAmount }) => {
     }
   };
 
+  if (order.isPaid == true)
+    return (
+      <div className="mt-8 p-6 bg-white rounded-lg shadow-md" disabled>
+        <h3 className="text-xl font-semibold mb-4">Thanh toán</h3>
+        <div className="font-[roboto]">
+          Đơn hàng đã được thanh toán vào: {formatToVietnamTime(order.paidAt)}
+        </div>
+        <div className="mt-2  font-[roboto]">
+          Hình thức:{" "}
+          <span className="font-bold">
+            {order.paymentChannel == 0 ? "Tiền mặt" : "Chuyển khoản VNPay"}
+          </span>
+        </div>
+
+        {
+          order.isRefundedAfterFulfillment == true && (
+            <>
+            <div className="mt-2">Đã hoàn {order.refundedAmount.toLocaleString()} vào {formatToVietnamTime(order.refundedAt)}</div>
+            </>
+          )
+        }
+      </div>
+    );
+
   return (
-    <div className="mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h3 className="text-xl font-semibold mb-4">Phương thức thanh toán</h3>
+    <div className="mt-8 p-6 bg-white rounded-lg shadow-md" disabled>
+      <h3 className="text-xl font-semibold mb-4">Thanh toán</h3>
       <form onSubmit={handlePayment}>
         <div className="mb-4">
           <label className="block mb-2 font-medium">Chọn phương thức:</label>
@@ -100,11 +127,12 @@ const PaymentForm = ({ order, formatCurrency, totalAmount }) => {
 
         {paymentMethod === "cash" && (
           <div className="space-y-4">
-            <div>
+            Nhân viên giao hàng sẽ nhận tiền sau khi giao hàng cho bạn
+            {/* <div>
               <label className="block mb-2 font-medium">Tổng thanh toán:</label>
               <p className="text-lg">{formatCurrency(totalAmount)}</p>
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <label className="block mb-2 font-medium">Số tiền nhận:</label>
               <input
                 type="number"
@@ -116,35 +144,31 @@ const PaymentForm = ({ order, formatCurrency, totalAmount }) => {
                 step="1000"
                 disabled={isSubmitting}
               />
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <label className="block mb-2 font-medium">Số tiền còn lại:</label>
               <p className="text-lg">{formatCurrency(remainingAmount)}</p>
-            </div>
+            </div> */}
           </div>
         )}
-<div className="grid grid-cols-2 gap-4 mt-4">
-  {/* Button Hủy đơn */}
-  <button
-    className="w-full py-2 rounded-xl border border-[#d6a97e] text-[#a17455] font-medium hover:bg-[#f5e9dc] transition"
-  >
-    Hủy đơn
-  </button>
+        <div className="grid grid-cols-1   gap-4 mt-4">
+          {/* Button Hủy đơn */}
 
-  {/* Button Thanh toán */}
-  <button
-    type="submit"
-    disabled={isSubmitting}
-    className="w-full bg-[#a17455] text-white py-2 px-4 rounded-xl hover:bg-[#8c5e42] transition disabled:bg-gray-400"
-  >
-    {isSubmitting
-      ? "Đang xử lý..."
-      : paymentMethod === "cash"
-      ? "Xác nhận thanh toán"
-      : "Chuyển đến trang thanh toán"}
-  </button>
-</div>
-
+          {/* Button Thanh toán */}
+          {paymentMethod != "cash" && !isOrderCompleted(order) && (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#a17455] text-white py-2 px-4 rounded-lg hover:bg-[#8c5e42] transition disabled:bg-gray-400"
+            >
+              {isSubmitting
+                ? "Đang xử lý..."
+                : paymentMethod === "cash"
+                ? "Xác nhận thanh toán"
+                : "Chuyển đến trang thanh toán"}
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );

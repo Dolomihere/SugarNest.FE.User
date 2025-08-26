@@ -47,8 +47,8 @@ export function ProductShowcase() {
 
   // Fetch favorites
   const { data: favoritesData = [], isLoading: favoritesLoading } = useQuery({
-    queryKey: ['favorites'],
-    queryFn: () => FavoriteService.getFavorites().then((res) => res.data.data),
+    queryKey: ['productsAdvanced'],
+    queryFn: () => ProductService.getAllPrgetProductAdvancedoducts("RatingPoint", "4", "").then((res) => res.data.data),
   });
 
   const addFavoriteMutation = useMutation({
@@ -65,10 +65,35 @@ export function ProductShowcase() {
     },
   });
 
-  const isFavorite = (productId) => favoritesData.some((fav) => fav.productId === productId);
+  // const isFavorite = (productId) => favoritesData.some((fav) => fav.productId === productId);
 
-  const addToFavorites = (productId) => addFavoriteMutation.mutate(productId);
-  const removeFromFavorites = (productId) => removeFavoriteMutation.mutate(productId);
+  // const addToFavorites = (productId) => {
+  //   addFavoriteMutation.mutate(productId);
+  // };
+
+  // const removeFromFavorites = (productId) => {
+  //   removeFavoriteMutation.mutate(productId);
+  // };
+
+  // Demo categories
+  const demoCategories = Array.from({ length: 8 }, (_, i) => ({
+    categoryId: `demo-cat-${i}`,
+    name: `Bánh Mẫu ${i + 1}`,
+    img: `https://i.pinimg.com/736x/32/27/61/322761c59b52a2f0e4cce7a06347b65a.jpg`,
+  }));
+
+  // Demo hot products with default ratings
+  const demoHotProducts = Array.from({ length: 4 }, (_, i) => ({
+    productId: `hot-${i}`,
+    name: `Bánh Hot ${i + 1}`,
+    imgs: [`https://i.pinimg.com/736x/8b/ba/e7/8bbae712ed51359ef8a109318b05838d.jpg`],
+    unitPrice: 10 + i,
+    finalUnitPrice: 10 + i,
+    description: 'A delicious treat crafted with the finest ingredients.',
+    activeStatus: 1,
+    reviewCount: 0,
+    point: 0,
+  }));
 
   // Enrich hot products with ratings
   const enrichedHotProducts = (!loadingProducts && !loadingRatings && !errorRatings && !favoritesLoading)
@@ -82,10 +107,10 @@ export function ProductShowcase() {
   const enrichedCategories = categories.length >= 4 ? categories.slice(0, 4) : categories;
 
   // Enrich favorite products
-  const favoriteProducts = products.filter((p) => isFavorite(p.productId));
-  const enrichedFavProducts = favoriteProducts.length >= 4
-    ? favoriteProducts.slice(0, 4)
-    : favoriteProducts;
+  // const favoriteProducts = products.filter((p) => isFavorite(p.productId));
+  // const enrichedFavProducts = favoriteProducts.length >= 4
+  //   ? favoriteProducts.slice(0, 4)
+  //   : favoriteProducts;
 
   return (
     <section className="px-4 py-16 space-y-24 text-base md:px-24 bg-[#FFF9F4] text-[#5A3E2B]">
@@ -128,6 +153,8 @@ export function ProductShowcase() {
             </div>
           </div>
         )}
+
+
       </div>
 
       {/* Top Sản Phẩm */}
@@ -159,15 +186,14 @@ export function ProductShowcase() {
         </div>
       )}
 
-      {/* Sản Phẩm Yêu Thích */}
-      {enrichedFavProducts.length > 0 && (
-        <div>
-          <div className="mb-10 text-center">
-            <h2 className="mb-3 text-3xl font-extrabold md:text-4xl text-[#E8B273]">Sản Phẩm Yêu Thích</h2>
-            <p className="max-w-xl mx-auto text-[#5A3E2B]">
-              Những chiếc bánh được khách hàng đánh giá cao và yêu thích nhất.
-            </p>
-          </div>
+      {/* Sản Phẩm Yêu Thích
+      <div>
+        <div className="mb-10 text-center">
+          <h2 className="mb-3 text-3xl font-extrabold md:text-4xl text-[#E8B273]">Sản Phẩm Yêu Thích</h2>
+          <p className="max-w-xl mx-auto text-[#5A3E2B]">
+            Những chiếc bánh được khách hàng đánh giá cao và yêu thích nhất.
+          </p>
+        </div>
 
           <div
             className={`grid gap-6 ${
@@ -195,8 +221,8 @@ export function ProductShowcase() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div> */}
     </section>
   );
 }

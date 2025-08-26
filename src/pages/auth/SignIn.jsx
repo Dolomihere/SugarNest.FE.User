@@ -4,6 +4,7 @@ import { flushSync } from "react-dom";
 import { AuthService } from "../../services/AuthService";
 import GoogleLoginButton from "../../components/buttons/GoogleLoginButton";
 import EmojiPopperMultiPosition from "../../components/EmojiPopperMultiPosition";
+import axios from "axios";
 
 // Token storage keys (consistent with provided auth code)
 const ACCESS_TOKEN_KEY = "accessToken";
@@ -34,6 +35,73 @@ export default function SignInForm() {
     };
   }, []);
 
+  const signinWithGoogleV2 = async (authorizationCode) => {
+    const tempClient = axios.create({
+      baseURL: "https://sugarnest-api.io.vn/",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const response = await tempClient.post("/auth/signin-google/v2", {
+      authorizationCode,
+      isCustomer: true,
+    });
+    const result = response.data;
+
+    if (result?.isSuccess && result.data) {
+      localStorage.setItem(ACCESS_TOKEN_KEY, result.data.accessToken);
+      if (result.data?.refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, result.data.refreshToken);
+      }
+      // storeTokens(result.data);
+      return true;
+    } else {
+      const errMsg =
+        result.message ||
+        result.errors?.join(", ") ||
+        "Đăng nhập không thành công. Vui lòng thử lại.";
+      alert(errMsg);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    const code = searchParams.get("code");
+    if (!code) return;
+
+    const exchangeCode = async () => {
+      const authorizationCode = code;
+      const result = await signinWithGoogleV2(authorizationCode);
+      if (result) {
+        alert("Đăng nhập thành công");
+        // alert(1);
+        // setLogedIn(); // Set logged in state and navigate to home
+        // await confirm({
+        //   title: "Thông báo",
+        //   message: "Đăng nhập thành công!",
+        //   confirmText: "Xác nhận",
+        //   confirmClassName: "",
+        //   cancelText: "Thoát",
+        // });
+
+        navigate("/");
+      } else {
+        alert("Đăng nhập google thất bại")
+        // await confirm({
+        //   title: "Thông báo",
+        //   message: "Đăng nhập thất bại!",
+        //   confirmText: "Xác nhận",
+        //   confirmClassName: "",
+        //   cancelText: "Thoát",
+        // });
+        // logoutApp(); // Logout if signin failed
+      }
+      // else
+      // alert(2);
+    };
+    exchangeCode();
+  }, [searchParams]);
+
   const handleLogin = async () => {
     if (!username || !password) {
       setError("Vui lòng nhập đầy đủ thông tin");
@@ -48,7 +116,10 @@ export default function SignInForm() {
       if (requires2fa && code2fa) {
         result = await AuthService.login2fa(code2fa);
       } else {
-        result = await AuthService.login({ userNameOrEmail: username, password });
+        result = await AuthService.login({
+          userNameOrEmail: username,
+          password,
+        });
       }
 
       log("Login result:", result);
@@ -118,7 +189,9 @@ export default function SignInForm() {
 
   const handleGoogleLogin = async (credential) => {
     if (!username) {
-      setError("Vui lòng nhập email hoặc tên tài khoản trước khi đăng nhập bằng Google");
+      setError(
+        "Vui lòng nhập email hoặc tên tài khoản trước khi đăng nhập bằng Google"
+      );
       return;
     }
 
@@ -126,7 +199,11 @@ export default function SignInForm() {
     setError("");
 
     try {
-      const result = await AuthService.loginGoogle({ credential, userNameOrEmail: username, returnUrl });
+      const result = await AuthService.loginGoogle({
+        credential,
+        userNameOrEmail: username,
+        returnUrl,
+      });
       log("Google login result:", result);
 
       if (result.isSuccess) {
@@ -195,9 +272,12 @@ export default function SignInForm() {
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="relative bg-gradient-to-br from-[#fff8f1] to-[#fcead9] border border-[#f9c89b] text-[#5c4033] rounded-2xl px-8 py-6 shadow-2xl text-center max-w-sm w-full animate-fade-in-down">
-            <div className="text-2xl font-semibold mb-2">🎉 Đăng nhập thành công!</div>
+            <div className="text-2xl font-semibold mb-2">
+              🎉 Đăng nhập thành công!
+            </div>
             <p className="text-sm text-[#8B5E3C] leading-relaxed">
-              Chào mừng bạn đến với <strong>SugarNest</strong> 🍰 – nơi ngập tràn bánh ngọt và niềm vui!
+              Chào mừng bạn đến với <strong>SugarNest</strong> 🍰 – nơi ngập
+              tràn bánh ngọt và niềm vui!
             </p>
             <div className="mt-2">
               <EmojiPopperMultiPosition
@@ -226,12 +306,17 @@ export default function SignInForm() {
       )}
 
       <div className="relative flex flex-col justify-center flex-1 w-full max-w-md mx-auto dark:text-white/90">
-        <Link to="/" className="inline-flex items-center mb-8 text-sm text-gray-700 dark:text-gray-400">
+        <Link
+          to="/"
+          className="inline-flex items-center mb-8 text-sm text-gray-700 dark:text-gray-400"
+        >
           ← Quay về trang chủ
         </Link>
 
         <div className="mb-5 sm:mb-8">
-          <h1 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-inherit">Đăng nhập</h1>
+          <h1 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-inherit">
+            Đăng nhập
+          </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Nhập email hoặc tên tài khoản và mật khẩu để đăng nhập
           </p>
@@ -257,7 +342,9 @@ export default function SignInForm() {
             <div className="w-full border-t border-gray-300 dark:border-gray-600" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-5 bg-white dark:bg-gray-900 dark:text-gray-400">hoặc</span>
+            <span className="px-5 bg-white dark:bg-gray-900 dark:text-gray-400">
+              hoặc
+            </span>
           </div>
         </div>
 
@@ -299,7 +386,9 @@ export default function SignInForm() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute -translate-y-1/2 cursor-pointer right-4 top-1/2 text-gray-500 dark:text-gray-400"
               >
-                <i className={`fa-regular fa-eye${showPassword ? "-slash" : ""}`}></i>
+                <i
+                  className={`fa-regular fa-eye${showPassword ? "-slash" : ""}`}
+                ></i>
               </span>
             </div>
           </div>
@@ -329,7 +418,9 @@ export default function SignInForm() {
                 disabled={loading}
                 className="rounded border-gray-300 dark:border-gray-600"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Ghi nhớ đăng nhập</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Ghi nhớ đăng nhập
+              </span>
             </label>
             <Link
               to="/request-reset-password"

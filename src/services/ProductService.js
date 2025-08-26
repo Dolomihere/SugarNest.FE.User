@@ -3,6 +3,16 @@ import { publicApi } from "../configs/AxiosConfig";
 const endpoint = "/products/sellable";
 
 const ProductService = {
+  getProductAdvanced: async (sortBy, pageNumber, sortDescending) => {
+    try {
+      const response = await publicApi.get(endpoint + `?${sortBy? `SortBy=${sortBy}&` : ""}${pageNumber? `PageSize=${pageNumber}&`:""}${sortDescending? `SortDescending=${sortDescending}&`:""}`);
+      return response;
+    } catch (error) {
+      console.error("Get all products error:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   getAllProducts: async () => {
     try {
       const response = await publicApi.get(endpoint);

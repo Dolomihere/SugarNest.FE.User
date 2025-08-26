@@ -13,6 +13,7 @@ const OrderSummary = ({
   loading,
   selectedOrderVoucher,
   orderDiscount,
+  pointDiscount
 }) => {
  const isFreeShipping = shippingFee <= 0;
 
@@ -51,7 +52,7 @@ const OrderSummary = ({
     (sum, p) => sum + p.total,
     0
   );
-  const total = subtotal + (isFreeShipping ? 0 : shippingFee);
+  const total = subtotal + (isFreeShipping ? 0 : shippingFee) - orderDiscount - pointDiscount;
   
   return (
     <div className="p-6 space-y-4 bg-white shadow-md rounded-2xl">
@@ -82,19 +83,24 @@ const OrderSummary = ({
         <span>{isFreeShipping ? "Miễn phí" : formatCurrency(shippingFee)}</span>
       </div>
 
-      {discountAmount > 0 && (
+
+      {/* {discountAmount > 0 && (
         <div className="flex justify-between mt-2 text-sm text-green-600">
           <span>Tổng chiết khấu sản phẩm:</span>
           <span>-{formatCurrency(discountAmount)}</span>
         </div>
-      )}
+      )} */}
 
       {selectedOrderVoucher && (
         <div className="flex justify-between mt-2 text-sm text-green-600">
-          <span>Chiết khấu toàn đơn:</span>
+          <span>Giảm giá:</span>
           <span>-{formatCurrency(orderDiscount)}</span>
         </div>
       )}
+      <div className="flex justify-between mt-2 text-sm">
+        <span>Giảm giá (điểm):</span>
+        <span>{formatCurrency(pointDiscount)}</span>
+      </div>
 
       <div className="flex justify-between mt-2 font-bold text-lg">
         <span>Tổng cộng:</span>

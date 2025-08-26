@@ -54,7 +54,9 @@ function App() {
         <Route path="/request-reset-password" element={<RequestResetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify" element={<VerifyAccount />} />
-        <Route path="/signin-google/v2" element={<SignInForm />} />
+        <Route path="/signin-google/v2" element={<AuthLayout imageSrc="/images/sign-in.png">
+              <SignInForm />
+            </AuthLayout>} />
           <Route path="/category/:categoryId" element={<CategoryPage />} />
           <Route path="*" element={<div>Not Found</div>} />
           <Route path="/order-status" element={<OrderStatusPage />}/>

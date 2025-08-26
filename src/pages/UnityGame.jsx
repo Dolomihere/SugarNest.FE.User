@@ -73,7 +73,7 @@ const UnityGame = () => {
             },
             "*"
           );
-        }, 3000);
+        }, 1000);
       }
     }
   }, [userResponse]);

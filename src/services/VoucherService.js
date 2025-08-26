@@ -75,41 +75,16 @@ const VoucherService = {
    * Lấy danh sách voucher item của user
    */
   getUserItemVouchers: async (accessToken) => {
+    if (!accessToken)
+      return[];
     try {
       const res = await publicApi.get("/itemvouchers/mine", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log(
-        "User Item Vouchers API response:",
-        JSON.stringify(res.data, null, 2)
-      );
-
-      if (!res?.data?.data) {
-        console.warn("Không có dữ liệu voucher item từ API");
-        return [];
-      }
-
-      let vouchers = res.data.data.map((v) => ({
-        userItemVoucherId: v.userItemVoucherId,
-        itemVoucherId: v.itemVoucherId,
-        name: v.name,
-        productId: v.productId,
-        productName: v.productName,
-        minQuantity: v.minQuantity,
-        maxQuantity: v.maxQuantity,
-        hardValue: v.hardValue,
-        percentValue: v.percentValue,
-        isActive: v.isActive,
-        startTime: v.startTime,
-        endTime: v.endTime,
-      }));
-
-      // Sắp xếp theo tên sản phẩm (giảm dần)
-      vouchers = vouchers.sort((a, b) =>
-        b.productName.localeCompare(a.productName)
-      );
-
-      console.log("Mapped vouchers:", JSON.stringify(vouchers, null, 2));
+      if (!res?.data?.data) return [];
+      let vouchers = res?.data?.data ?? [];
+      vouchers = vouchers.sort((a, b) => b.productName.localeCompare(a.productName));
+      
       return vouchers;
     } catch (error) {
       console.error(

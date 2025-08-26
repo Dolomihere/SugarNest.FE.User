@@ -10,6 +10,7 @@ import DeliveryForm from "./cart/DeliveryForm";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
 import { getCartItemKey } from "../utils/cart";
+import AxiosInstance from "../core/services/AxiosInstance";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const CheckoutPage = () => {
     deliveryTime: "",
     note: "",
     isBuyNow: "0",
-    isBuyInShop: "0"
+    isBuyInShop: "1",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,49 @@ const CheckoutPage = () => {
   const [selectedOrderVoucher, setSelectedOrderVoucher] = useState(null);
   const [orderDiscount, setOrderDiscount] = useState(0);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
+  const [pointInfo, setPointInfo] = useState();
+  const [usedPoint, setUsedPoint] = useState(0);
+  const [pointRule, setPointRule] = useState();
+  const [pointDiscount, setPointDiscount] = useState(0);
+
+  function GetDiscountByPoint(point, rule) {
+    if (!point || !rule) return 0;
+    if (point <= 0 || !rule) return 0;
+    // alert(point * rule.redeemValue)
+    return point * rule.redeemValue;
+  }
+
+  function GetGiftedPoint(total, rule) {
+    if (!total || !rule) return 0;
+    if (total <= 0 || !rule) return 0;
+    return Math.round((total / rule.spendAmount) * rule.earnedPoints);
+  }
+
+  const fetchPointRule = async () => {
+    try {
+      const response = await AxiosInstance.get("/configs/point");
+      if (response.data.isSuccess && response.data.data) {
+        const pointdata = response.data.data;
+        setPointRule(pointdata);
+      } else {
+        setError(
+          response.data.message || "Không thể tải công thức tính điểm tích lũy."
+        );
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("API Error:", err);
+      setError("Lỗi khi tải dữ liệu công thức điểm tích lũy");
+    }
+  };
+  useEffect(() => {
+    if (usedPoint && usedPoint > 0) {
+      const discount = GetDiscountByPoint(usedPoint, pointRule);
+      setPointDiscount(discount);
+    } else {
+      setPointDiscount(0);
+    }
+  }, [usedPoint]);
 
   const { cartData, guestCartId: stateGuestCartId } = location.state || {};
   const guestCartId = stateGuestCartId || localStorage.getItem("guestCartId");
@@ -46,7 +90,10 @@ const CheckoutPage = () => {
   const isLoggedIn = !!accessToken;
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.total, 0);
-  const totalItemDiscount = Object.values(productDiscounts).reduce((sum, d) => sum + d, 0);
+  const totalItemDiscount = Object.values(productDiscounts).reduce(
+    (sum, d) => sum + d,
+    0
+  );
   const totalDiscount = totalItemDiscount + orderDiscount;
   const total = subtotal + shippingFee - totalDiscount;
 
@@ -55,7 +102,11 @@ const CheckoutPage = () => {
   }, [subtotal, cartItems]);
 
   // Lấy voucher toàn đơn
-  const { data: orderVouchers = [], isLoading: isLoadingVouchers, error: voucherError } = useQuery({
+  const {
+    data: orderVouchers = [],
+    isLoading: isLoadingVouchers,
+    error: voucherError,
+  } = useQuery({
     queryKey: ["orderVouchers", accessToken],
     queryFn: async () => {
       try {
@@ -72,7 +123,10 @@ const CheckoutPage = () => {
         }));
       } catch (error) {
         console.error("Error fetching order vouchers:", error);
-        throw new Error("Không thể tải danh sách voucher toàn đơn: " + (error.response?.data?.message || error.message));
+        throw new Error(
+          "Không thể tải danh sách voucher toàn đơn: " +
+            (error.response?.data?.message || error.message)
+        );
       }
     },
     enabled: isLoggedIn,
@@ -84,6 +138,35 @@ const CheckoutPage = () => {
       setError("Không thể tải voucher toàn đơn: " + voucherError.message);
     }
   }, [voucherError]);
+
+  const handlePointChange = (value) => {
+    if (pointInfo) {
+      let amount = Number.parseInt(value);
+      // Guard các giá trị đầu vào
+      const rv = pointRule?.redeemValue ?? 0;
+      if (rv <= 0) {
+        setUsedPoint(0);
+        return;
+      }
+
+      const available = Math.max(0, pointInfo?.availablePoints ?? 0);
+      const requested = Math.max(0, Math.trunc(amount ?? 0)); // số điểm user muốn dùng
+      const payable = Math.max(
+        0,
+        (subtotal ?? 0) + (shippingFee ?? 0) - (orderDiscount ?? 0)
+      );
+
+      // Số điểm tối đa để không giảm quá payable
+      const maxByPayable = Math.floor(payable / rv);
+
+      // Điểm cuối cùng dùng = min(requested, available, maxByPayable)
+      const finalPoints = Math.min(requested, available, maxByPayable);
+
+      setUsedPoint(finalPoints);
+    } else {
+      setUsedPoint(undefined);
+    }
+  };
 
   // Lấy voucher sản phẩm
   const { data: userVouchers = [] } = useQuery({
@@ -136,7 +219,30 @@ const CheckoutPage = () => {
     setLongitude(lng);
   };
 
-   useEffect(() => {
+  const fetchUserPoint = async () => {
+    try {
+      const response = await AxiosInstance.get("/users/personal/points");
+      if (response.data.isSuccess && response.data.data) {
+        const pointdata = response.data.data;
+        setPointInfo(pointdata);
+        setLoading(false);
+      } else {
+        setError(response.data.message || "Không thể tải dữ liệu người dùng.");
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("API Error:", err);
+      setError("Lỗi khi tải dữ liệu điểm của người dùng");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPointRule();
+    fetchUserPoint();
+  }, []);
+
+  useEffect(() => {
     const fetchShipping = async () => {
       // if (!addressFromMap) {
       //   setShippingFee(0);
@@ -161,7 +267,11 @@ const CheckoutPage = () => {
         // }
         // setCoordinates({ lat, lng });
         if (longitude && latitude) {
-          const { shippingFee } = await OrderService.calculateShippingFee({ lat:latitude, lng:longitude, subTotal:subtotal });
+          const { shippingFee } = await OrderService.calculateShippingFee({
+            lat: latitude,
+            lng: longitude,
+            subTotal: subtotal,
+          });
           setShippingFee(shippingFee || 0);
         }
       } catch (err) {
@@ -171,6 +281,12 @@ const CheckoutPage = () => {
     };
     fetchShipping();
   }, [addressFromMap, longitude, latitude]);
+
+  useEffect(() => {
+    if (form.isBuyInShop == "1") {
+      setShippingFee(0);
+    }
+  }, [form.isBuyInShop]);
 
   const handleSetDiscountForProduct = (cartItemKey, discount) => {
     setProductDiscounts((prev) => ({
@@ -203,30 +319,44 @@ const CheckoutPage = () => {
       console.warn(
         `Voucher ${voucher.voucherId} not applied: subtotal ${subtotal} < minPriceCondition ${voucher.minPriceCondition}`
       );
-      setError(`Voucher không áp dụng được: Tổng đơn hàng (${formatCurrency(subtotal)}) nhỏ hơn giá trị tối thiểu (${formatCurrency(voucher.minPriceCondition)})`);
+      setError(
+        `Voucher không áp dụng được: Tổng đơn hàng (${formatCurrency(
+          subtotal
+        )}) nhỏ hơn giá trị tối thiểu (${formatCurrency(
+          voucher.minPriceCondition
+        )})`
+      );
       setSelectedOrderVoucher(null);
       setOrderDiscount(0);
       return;
     }
 
     if (isAlreadyUsed) {
-      console.warn(`Voucher ${voucher.voucherId} not applied: voucher has already been used`);
-      setError(`Voucher ${voucher.voucherId} không áp dụng được: Voucher đã được sử dụng`);
+      console.warn(
+        `Voucher ${voucher.voucherId} not applied: voucher has already been used`
+      );
+      setError(
+        `Voucher ${voucher.voucherId} không áp dụng được: Voucher đã được sử dụng`
+      );
       setSelectedOrderVoucher(null);
       setOrderDiscount(0);
       return;
     }
 
     if (isExpired) {
-      console.warn(`Voucher ${voucher.voucherId} not applied: voucher has expired`);
-      setError(`Voucher ${voucher.voucherId} không áp dụng được: Voucher đã hết hạn`);
+      console.warn(
+        `Voucher ${voucher.voucherId} not applied: voucher has expired`
+      );
+      setError(
+        `Voucher ${voucher.voucherId} không áp dụng được: Voucher đã hết hạn`
+      );
       setSelectedOrderVoucher(null);
       setOrderDiscount(0);
       return;
     }
 
     const discount = voucher.percentValue
-      ? Math.round((subtotal * voucher.percentValue) / 100)
+      ? Math.round(((subtotal + shippingFee) * voucher.percentValue) / 100)
       : voucher.hardValue;
 
     setSelectedOrderVoucher(voucher);
@@ -236,7 +366,10 @@ const CheckoutPage = () => {
       `Voucher ${voucher.voucherId} applied successfully. Discount: ${discount}`
     );
     console.log("Updated orderDiscount:", discount);
-    console.log("Updated totalDiscount (including product discounts):", totalItemDiscount + discount);
+    console.log(
+      "Updated totalDiscount (including product discounts):",
+      totalItemDiscount + discount
+    );
   };
 
   const mapPaymentMethodToChannel = (method) => {
@@ -269,29 +402,62 @@ const CheckoutPage = () => {
           discountAmount: discount,
         };
       });
-    const voucherDiscountAmount = Object.values(productDiscounts).reduce(
-      (sum, d) => sum + (d || 0),
-      0
-    );
-    const orderTotal = subtotal + shippingFee - voucherDiscountAmount;
+      const voucherDiscountAmount = Object.values(productDiscounts).reduce(
+        (sum, d) => sum + (d || 0),
+        0
+      );
+      const orderTotal = subtotal + shippingFee - voucherDiscountAmount;
+      if (form.isBuyInShop == "0" && (!coordinates.lat || !coordinates.lng)) {
+        alert("Vui lòng chọn địa điểm giao hàng từ bản đồ!");
+        return;
+      }
+
+      if (form.isBuyNow == "1" && form.deliveryTime) {
+        const deliveryDateVN = new Date(form.deliveryTime);
+        const nowVN = new Date();
+
+        // Chuyển sang giờ Việt Nam (UTC+7)
+        const deliveryDay = deliveryDateVN.toLocaleDateString("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh",
+        });
+        const todayVN = nowVN.toLocaleDateString("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh",
+        });
+
+        if (deliveryDay === todayVN) {
+          alert(
+            "Nếu bạn muốn mua trong ngày, hãy chọn mua ngay. Chúng tôi sẽ hỗ trợ giao hàng đúng thời gian cho bạn."
+          );
+          return;
+        }
+      }
 
       const orderData = {
-        Address: form.isBuyInShop == "0"? addressFromMap : null,
+        Address: form.isBuyInShop == "0" ? addressFromMap : null,
         CustomerName: form.name,
         PhoneNumber: form.phoneNumber,
         Email: form.email || null,
-        DeliveryTime: form.isBuyNow == "0"? null : (form.deliveryTime ? new Date(form.deliveryTime).toISOString() : null),
+        DeliveryTime:
+          form.isBuyNow == "0"
+            ? null
+            : form.deliveryTime
+            ? new Date(form.deliveryTime).toISOString()
+            : null,
         RecipientName: form.name || null,
         RecipientEmail: form.email || null,
         RecipientPhone: form.phoneNumber || null,
         Note: form.note || null,
         UserVoucher: selectedOrderVoucher?.voucherId || null,
-        Latitude: form.isBuyInShop == "0"? (coordinates.lat || null) : null,
-        Longitude: form.isBuyInShop == "0"? (coordinates.lng || null) : null,
+        Latitude: form.isBuyInShop == "0" ? coordinates.lat || null : null,
+        Longitude: form.isBuyInShop == "0" ? coordinates.lng || null : null,
+        usedPoint,
       };
 
-
-      const res = await OrderService.createOrder(orderData, accessToken, guestCartId);
+      const res = await OrderService.createOrder(
+        orderData,
+        accessToken,
+        guestCartId
+      );
 
       console.log("📩 Phản hồi từ createOrder:", JSON.stringify(res, null, 2));
 
@@ -299,13 +465,20 @@ const CheckoutPage = () => {
       const orderId = orderFromServer.orderId;
 
       if (!orderId) {
-        throw new Error("Không nhận được orderId từ server. Phản hồi: " + JSON.stringify(res));
+        throw new Error(
+          "Không nhận được orderId từ server. Phản hồi: " + JSON.stringify(res)
+        );
       }
 
       // Kiểm tra nếu voucher không được áp dụng
       if (selectedOrderVoucher && !orderFromServer.userVoucherId) {
-        console.warn("Voucher không được áp dụng bởi backend:", selectedOrderVoucher.voucherId);
-        setError("Voucher toàn đơn không được áp dụng. Vui lòng kiểm tra lại điều kiện voucher.");
+        console.warn(
+          "Voucher không được áp dụng bởi backend:",
+          selectedOrderVoucher.voucherId
+        );
+        setError(
+          "Voucher toàn đơn không được áp dụng. Vui lòng kiểm tra lại điều kiện voucher."
+        );
       }
 
       const fullOrderData = {
@@ -322,10 +495,12 @@ const CheckoutPage = () => {
 
       await clearCartMutation.mutateAsync();
 
-      navigate(`/order-confirmation/${orderId}`, { state: fullOrderData });
+      navigate(`/order/${orderId}`, { state: fullOrderData });
     } catch (err) {
       console.error("Lỗi đặt hàng:", err);
-      setError(err.response?.data?.message || err.message || "Lỗi khi đặt hàng");
+      setError(
+        err.response?.data?.message || err.message || "Lỗi khi đặt hàng"
+      );
     } finally {
       setLoading(false);
     }
@@ -334,7 +509,7 @@ const CheckoutPage = () => {
   return (
     <div className="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-[#fffaf3] text-gray-700">
       <Header />
-      <main className="max-w-6xl px-4 py-8 mx-auto">
+      <main className="max-w-6xl px-4 py-8 mx-auto min-h-[100vh] mb-12">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="sticky top-8 order-1 h-fit lg:order-none">
             <OrderSummary
@@ -343,6 +518,7 @@ const CheckoutPage = () => {
               discounts={productDiscounts}
               subtotal={subtotal}
               total={total}
+              pointDiscount={pointDiscount}
               discountAmount={totalDiscount}
               shippingFee={shippingFee}
               formatCurrency={formatCurrency}
@@ -407,18 +583,31 @@ const CheckoutPage = () => {
                     onClick={() => setShowVoucherModal(true)}
                     disabled={isLoadingVouchers}
                   >
-                    {isLoadingVouchers ? "Đang tải voucher..." : "Chọn voucher toàn đơn"}
+                    {isLoadingVouchers
+                      ? "Đang tải voucher..."
+                      : "Chọn voucher toàn đơn"}
                   </button>
                   {showVoucherModal && (
                     <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-                      <h3 className="font-semibold mb-2">Danh sách voucher khả dụng</h3>
+                      <h3 className="font-semibold mb-2">
+                        Danh sách voucher khả dụng
+                      </h3>
                       {orderVouchers.length === 0 ? (
                         <p>Không có voucher toàn đơn nào khả dụng.</p>
                       ) : (
                         orderVouchers.map((voucher) => {
-                          const eligible = !voucher.isUsed && subtotal >= voucher.minPriceCondition && new Date(voucher.endTime) >= new Date();
+                          const eligible =
+                            !voucher.isUsed &&
+                            subtotal >= voucher.minPriceCondition &&
+                            new Date(voucher.endTime) >= new Date();
                           console.log(
-                            `Voucher ${voucher.voucherId} eligible? ${eligible} | subtotal: ${subtotal} | minPriceCondition: ${voucher.minPriceCondition} | isUsed: ${voucher.isUsed} | expired: ${new Date(voucher.endTime) < new Date()}`
+                            `Voucher ${
+                              voucher.voucherId
+                            } eligible? ${eligible} | subtotal: ${subtotal} | minPriceCondition: ${
+                              voucher.minPriceCondition
+                            } | isUsed: ${voucher.isUsed} | expired: ${
+                              new Date(voucher.endTime) < new Date()
+                            }`
                           );
 
                           return (
@@ -427,15 +616,26 @@ const CheckoutPage = () => {
                               className={`p-2 border-b cursor-pointer hover:bg-gray-200 ${
                                 !eligible ? "opacity-50 cursor-not-allowed" : ""
                               }`}
-                              onClick={() => eligible && handleSelectOrderVoucher(voucher)}
+                              onClick={() =>
+                                eligible && handleSelectOrderVoucher(voucher)
+                              }
                             >
                               <p>
                                 {voucher.percentValue
-                                  ? `${voucher.percentValue}% (Đơn tối thiểu ${formatCurrency(voucher.minPriceCondition)})`
-                                  : `${formatCurrency(voucher.hardValue)} (Đơn tối thiểu ${formatCurrency(voucher.minPriceCondition)})`}
+                                  ? `${
+                                      voucher.percentValue
+                                    }% (Đơn tối thiểu ${formatCurrency(
+                                      voucher.minPriceCondition
+                                    )})`
+                                  : `${formatCurrency(
+                                      voucher.hardValue
+                                    )} (Đơn tối thiểu ${formatCurrency(
+                                      voucher.minPriceCondition
+                                    )})`}
                               </p>
                               <p className="text-sm text-gray-500">
-                                Hết hạn: {new Date(voucher.endTime).toLocaleDateString()}
+                                Hết hạn:{" "}
+                                {new Date(voucher.endTime).toLocaleDateString()}
                               </p>
                             </div>
                           );
@@ -452,12 +652,18 @@ const CheckoutPage = () => {
                   {selectedOrderVoucher && (
                     <div className="mt-4">
                       <p className="text-green-600">
-                        Đã áp dụng voucher: {selectedOrderVoucher.percentValue
+                        Đã áp dụng voucher:{" "}
+                        {selectedOrderVoucher.percentValue
                           ? `${selectedOrderVoucher.percentValue}%`
                           : formatCurrency(selectedOrderVoucher.hardValue)}
-                        {selectedOrderVoucher.minPriceCondition && ` (Đơn tối thiểu ${formatCurrency(selectedOrderVoucher.minPriceCondition)})`}
+                        {selectedOrderVoucher.minPriceCondition &&
+                          ` (Đơn tối thiểu ${formatCurrency(
+                            selectedOrderVoucher.minPriceCondition
+                          )})`}
                       </p>
-                      <p className="text-sm">Chiết khấu: {formatCurrency(orderDiscount)}</p>
+                      <p className="text-sm">
+                        Chiết khấu: {formatCurrency(orderDiscount)}
+                      </p>
                       <button
                         className="text-red-600 text-sm mt-2"
                         onClick={() => handleSelectOrderVoucher(null)}
@@ -468,7 +674,61 @@ const CheckoutPage = () => {
                   )}
                 </>
               ) : (
-                <p className="text-sm text-gray-500">Vui lòng đăng nhập để sử dụng voucher toàn đơn.</p>
+                <p className="text-sm text-gray-500">
+                  Vui lòng đăng nhập để sử dụng voucher toàn đơn.
+                </p>
+              )}
+            </div>
+
+            <div className="p-6 bg-white rounded-2xl shadow-md">
+              <h2 className="text-xl font-semibold mb-4">
+                Giảm giá điểm tích lũy
+              </h2>
+              {isLoggedIn ? (
+                <>
+                  <div className="flex justify-between w-full mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <div>
+                      <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                        Điểm tích lũy
+                      </p>
+                      <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                        {pointInfo?.availablePoints.toLocaleString() || 0}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                        Điểm nợ
+                      </p>
+                      <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                        {pointInfo?.debtPoints.toLocaleString() || 0}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                        Điểm khóa
+                      </p>
+                      <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                        {pointInfo?.lockedPoints.toLocaleString() || 0}
+                      </p>
+                    </div>
+                  </div>
+                  <input
+                    id="usedPoint"
+                    name="usedPoint"
+                    type="number"
+                    min="0"
+                    className="p-4 border w-full border-gray-100"
+                    placeholder="Nhập số điểm bạn muốn dùng"
+                    value={usedPoint}
+                    onChange={(e) => handlePointChange(e.target.value)}
+                  />
+                </>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Đăng nhập để sử dụng điểm tích lũy
+                </p>
               )}
             </div>
 

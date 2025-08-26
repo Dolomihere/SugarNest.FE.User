@@ -59,6 +59,7 @@ const RatingService = {
   },
   postRating: async (newRating, token) => {
     try {
+      alert('post rating')
       const headers = {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,

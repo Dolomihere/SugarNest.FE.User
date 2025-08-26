@@ -3,17 +3,17 @@ import ProductService from "../../../services/ProductService";
 import FavoriteService from "../../../services/FavoriteService";
 import { ProductCard } from "../../../components/ProductCard";
 
-export function TopProducts() {
+export function TopProducts({queryKey, sortBy, amount, sortDescending, title, description}) {
   const queryClient = useQueryClient();
 
   // Lấy sản phẩm sellable
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ["productsSellable"],
-    queryFn: () => ProductService.getAllProducts().then((res) => res.data.data),
+    queryKey: [queryKey],
+    queryFn: () => ProductService.getProductAdvanced(sortBy, amount, sortDescending).then((res) => res.data.data),
   });
 
   // Top 4 sản phẩm active
-  const hotProducts = products.filter((p) => p.isActive).slice(0, 4);
+  const hotProducts = products;
 
   // Lấy danh sách favorites
   const { data: favoritesData = [], isLoading: favoritesLoading } = useQuery({
@@ -38,16 +38,16 @@ export function TopProducts() {
   return (
     <section className="px-4 py-8 space-y-10 text-base md:px-24 bg-[#FFF9F4] text-[#5A3E2B]">
       <div className="mb-10 text-center">
-        <h2 className="mb-3 text-3xl font-extrabold md:text-4xl text-red-500">Top Sản Phẩm</h2>
+        <h2 className="mb-3 text-3xl font-extrabold md:text-4xl text-red-500">{title}</h2>
         <p className="max-w-xl mx-auto text-[#5A3E2B]">
-          Những sản phẩm bán chạy và được khách hàng yêu thích nhất.
+          {description}
         </p>
       </div>
 
-      {isLoading || favoritesLoading ? (
-        <p className="text-center text-[#A47449]">Đang tải top sản phẩm...</p>
+      {isLoading ? (
+        <p className="text-center text-[#A47449]">Đang tải sản phẩm...</p>
       ) : hotProducts.length === 0 ? (
-        <p className="text-center text-[#A47449]">Không có sản phẩm nổi bật.</p>
+        <p className="text-center text-[#A47449]">Không tìm thấy sản phẩm</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {hotProducts.map((product) => (

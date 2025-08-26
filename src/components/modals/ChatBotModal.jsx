@@ -126,7 +126,7 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
       const typingMessage = {
         cbMessageId: `typing-${Date.now()}`,
         userMessage: null,
-        aiMessage: "Đang trả lời...",
+        aiMessage: "Đang trả lời",
         createdAt: new Date().toISOString(),
         attachedProducts: [],
         isTyping: true,
@@ -237,7 +237,7 @@ const ChatBotModal = ({ isOpen, onClose, orderId }) => {
         isOpen={isOpen}
         onClose={onClose}
         showCloseButton={false}
-        className="max-w-[95%] w-[400px] sm:max-w-md md:max-w-[26rem] my-6 shadow-2xl rounded-2xl"
+        className="max-w-[95%] w-[400px] sm:max-w-md md:max-w-[26rem] my-6 mr-4 shadow-2xl rounded-2xl"
       >
         <div className="max-h-[85vh] h-[650px] flex flex-col bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl overflow-hidden transition-all duration-500 ease-in-out">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shadow-sm dark:border-gray-700 bg-gradient-to-r from-amber-100 to-amber-200 dark:from-gray-800 dark:to-gray-700">

@@ -297,7 +297,7 @@ export default function UserPage() {
                     <td className="flex items-center gap-4 px-6 py-4">
                       <div className="overflow-hidden rounded-lg shadow-sm">
                         <img
-                          src={getProductImage(item.productId)}
+                          src={item.imgs[0]}
                           alt={getProductName(item.productId)}
                           className="object-cover w-20 h-20 transition-transform duration-300 transform hover:scale-110"
                         />
