@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import UserService from "../../services/UserService";
 
 const UserMiniProfile = ({ userId }) => {
-  const [avatarImg, setAvatarImg] = useState("/images/default-avatar.png");
+  const [avatarImg, setAvatarImg] = useState("https://res.cloudinary.com/dwlvd5lxt/image/upload/v1750868725/user1_tym9ts.jpg");
   const [name, setName] = useState("Người dùng ẩn danh");
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-  if (!userId) return;
+  if (!userId) {
+    return;
+  }
 
   const fetchUser = async () => {
     try {

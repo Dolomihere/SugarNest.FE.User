@@ -7,24 +7,41 @@ import { useDebouncedSearch } from "../core/hooks/useDebouncedSearch";
 import FavoriteService from "../services/FavoriteService";
 import { Header } from "./layouts/Header";
 import { Footer } from "./layouts/Footer";
-import RatingService from "../services/RatingService";
-import ChatPage from "./ChatPage"; // Import ChatPage component
+import { useSearchParams } from "react-router-dom";
 
 export function ProductPage() {
   const [categories, setCategories] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [totalPrice, setTotalPrice] = useState(0); // Thêm state cho tổng giá
+  // const [totalPrice, setTotalPrice] = useState(0); // Thêm state cho tổng giá
+
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const categoryId = searchParams.get("categoryId");
+    if (categoryId) {
+      setProductQuery((prev) => ({
+        ...prev,
+        Filter: {
+          ...prev.Filter,
+          CategoryId: categoryId,
+        },
+      }));
+    }
+    setSelectedCategory(categoryId);
+  }, [searchParams]);
 
   const queryClient = useQueryClient();
 
-  const {
-    data: favoritesData,
-    isLoading: favoritesLoading,
-  } = useQuery({
+  const { data: favoritesData, isLoading: favoritesLoading, refetch: refetchFavorites } = useQuery({
     queryKey: ["favorites"],
     queryFn: () => FavoriteService.getFavorites().then((res) => res.data.data),
   });
+  // const { data: favoritesData, isLoading: favoritesLoading } = useFetchList("/favorites", productQuery, { reloadTrigger });
+  
+  useEffect(() => {
+refetchFavorites();
+  }, [])
 
   const addFavoriteMutation = useMutation({
     mutationFn: (productId) => FavoriteService.addFavorites([productId]),
@@ -41,7 +58,7 @@ export function ProductPage() {
   });
 
   const isFavorite = (productId) =>
-    favoritesData.some((fav) => fav.productId === productId);
+    favoritesData? favoritesData.some((fav) => fav.productId === productId): false;
 
   const addToFavorites = (productId) => {
     addFavoriteMutation.mutate(productId);
@@ -95,25 +112,39 @@ export function ProductPage() {
     setInputValue("");
     setShowFavoritesOnly(false);
     // Tính lại tổng giá khi bỏ lọc
-    if (apiResponse?.data) {
-      const total = apiResponse.data.reduce((sum, p) => sum + (p.UnitPrice || 0), 0);
-      setTotalPrice(total);
-    }
+    // if (apiResponse?.data) {
+    //   const total = apiResponse.data.reduce(
+    //     (sum, p) => sum + (p.UnitPrice || 0),
+    //     0
+    //   );
+    //   setTotalPrice(total);
+    // }
   };
 
-  const { response: apiResponse, loading, error } = useFetchList(
-    "products/sellable",
-    productQuery,
-    { reloadTrigger }
-  );
+  // const [productUrl, setProductUrl] = useState("products/sellable");
+  // const [isGetFavorite, setIsGetFavorite] = useState(true);
+  // useEffect(() => {
+  //   if (isGetFavorite == true)
+  //     setProductUrl("favorites");
+  //   else
+  //     setProductUrl("favorites");
+  // }, [isGetFavorite])
+  const {
+    response: apiResponse,
+    loading,
+    error,
+  } = useFetchList("products/sellable", productQuery, { reloadTrigger });
 
   // Tính tổng giá khi dữ liệu sản phẩm thay đổi
-  useEffect(() => {
-    if (apiResponse?.data) {
-      const total = apiResponse.data.reduce((sum, p) => sum + (p.UnitPrice || 0), 0);
-      setTotalPrice(total);
-    }
-  }, [apiResponse?.data]);
+  // useEffect(() => {
+  //   if (apiResponse?.data) {
+  //     const total = apiResponse.data.reduce(
+  //       (sum, p) => sum + (p.UnitPrice || 0),
+  //       0
+  //     );
+  //     setTotalPrice(total);
+  //   }
+  // }, [apiResponse?.data]);
 
   const meta = apiResponse?.meta ?? {};
   const totalPages = Math.ceil((meta.totalCount ?? 0) / (meta.pageSize ?? 12));
@@ -179,176 +210,176 @@ export function ProductPage() {
   };
 
   return (
-  <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-[#5A3E2B]">
-    <Header />
-
-    {/* Banner */}
-    <div className="bg-gradient-to-r from-[#FFD9B3] to-[#F4A261] py-12 text-center shadow-md">
-      <h1 className="text-4xl font-extrabold text-white drop-shadow">
-        Khám Phá Sản Phẩm Bánh Ngọt
-      </h1>
-      <p className="mt-2 text-lg text-[#FFF9F4] opacity-90">
-        Hương vị ngọt ngào - Phong cách hiện đại
-      </p>
-    </div>
-
-    <main className="w-full px-6 py-10 mx-auto max-w-7xl">
-      {/* Bộ lọc trong card */}
-      <div className="p-6 bg-white rounded-2xl shadow-md mb-8">
-        <div className="grid grid-cols-12 gap-4">
-          <div className="relative col-span-12 lg:col-span-4">
-            <i className="fa-solid fa-magnifying-glass absolute left-3 top-3 text-[#A47449]"></i>
-            <input
-              type="text"
-              placeholder="Tìm kiếm sản phẩm..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className="w-full pl-10 p-3 border border-[#F4C78A] rounded-xl shadow-sm bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
-            />
-          </div>
-          <select
-            className="col-span-12 p-3 border border-[#F4C78A] rounded-xl shadow-sm lg:col-span-4 bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
-            value={selectedCategory}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-          >
-            <option value="">Tất cả danh mục</option>
-            {categories.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className="col-span-12 p-3 border border-[#F4C78A] rounded-xl shadow-sm lg:col-span-4 bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
-            value={selectedSort}
-            onChange={(e) => handleSortChange(e.target.value)}
-          >
-            {sortOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+    <div className="min-h-screen grid grid-rows-[auto_1fr_auto] font-sans bg-[#FFF9F4] text-[#5A3E2B]">
+      <Header />
+      <div className="min-h-[100vh]">
+        <div className="bg-amber-500 py-12 text-center shadow-md">
+          <h1 className="text-4xl font-extrabold font-[inter] !text-white drop-shadow">
+            Khám Phá thế giới ẩm thực hấp dẫn
+          </h1>
+          <p className="mt-2 text-lg text-[#FFF9F4] opacity-90">
+            Hương vị ngọt ngào - Phong cách hiện đại
+          </p>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-wrap justify-between gap-3 mt-6">
-          <div className="flex gap-2">
-            <button
-              onClick={handleClearFilters}
-              className="px-5 py-2 bg-[#FFEBD2] border border-[#F4C78A] rounded-2xl hover:bg-[#FFD9B3] transition shadow-sm flex items-center gap-2"
-            >
-              <i className="fa-solid fa-rotate-left"></i> Bỏ lọc
-            </button>
-            <button className="px-5 py-2 bg-[#FFEBD2] border border-[#F4C78A] rounded-2xl hover:bg-[#FFD9B3] transition shadow-sm flex items-center gap-2">
-              <i className="fa-solid fa-sliders"></i> Lọc & Sắp xếp
-            </button>
-            <button
-              onClick={() => setShowFavoritesOnly((prev) => !prev)}
-              className={`px-5 py-2 rounded-2xl shadow-sm transition flex items-center gap-2 ${
-                showFavoritesOnly
-                  ? "bg-[#F4A261] text-white shadow-md"
-                  : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
-              }`}
-            >
-              <i className="fa-solid fa-heart"></i> Yêu thích
-            </button>
+        <main className="w-full px-6 py-10 mx-auto max-w-7xl">
+          {/* Bộ lọc trong card */}
+          <div className="p-6 bg-white rounded-2xl shadow-md mb-8">
+            <div className="grid grid-cols-12 gap-4">
+              <div className="relative col-span-12 lg:col-span-4">
+                <i className="fa-solid fa-magnifying-glass absolute left-3 top-3 text-[#A47449]"></i>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm sản phẩm..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="w-full pl-10 p-3 border border-[#F4C78A] rounded-xl shadow-sm bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
+                />
+              </div>
+              <select
+                className="col-span-12 p-3 border border-[#F4C78A] rounded-xl shadow-sm lg:col-span-4 bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
+                value={selectedCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+              >
+                <option value="">Tất cả danh mục</option>
+                {categories.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="col-span-12 p-3 border border-[#F4C78A] rounded-xl shadow-sm lg:col-span-4 bg-[#FFFDF9] focus:ring-2 focus:ring-[#FFD5A1]"
+                value={selectedSort}
+                onChange={(e) => handleSortChange(e.target.value)}
+              >
+                {sortOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap justify-between gap-3 mt-6">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleClearFilters}
+                  className="px-5 py-2 bg-[#FFEBD2] border border-[#F4C78A] rounded-2xl hover:bg-[#FFD9B3] transition shadow-sm flex items-center gap-2"
+                >
+                  <i className="fa-solid fa-rotate-left"></i> Bỏ lọc
+                </button>
+                <button className="px-5 py-2 bg-[#FFEBD2] border border-[#F4C78A] rounded-2xl hover:bg-[#FFD9B3] transition shadow-sm flex items-center gap-2">
+                  <i className="fa-solid fa-sliders"></i> Lọc & Sắp xếp
+                </button>
+                <button
+                  onClick={() => setShowFavoritesOnly((prev) => !prev)}
+                  className={`px-5 py-2 rounded-2xl shadow-sm transition flex items-center gap-2 ${
+                    showFavoritesOnly
+                      ? "bg-[#F4A261] text-white shadow-md"
+                      : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
+                  }`}
+                >
+                  <i className="fa-solid fa-heart"></i> Yêu thích
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`px-5 py-2 rounded-2xl transition shadow-sm flex items-center gap-2 ${
+                    viewMode === "grid"
+                      ? "bg-[#F4A261] text-white shadow-md"
+                      : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
+                  }`}
+                >
+                  <i className="fa-solid fa-grip"></i> Lưới
+                </button>
+                <button
+                  onClick={() => setViewMode("blog")}
+                  className={`px-5 py-2 rounded-2xl transition shadow-sm flex items-center gap-2 ${
+                    viewMode === "blog"
+                      ? "bg-[#F4A261] text-white shadow-md"
+                      : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
+                  }`}
+                >
+                  <i className="fa-solid fa-bars"></i> Blog
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`px-5 py-2 rounded-2xl transition shadow-sm flex items-center gap-2 ${
+
+          {/* Tổng giá floating */}
+          {/* {totalPrice > 0 && (
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+              <div className="px-6 py-3 bg-[#FFD9B3] text-[#5A3E2B] font-bold rounded-full shadow-lg flex items-center gap-2">
+                <i className="fa-solid fa-sack-dollar"></i>
+                Tổng giá: {totalPrice.toLocaleString()} VNĐ
+              </div>
+            </div>
+          )} */}
+
+          {/* Product List */}
+          {loading ? (
+            <p>Đang tải sản phẩm...</p>
+          ) : error ? (
+            <p className="text-[#A47449]">Lỗi: {error.message}</p>
+          ) : apiResponse?.data?.length > 0 ? (
+            <div
+              className={
                 viewMode === "grid"
-                  ? "bg-[#F4A261] text-white shadow-md"
-                  : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
-              }`}
-            >
-              <i className="fa-solid fa-grip"></i> Lưới
-            </button>
-            <button
-              onClick={() => setViewMode("blog")}
-              className={`px-5 py-2 rounded-2xl transition shadow-sm flex items-center gap-2 ${
-                viewMode === "blog"
-                  ? "bg-[#F4A261] text-white shadow-md"
-                  : "bg-[#FFEBD2] border border-[#F4C78A] hover:bg-[#FFD9B3]"
-              }`}
-            >
-              <i className="fa-solid fa-bars"></i> Blog
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Tổng giá floating */}
-      {totalPrice > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="px-6 py-3 bg-[#FFD9B3] text-[#5A3E2B] font-bold rounded-full shadow-lg flex items-center gap-2">
-            <i className="fa-solid fa-sack-dollar"></i> 
-            Tổng giá: {totalPrice.toLocaleString()} VNĐ
-          </div>
-        </div>
-      )}
-
-      {/* Product List */}
-      {loading ? (
-        <p>Đang tải sản phẩm...</p>
-      ) : error ? (
-        <p className="text-[#A47449]">Lỗi: {error.message}</p>
-      ) : apiResponse?.data?.length > 0 ? (
-        <div
-          className={
-            viewMode === "grid"
-              ? "grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8"
-              : "flex flex-col gap-6 mb-8"
-          }
-        >
-          {(showFavoritesOnly
-            ? apiResponse.data.filter((p) => isFavorite(p.productId))
-            : apiResponse.data
-          ).map((p) => (
-            <ProductCard
-              key={p.productId}
-              product={p}
-              viewMode={viewMode}
-              isFavorite={isFavorite(p.productId)}
-              onAddFavorite={() =>
-                isFavorite(p.productId)
-                  ? removeFromFavorites(p.productId)
-                  : addToFavorites(p.productId)
+                  ? "grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8"
+                  : "flex flex-col gap-6 mb-8"
               }
-            />
-          ))}
-        </div>
-      ) : (
-        <p>Không có sản phẩm nào.</p>
-      )}
+            >
+              {(showFavoritesOnly
+                ? apiResponse.data.filter((p) => isFavorite(p.productId))
+                : apiResponse.data
+              ).map((p) => (
+                <ProductCard
+                  key={p.productId}
+                  product={p}
+                  viewMode={viewMode}
+                  isFavorite={isFavorite(p.productId)}
+                  onAddFavorite={() =>
+                    isFavorite(p.productId)
+                      ? removeFromFavorites(p.productId)
+                      : addToFavorites(p.productId)
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <p>Không có sản phẩm nào.</p>
+          )}
 
-      {/* Pagination với icon */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-16 mb-10">
-          <button
-            disabled={isFirstPage}
-            onClick={() => handlePageChange(currentPage - 1)}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FFEBD2] border border-[#F4C78A] shadow-sm disabled:opacity-50 hover:bg-[#FFD9B3]"
-          >
-            <i className="fa-solid fa-chevron-left"></i>
-          </button>
-          <span className="px-4 py-2 rounded-full bg-[#F4A261] text-white font-semibold shadow">
-            {currentPage} / {totalPages}
-          </span>
-          <button
-            disabled={isLastPage}
-            onClick={() => handlePageChange(currentPage + 1)}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FFEBD2] border border-[#F4C78A] shadow-sm disabled:opacity-50 hover:bg-[#FFD9B3]"
-          >
-            <i className="fa-solid fa-chevron-right"></i>
-          </button>
-        </div>
-      )}
-    </main>
-    <Footer />
-  </div>
-);
+          {/* Pagination với icon */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-16 mb-10">
+              <button
+                disabled={isFirstPage}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FFEBD2] border border-[#F4C78A] shadow-sm disabled:opacity-50 hover:bg-[#FFD9B3]"
+              >
+                <i className="fa-solid fa-chevron-left"></i>
+              </button>
+              <span className="px-4 py-2 rounded-full bg-[#F4A261] text-white font-semibold shadow">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                disabled={isLastPage}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FFEBD2] border border-[#F4C78A] shadow-sm disabled:opacity-50 hover:bg-[#FFD9B3]"
+              >
+                <i className="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
+      {/* Banner */}
 
-
+      <Footer />
+    </div>
+  );
 }

@@ -1,6 +1,7 @@
-import { Header } from './layouts/Header'
-import { Footer } from './layouts/Footer'
+import { Header } from "./layouts/Header";
+import { Footer } from "./layouts/Footer";
 import { Link } from "react-router-dom";
+
 import { ProductShowcase } from './layouts/home/ProductShowcase'
 import { TopProducts } from './layouts/home/TopProducts';
 import { Mailing } from './layouts/home/Mailing'
@@ -16,9 +17,9 @@ export function HomePage() {
       <section className="flex flex-col flex-wrap gap-5 p-5 mx-auto md:flex-row max-w-7xl">
         <div className="flex flex-col flex-1 gap-5 p-5">
           <h1 className="text-4xl font-extrabold leading-tight md:text-5xl text-main">
-            Bánh Ngọt{' '}
+            Bánh Ngọt{" "}
             <span className="inline-flex items-center text-amber-600">
-              Tuyệt Hảo{' '}
+              Tuyệt Hảo{" "}
             </span>
             <br />
             Cho Mọi Dịp
@@ -35,12 +36,14 @@ export function HomePage() {
           </h1>
 
           <p className="text-lg text-sub max-w-prose">
-            Hãy để mỗi khoảnh khắc trong cuộc sống thêm phần ngọt ngào với những chiếc bánh thủ công tinh tế từ chúng tôi được chế biến từ nguyên liệu tự nhiên, kết hợp giữa hương vị truyền thống và sự sáng tạo hiện đại trong từng lớp bánh.
+            Hãy để mỗi khoảnh khắc trong cuộc sống thêm phần ngọt ngào với những
+            chiếc bánh thủ công tinh tế từ chúng tôi được chế biến từ nguyên
+            liệu tự nhiên, kết hợp giữa hương vị truyền thống và sự sáng tạo
+            hiện đại trong từng lớp bánh.
           </p>
 
           <p className="text-lg text-sub max-w-prose">
-            Từ những chiếc bánh sinh nhật{' '}
-     
+            Từ những chiếc bánh sinh nhật{" "}
             <EmojiPopperMultiPosition
               popupIcon={<span>🎂</span>}
               trigger="hover"
@@ -49,22 +52,24 @@ export function HomePage() {
             >
               <span className="inline-block">🎂</span>
             </EmojiPopperMultiPosition>
-            , bánh cưới sang trọng cho đến các món tráng miệng thường ngày, mỗi sản phẩm đều là một tác phẩm nghệ thuật được làm bằng cả trái tim.
-               </p>
+            , bánh cưới sang trọng cho đến các món tráng miệng thường ngày, mỗi
+            sản phẩm đều là một tác phẩm nghệ thuật được làm bằng cả trái tim.
+          </p>
 
           <p className="text-lg text-sub max-w-prose">
-            Hãy cùng chúng tôi lan tỏa niềm vui, chia sẻ những khoảnh khắc ý nghĩa, và tạo nên những kỷ niệm ngọt ngào không thể nào quên.
+            Hãy cùng chúng tôi lan tỏa niềm vui, chia sẻ những khoảnh khắc ý
+            nghĩa, và tạo nên những kỷ niệm ngọt ngào không thể nào quên.
           </p>
 
           <div className="flex flex-wrap gap-4 mt-4">
-          
-               <Link
-              to="/products" className="shadow-md cursor-pointer btn-primary hover:shadow-lg">
+            <Link
+              to="/products"
+              className="shadow-md cursor-pointer btn-primary hover:shadow-lg"
+            >
               Đặt bánh ngay
-                </Link>
+            </Link>
 
-           
-              <Link
+            <Link
               to="/contact"
               className="px-5 py-3 text-lg transition border cursor-pointer text-amber-600 border-amber-300 rounded-xl hover:bg-amber-100"
             >
@@ -82,22 +87,52 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* Top Products Section */}
+      <div className="mb-6">
+        <TopProducts
+          queryKey={"OrderItemsCount"}
+          sortBy="OrderItemsCount"
+          amount="4"
+          sortDescending={"true"}
+          title="Sản phẩm được quan tâm nhiều"
+          description="Những sản phẩm bán chạy và được khách hàng yêu thích nhất."
+        />
+      </div>
+
+      {/* Top Products Section */}
+      <div className="mb-6">
+        <TopProducts
+          queryKey={"AverageRatingPoint"}
+          sortBy="AverageRatingPoint"
+          amount="4"
+          sortDescending={"true"}
+          title="Sản phẩm được đánh giá cao"
+          description="Những sản phẩm có uy tín và chất lượng tốt"
+        />
+      </div>
+
+      {/* Top Products Section */}
+      <div className="mb-6">
+        <TopProducts
+          queryKey={"FinalUnitPrice"}
+          sortBy="FinalUnitPrice"
+          amount="4"
+          sortDescending={"false"}
+          title="Sản phẩm giá tốt"
+          description="Những sản phẩm có giá thành cực kì ưu đãi"
+        />
+      </div>
 
       {/* Showcase Section */}
       <div className="p-5">
         <ProductShowcase />
       </div>
 
-      {/* Top Products Section */}
-       <div className="p-5">
-        <TopProducts />
-      </div>
-
       {/* Mailing Section */}
       <div className="p-5">
         <Mailing />
       </div>
-      
+
       <Footer />
 
       <div className="fixed z-50 bottom-4 right-4">

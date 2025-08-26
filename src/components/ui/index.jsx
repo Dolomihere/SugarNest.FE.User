@@ -7,6 +7,8 @@ export const Modal = ({
   className,
   showCloseButton = true,
   isFullscreen = false,
+  justify = "end",
+  items = "end"
 }) => {
   const modalRef = useRef(null);
   const [animateOut, setAnimateOut] = useState(false);
@@ -57,9 +59,13 @@ export const Modal = ({
   //   const contentClasses = isFullscreen ? "" : "";
 
   return (
-    <div className="fixed inset-0 flex items-end justify-end overflow-y-auto modal z-[2000]">
+    <div className={`fixed inset-0 flex items-${items} justify-${justify} overflow-y-auto modal z-[2000]`}>
       {!isFullscreen && (
-        <div className="fixed inset-0 h-full w-full" onClick={onClose}></div>
+        <div
+          className="fixed inset-0 h-full w-full bg-black/20 dark:bg-white/10 backdrop-blur-[1px]"
+          onClick={onClose}
+        ></div>
+        // <div className="fixed inset-0 h-full w-full" onClick={onClose}></div>
       )}
       <div
         ref={modalRef}

@@ -22,7 +22,8 @@ export default function GoogleLoginButton({ returnUrl }) {
     const baseUrl =
       "https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount?response_type=code&response_mode=query&scope=email%20profile&prompt=consent";
     const clientId = `client_id=1084075727869-8dl016bmprkgl9v3o1bcusvggmdp7l9o.apps.googleusercontent.com`;
-    const redirectUri = `redirect_uri=${window.location.origin}/signin-google/v2`;
+    // const redirectUri = `redirect_uri=${window.location.origin}/signin-google/v2`;
+    const redirectUri = `redirect_uri=https://app.sugarnest.io.vn/signin-google/v2`;
 
     window.location.href = `${baseUrl}&${clientId}&${redirectUri}`;
 

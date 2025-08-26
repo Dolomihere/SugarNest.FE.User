@@ -39,10 +39,30 @@ export function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [avatar, setAvatar] = useState("/images/12.jpg");
+  const [username, setUserName] = useState();
+  const [notifications, setNotifications] = useState([]);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+  const token =
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken");
   const guestCartId = localStorage.getItem("guestCartId");
+
+  // const { data: notificationsData, refetch } = useQuery({
+  //   queryKey: ["notifications"],
+  //   queryFn: () => TransactionService.getAllNotifications({}, { page: 1, limit: 100 }),
+  //   enabled: !!token,
+  //   refetchInterval: 300000,
+  // });
+
+  // useEffect(() => {
+  //   if (notificationsData?.data) {
+  //     const sortedNotifications = notificationsData.data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  //     setNotifications(sortedNotifications);
+  //   }
+  // }, [notificationsData]);
 
   const { data: cartData } = useQuery({
     queryKey: isLoggedIn ? ["userCart", token] : ["guestCart", guestCartId],
@@ -74,7 +94,9 @@ export function Header() {
   }, [orderStatusHistoryData]);
 
   const cartItemCount = useMemo(() => {
-    return cartData?.cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+    return (
+      cartData?.cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0
+    );
   }, [cartData]);
 
   const navLinks = [
@@ -103,7 +125,10 @@ export function Header() {
 
   // Get the latest 3 status history entries
   const recentStatusHistory = useMemo(() => {
-    if (!orderStatusHistoryData?.data || !Array.isArray(orderStatusHistoryData.data)) {
+    if (
+      !orderStatusHistoryData?.data ||
+      !Array.isArray(orderStatusHistoryData.data)
+    ) {
       return [];
     }
     const allHistories = orderStatusHistoryData.data
@@ -127,6 +152,7 @@ export function Header() {
           if (response.data.isSuccess && response.data.data) {
             const userData = response.data.data;
             setAvatar(userData.avatar || "/images/12.jpg");
+            setUserName(userData.fullname);
           }
         } catch (err) {
           console.error("Error fetching user data:", err);
@@ -136,25 +162,98 @@ export function Header() {
     }
   }, [token]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  // useEffect(() => {
+  //   if (isLoggedIn && signalR && token) {
+  //     const hubUrl = `${import.meta.env.VITE_API_URL}/orderNotificationHub`;
+  //     const connection = new signalR.HubConnectionBuilder()
+  //       .withUrl(hubUrl, {
+  //         accessTokenFactory: () => token,
+  //         skipNegotiation: true,
+  //         transport: signalR.HttpTransportType.WebSockets,
+  //       })
+  //       .withAutomaticReconnect()
+  //       .configureLogging(signalR.LogLevel.Information)
+  //       .build();
+
+  //     connectionRef.current = connection;
+
+  //     connection.on("NotifyOrderUpdated", (orderId) => {
+  //       const notificationId = Date.now();
+  //       setNotifications((prev) => {
+  //         const newNotif = {
+  //           id: notificationId,
+  //           // message: `Đơn hàng ${orderId} đã được cập nhật!`,
+  //           orderId,
+  //           timestamp: new Date(),
+  //           isRead: false,
+  //         };
+  //         const updated = [newNotif, ...prev].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  //         return updated;
+  //       });
+  //       refetch();
+  //       setTimeout(() => {
+  //         setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+  //       }, 5000);
+  //     });
+
+  //     connection
+  //       .start()
+  //       .then(() => console.log("SignalR Connected successfully"))
+  //       .catch((err) => {
+  //         console.error("SignalR Connection Error:", err);
+  //         setNotifications((prev) => [
+  //           ...prev,
+  //           {
+  //             id: Date.now(),
+  //             message: "Không thể kết nối đến thông báo thời gian thực. Vui lòng kiểm tra lại sau.",
+  //             orderId: null,
+  //             timestamp: new Date(),
+  //             isRead: false,
+  //           },
+  //         ]);
+  //       });
+
+  //     return () => {
+  //       connection.stop().catch((err) => console.error("SignalR Disconnection Error:", err));
+  //     };
+  //   } else if (!signalR) {
+  //     console.warn("SignalR is not available. Notifications will not be received.");
+  //     setNotifications((prev) => [
+  //       ...prev,
+  //       {
+  //         id: Date.now(),
+  //         message: "Không thể kết nối thông báo. Vui lòng kiểm tra cài đặt!",
+  //         orderId: null,
+  //         timestamp: new Date(),
+  //         isRead: false,
+  //       },
+  //     ]);
+  //   }
+  // }, [isLoggedIn, token, refetch]);
+
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+  //       setDropdownOpen(false);
+  //       setNotificationsOpen(false);
+  //     }
+  //   };
+  //   document.addEventListener("mousedown", handleClickOutside);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, []);
 
   const handleLogout = () => {
+    const confirm = window.confirm("Bạn có chắc muốn đăng xuất?");
+    if (!confirm || confirm == false) return;
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     sessionStorage.removeItem("accessToken");
     setIsLoggedIn(false);
     setAvatar("/images/12.jpg");
     setDropdownOpen(false);
+    alert('Đăng xuất thành công')
     navigate("/");
   };
 
@@ -192,19 +291,21 @@ export function Header() {
 
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2"
               aria-label="User account"
             >
               <img
+                title={username}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
                 src={avatar}
                 alt="User avatar"
                 className="border rounded-full cursor-pointer w-9 h-9 border-amber-600 hover:shadow-md"
               />
-              <FontAwesomeIcon
+              {/* <div>{username}</div> */}
+              {/* <FontAwesomeIcon
                 icon={faChevronDown}
                 className={`text-gray-600 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
-              />
+              /> */}
             </button>
 
             {dropdownOpen && (
@@ -227,44 +328,7 @@ export function Header() {
                 >
                   Đơn hàng
                 </button>
-                {isLoggedIn && (
-                  <div className="border-t border-gray-200">
-                    <button
-                      onClick={() => {
-                        navigate("/order-status");
-                        setDropdownOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm font-medium text-gray-600 transition-colors duration-200 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-300"
-                    >
-                      Lịch sử trạng thái
-                    </button>
-                    {recentStatusHistory.length > 0 ? (
-                      <ul className="max-h-48 overflow-y-auto">
-                        {recentStatusHistory.map((history) => (
-                          <li
-                            key={history.OrderStatusHistoryId}
-                            className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
-                            onClick={() => {
-                              navigate(`/order-status?orderId=${history.orderId}`);
-                              setDropdownOpen(false);
-                            }}
-                          >
-                            <p>
-                              Đơn #{history.orderId.slice(0, 8)}: {statusMap[history.NewStatus] || "Không xác định"}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {formatDate(history.CreatedAt)}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
-                        Chưa có lịch sử trạng thái
-                      </div>
-                    )}
-                  </div>
-                )}
+
                 {isLoggedIn ? (
                   <button
                     onClick={handleLogout}
@@ -374,12 +438,15 @@ export function Header() {
                           key={history.OrderStatusHistoryId}
                           className="text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
                           onClick={() => {
-                            navigate(`/order-status?orderId=${history.orderId}`);
+                            navigate(
+                              `/order-status?orderId=${history.orderId}`
+                            );
                             setMenuOpen(false);
                           }}
                         >
                           <p>
-                            Đơn #{history.orderId.slice(0, 8)}: {statusMap[history.NewStatus] || "Không xác định"}
+                            Đơn #{history.orderId.slice(0, 8)}:{" "}
+                            {statusMap[history.NewStatus] || "Không xác định"}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {formatDate(history.CreatedAt)}

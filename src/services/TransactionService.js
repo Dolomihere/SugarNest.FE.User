@@ -101,10 +101,15 @@ class TransactionService {
 //     }
 //   }
 
-  static async createVnPayTransaction(orderId) {
+  static async createVnPayTransaction(orderId, token) {
     try {
+      // alert(`token in api ${token}`)
       if (!orderId) throw new Error("Order ID is undefined");
-      const response = await publicApi.post(`/transactions/vnpay/${orderId}`);
+      const response = await privateApi.post(`/transactions/vnpay/${orderId}`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       console.log("data vnpay ", response.data)
       return response.data;
     } catch (error) {

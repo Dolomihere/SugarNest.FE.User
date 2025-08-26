@@ -88,7 +88,7 @@ const ProductCard = ({ id, index }) => {
         onClick={handleClick}
       >
         <img
-          src={product.imgs[0]}
+          src={product.imgs[0]?? "https://res.cloudinary.com/dwlvd5lxt/image/upload/v1751540177/temp_product_tfynpj.jpg"}
           alt={product.name}
           className="object-cover w-20 h-20 transition-all duration-300 border border-gray-200 rounded-lg shadow-md dark:border-gray-700 group-hover:border-amber-500 group-hover:shadow-xl group-hover:scale-105"
         />

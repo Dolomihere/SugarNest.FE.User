@@ -63,7 +63,7 @@ export function ProductCard({
     retry: 1,
   });
 
-  const averageRating = Math.min(Math.max(ratingData?.averageRating || 0, 0), 5);
+  const averageRating = (ratingData?.averageRating == 0)? 5 : Math.min(Math.max(ratingData?.averageRating || 0, 0), 5);
   const reviewCount = ratingData?.reviewCount || 0;
 
   // Track viewed products
@@ -93,7 +93,7 @@ export function ProductCard({
   }, [productId, name, unitPrice, finalUnitPrice, imgs, averageRating, reviewCount, createdDate]);
 
   const productImg =
-    Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : "/placeholder.jpg";
+    Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : "https://res.cloudinary.com/dwlvd5lxt/image/upload/v1751540177/temp_product_tfynpj.jpg";
 
   const handleFavoriteClick = (e) => {
     e.preventDefault();

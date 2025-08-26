@@ -15,7 +15,8 @@ const DeliveryForm = ({
   // const [isBuyNow, setIsBuyNow] = useState("now");
 
   const token =
-    localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken");
 
   const getCurrentDateTime = () => {
     const now = new Date();
@@ -23,7 +24,11 @@ const DeliveryForm = ({
     return now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
   };
 
-  const { data: userData, isLoading, error } = useQuery({
+  const {
+    data: userData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["personalUser"],
     queryFn: () => UserService.getPersonalUser(token),
     enabled: !!token,
@@ -79,11 +84,13 @@ const DeliveryForm = ({
   if (error)
     return (
       <div>Error loading user data: {error.message}. Please try again.</div>
-    )
+    );
 
   // Xử lý lỗi khi fetch dữ liệu
   if (error) {
-    return <div>Error loading user data: {error.message}. Please try again.</div>;
+    return (
+      <div>Error loading user data: {error.message}. Please try again.</div>
+    );
   }
 
   // Yêu cầu đăng nhập nếu không có token
@@ -94,7 +101,9 @@ const DeliveryForm = ({
   return (
     <div className="p-6 space-y-6 bg-white shadow-md rounded-2xl">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-heading">Thông tin giao hàng</h2>
+        <h2 className="text-xl font-semibold text-heading">
+          Thông tin giao hàng
+        </h2>
         {!isEditing && (
           <button
             type="button"
@@ -108,7 +117,9 @@ const DeliveryForm = ({
 
       <form className="space-y-5 text-main" onSubmit={onSubmit}>
         <div>
-          <label className="block mb-1 text-sm font-medium text-sub">Tên của bạn</label>
+          <label className="block mb-1 text-sm font-medium text-sub">
+            Tên của bạn
+          </label>
           <input
             type="text"
             name="name"
@@ -148,7 +159,9 @@ const DeliveryForm = ({
         </div>
 
         <div>
-          <label className="block mb-1 text-sm font-medium text-sub">Email</label>
+          <label className="block mb-1 text-sm font-medium text-sub">
+            Email
+          </label>
           <input
             type="email"
             name="email"
@@ -161,106 +174,111 @@ const DeliveryForm = ({
             placeholder="Nhập email của bạn"
           />
         </div>
-
-          <select
-    name="isBuyInShop"
-    value={form.isBuyInShop}
-    onChange={handleInputChange}
-    disabled={!isEditing}
-    className={`w-full p-3 border rounded-lg ${
-      !isEditing
-        ? "bg-gray-100 cursor-not-allowed"
-        : errors.orderType
-        ? "border-red-600"
-        : "border-gray-300"
-    }`}
-  >
-    <option value="0">Giao Hàng đến địa chỉ</option>
-    <option value="1">Nhận tại cửa hàng</option>
-  </select>
-
-{form.isBuyInShop == "0" && (
-<div>
-          <label className="block mb-1 text-sm font-medium text-sub">Chọn vị trí trên bản đồ</label>
-          <LeafletMap onAddressSelect={onAddressSelect} />
-        </div>
-)}
         
-{
-  form.IsBuyInShop == "0" && (
-<div>
-          <label className="block mb-1 text-sm font-medium text-sub">Địa chỉ chi tiết</label>
-          <textarea
-            value={addressFromMap}
-            readOnly
-            className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg"
-            rows="3"
-            placeholder="Địa chỉ tự động từ bản đồ"
-          />
-        </div>
-  )
-}
+        <label className="block mb-1 text-sm font-medium text-sub">
+            Hình thực nhận hàng
+          </label>
+        <select
+          name="isBuyInShop"
+          value={form.isBuyInShop}
+          onChange={handleInputChange}
+          disabled={!isEditing}
+          className={`w-full p-3 border rounded-lg ${
+            !isEditing
+              ? "bg-gray-100 cursor-not-allowed"
+              : errors.orderType
+              ? "border-red-600"
+              : "border-gray-300"
+          }`}
+        >
+          <option value="0">Giao Hàng đến địa chỉ</option>
+          <option value="1">Nhận tại cửa hàng</option>
+        </select>
+
+        {form.isBuyInShop == "0" && (
+          <>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-sub">
+              Chọn vị trí trên bản đồ
+            </label>
+            <LeafletMap onAddressSelect={onAddressSelect} />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-sub">
+              Địa chỉ chi tiết
+            </label>
+            <textarea
+              value={addressFromMap}
+              readOnly
+              className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg"
+              rows="3"
+              placeholder="Địa chỉ tự động từ bản đồ"
+            />
+          </div>
+          </>
+          
+          
+        )}
+
         
 
         <div>
-  <label className="block mb-1 text-sm font-medium text-sub">
-    Hình thức đặt hàng <span className="text-red-600">*</span>
-  </label>
-  <select
-    name="isBuyNow"
-    value={form.isBuyNow}
-    onChange={handleInputChange}
-    disabled={!isEditing}
-    className={`w-full p-3 border rounded-lg ${
-      !isEditing
-        ? "bg-gray-100 cursor-not-allowed"
-        : errors.orderType
-        ? "border-red-600"
-        : "border-gray-300"
-    }`}
-  >
-    <option value="0">Mua ngay</option>
-    <option value="1">Đặt trước</option>
-  </select>
-  {/* {errors.is && (
-    <p className="mt-1 text-sm text-red-600">{errors.orderType}</p>
-  )} */}
-</div>
-      {
-        form.isBuyNow == "1" && (
-<div>
-            
           <label className="block mb-1 text-sm font-medium text-sub">
-            Thời gian giao hàng <span className="text-red-600">*</span>
+            Hình thức đặt hàng <span className="text-red-600">*</span>
           </label>
-          <input
-            type="datetime-local"
-            name="deliveryTime"
-            value={form.deliveryTime || ""}
+          <select
+            name="isBuyNow"
+            value={form.isBuyNow}
             onChange={handleInputChange}
-            min={getCurrentDateTime()}
-            required
             disabled={!isEditing}
             className={`w-full p-3 border rounded-lg ${
               !isEditing
                 ? "bg-gray-100 cursor-not-allowed"
-                : errors.deliveryTime
+                : errors.orderType
                 ? "border-red-600"
                 : "border-gray-300"
             }`}
-            placeholder="Chọn thời gian giao hàng"
-          />
-          {errors.deliveryTime && (
-            <p className="mt-1 text-sm text-red-600">{errors.deliveryTime}</p>
-          )}
+          >
+            <option value="0">Mua ngay</option>
+            <option value="1">Đặt trước</option>
+          </select>
+          {/* {errors.is && (
+    <p className="mt-1 text-sm text-red-600">{errors.orderType}</p>
+  )} */}
         </div>
-        )
-      }
-       
+        {form.isBuyNow == "1" && (
+          <div>
+            <label className="block mb-1 text-sm font-medium text-sub">
+              Thời gian giao hàng <span className="text-red-600">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              name="deliveryTime"
+              value={form.deliveryTime || ""}
+              onChange={handleInputChange}
+              min={getCurrentDateTime()}
+              required
+              disabled={!isEditing}
+              className={`w-full p-3 border rounded-lg ${
+                !isEditing
+                  ? "bg-gray-100 cursor-not-allowed"
+                  : errors.deliveryTime
+                  ? "border-red-600"
+                  : "border-gray-300"
+              }`}
+              placeholder="Chọn thời gian giao hàng"
+            />
+            {errors.deliveryTime && (
+              <p className="mt-1 text-sm text-red-600">{errors.deliveryTime}</p>
+            )}
+          </div>
+        )}
 
         {/* Ghi chú */}
         <div>
-          <label className="block mb-1 text-sm font-medium text-sub">Ghi chú</label>
+          <label className="block mb-1 text-sm font-medium text-sub">
+            Ghi chú
+          </label>
           <textarea
             name="note"
             value={form.note}

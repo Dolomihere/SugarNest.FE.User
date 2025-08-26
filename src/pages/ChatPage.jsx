@@ -13,47 +13,47 @@ export default function ChatPage() {
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (dragging) {
-        const dx = e.clientX - lastPos.x;
-        const dy = e.clientY - lastPos.y;
+    // const handleMouseMove = (e) => {
+    //   if (dragging) {
+    //     const dx = e.clientX - lastPos.x;
+    //     const dy = e.clientY - lastPos.y;
 
-        // Check if dragged beyond threshold
-        const deltaX = e.clientX - startPos.x;
-        const deltaY = e.clientY - startPos.y;
-        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-          setHasDragged(true);
-        }
+    //     // Check if dragged beyond threshold
+    //     const deltaX = e.clientX - startPos.x;
+    //     const deltaY = e.clientY - startPos.y;
+    //     if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+    //       setHasDragged(true);
+    //     }
 
-        // Update position
-        setPosition((prev) => ({
-          bottom: prev.bottom - dy,
-          right: prev.right - dx,
-        }));
+    //     // Update position
+    //     setPosition((prev) => ({
+    //       bottom: prev.bottom - dy,
+    //       right: prev.right - dx,
+    //     }));
 
-        setLastPos({ x: e.clientX, y: e.clientY });
-      }
-    };
+    //     setLastPos({ x: e.clientX, y: e.clientY });
+    //   }
+    // };
 
-    const handleMouseUp = () => {
-      setDragging(false);
-      if (!hasDragged) {
-        // If not dragged, treat as click and open modal
-        setSelectedOrderId("12345");
-        setIsModalOpen(true);
-      }
-      setHasDragged(false); // Reset for next interaction
-    };
+    // const handleMouseUp = () => {
+    //   setDragging(false);
+    //   if (!hasDragged) {
+    //     // If not dragged, treat as click and open modal
+    //     setSelectedOrderId("12345");
+    //     setIsModalOpen(true);
+    //   }
+    //   setHasDragged(false); // Reset for next interaction
+    // };
 
-    if (dragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    }
+    // if (dragging) {
+    //   document.addEventListener("mousemove", handleMouseMove);
+    //   document.addEventListener("mouseup", handleMouseUp);
+    // }
 
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+    // return () => {
+    //   document.removeEventListener("mousemove", handleMouseMove);
+    //   document.removeEventListener("mouseup", handleMouseUp);
+    // };
   }, [dragging, hasDragged, startPos, lastPos]);
 
   const handleMouseDown = (e) => {
@@ -74,8 +74,8 @@ export default function ChatPage() {
   return (
     <>
       <button
-        onMouseDown={handleMouseDown}
-        className="fixed z-50 p-5 text-white transition-all duration-300 transform rounded-full shadow-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-3xl hover:from-amber-600 hover:to-orange-700 hover:scale-110"
+        onClick={() => setIsModalOpen(true)}
+        className="fixed z-50 h-12 w-12 text-white transition-all duration-300 transform rounded-full shadow-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-3xl hover:from-amber-600 hover:to-orange-700 hover:scale-110"
         style={{ bottom: `${position.bottom}px`, right: `${position.right}px` }}
         title="Mở chat"
       >

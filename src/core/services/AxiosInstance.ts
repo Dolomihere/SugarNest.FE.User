@@ -37,7 +37,7 @@ AxiosInstance.interceptors.response.use(
       }
 
       logout();
-      window.location.href = `/signin?returnUrl=${encodeURIComponent(window.location.pathname)}`;
+      // window.location.href = `/signin?returnUrl=${encodeURIComponent(window.location.pathname)}`;
       return Promise.reject(error);
     }
 

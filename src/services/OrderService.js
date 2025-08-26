@@ -1,4 +1,4 @@
-import { publicApi } from "../configs/AxiosConfig";
+import { privateApi, publicApi } from "../configs/AxiosConfig";
 
 const endpoint = "/orders";
 
@@ -21,7 +21,10 @@ const OrderService = {
       const response = await publicApi.post("/carts", {});
       return response.data;
     } catch (error) {
-      console.error("OrderService.createCart error:", error.response?.data || error.message);
+      console.error(
+        "OrderService.createCart error:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -31,7 +34,10 @@ const OrderService = {
       const cart = await OrderService.getUserCart(accessToken);
       return cart.id; // vì backend sẽ trả về cart object có id
     } catch (error) {
-      console.error("OrderService.getUserCartId error:", error.response?.data || error.message);
+      console.error(
+        "OrderService.getUserCartId error:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -41,40 +47,45 @@ const OrderService = {
       const cart = await OrderService.getUserCart(accessToken);
       return cart.id;
     } catch (error) {
-      console.error("OrderService.getUserCartId error:", error.response?.data || error.message);
+      console.error(
+        "OrderService.getUserCartId error:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
   calculateShippingFee: async ({ lat, lng, subtotal }) => {
-  try {
-    console.log("Gọi API tính phí vận chuyển:", { lat, lng, subtotal });
+    try {
+      console.log("Gọi API tính phí vận chuyển:", { lat, lng, subtotal });
 
-    const response = await publicApi.get(`/orders/shippingfee`, {
-      params: {
-        latitude: lat,
-        longitude: lng,
-        subTotal: subtotal,
-      },
-    });
+      const response = await publicApi.get(`/orders/shippingfee`, {
+        params: {
+          latitude: lat,
+          longitude: lng,
+          subTotal: subtotal,
+        },
+      });
 
-    return { shippingFee: response.data.data };
-  } catch (error) {
-    console.error("Lỗi OrderService.calculateShippingFee:", {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      url: error.config?.url,
-      params: error.config?.params,
-    });
-    throw new Error(
-      "Không thể tính phí vận chuyển: " +
-        (error.response?.data?.message || error.message)
-    );
-  }
-},
+      return { shippingFee: response.data.data };
+    } catch (error) {
+      console.error("Lỗi OrderService.calculateShippingFee:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+        params: error.config?.params,
+      });
+      throw new Error(
+        "Không thể tính phí vận chuyển: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  },
   createOrder: async (orderData, accessToken = null, guestCartId = null) => {
     try {
-      const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+      const headers = accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : {};
 
       const payload = {
         Address: orderData.Address,
@@ -89,9 +100,13 @@ const OrderService = {
         UserVoucher: orderData.UserVoucher || null,
         Latitude: orderData.Latitude || null,
         Longitude: orderData.Longitude || null,
+        usedPoint: orderData.usedPoint,
       };
 
-      console.log("📦 Sending order payload to backend:", JSON.stringify(payload, null, 2));
+      console.log(
+        "📦 Sending order payload to backend:",
+        JSON.stringify(payload, null, 2)
+      );
 
       const response = await publicApi.post(
         guestCartId ? `${endpoint}?cartId=${guestCartId}` : endpoint,
@@ -99,7 +114,10 @@ const OrderService = {
         { headers }
       );
 
-      console.log("📩 Backend response:", JSON.stringify(response.data, null, 2));
+      console.log(
+        "📩 Backend response:",
+        JSON.stringify(response.data, null, 2)
+      );
 
       return response.data;
     } catch (error) {
@@ -111,16 +129,17 @@ const OrderService = {
     }
   },
 
-  getOrderHistory: async (accessToken) => {
+  getOrderHistory: async (accessToken, pageIndex, pageSize) => {
     try {
-      const response = await publicApi.get(`${endpoint}/mine`, {
+      const response = await privateApi.get(`${endpoint}/mine`, {
         headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      return {
-        data: {
-          orders: response.data.data?.orders || response.data.data || [],
+        params: {
+          PageIndex: pageIndex,
+          PageSize: pageSize,
         },
-      };
+      });
+      const data = response.data;
+      return data;
     } catch (error) {
       console.error(
         "OrderService.getOrderHistory error:",
@@ -156,43 +175,47 @@ const OrderService = {
       );
     }
   },
-cancelOrder: async (orderId, reason, accessToken = null) => {
-  try {
-    const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-    const response = await publicApi.post(
-      `${endpoint}/${orderId}/cancel`,
-      { reason },
-      { headers }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("OrderService.cancelOrder error:", error.response?.data || error.message);
-    throw error;
-  }
-},
+  cancelOrder: async (orderId, reason, accessToken = null) => {
+    try {
+      const headers = accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : {};
+      const response = await publicApi.post(
+        `${endpoint}/${orderId}/cancel`,
+        { reason },
+        { headers }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "OrderService.cancelOrder error:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
 
-calculateShippingFee: async ({ lat, lng, subTotal }) => {
-  try {
-    console.log("Gọi API tính phí vận chuyển:");
-    const response = await publicApi.get(
-      `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}&subTotal=${subTotal}`
-    );
-    return { shippingFee: response.data.data };
-  } catch (error) {
-    console.error("Lỗi OrderService.calculateShippingFee:", {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      url: error.config?.url,
-      params: error.config?.params,
-    });
-    throw new Error(
-      "Không thể tính phí vận chuyển: " +
-        (error.response?.data?.message || error.message)
-    );
-  }
-},
-
+  calculateShippingFee: async ({ lat, lng, subTotal }) => {
+    try {
+      console.log("Gọi API tính phí vận chuyển:");
+      const response = await publicApi.get(
+        `${endpoint}/shippingfee?longitude=${lng}&latitude=${lat}&subTotal=${subTotal}`
+      );
+      return { shippingFee: response.data.data };
+    } catch (error) {
+      console.error("Lỗi OrderService.calculateShippingFee:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+        params: error.config?.params,
+      });
+      throw new Error(
+        "Không thể tính phí vận chuyển: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  },
 
   processPayment: async ({ orderId, amount }) => {
     try {
@@ -224,7 +247,9 @@ calculateShippingFee: async ({ lat, lng, subTotal }) => {
       });
       return new Promise((resolve) => {
         setTimeout(() => {
-          console.log(`(Giả lập) Gửi email tới ${email} cho đơn hàng ${orderId}`);
+          console.log(
+            `(Giả lập) Gửi email tới ${email} cho đơn hàng ${orderId}`
+          );
           console.log("Chi tiết đơn hàng:", orderData);
           resolve({ status: "email_sent", mock: true });
         }, 1000);
@@ -254,9 +279,12 @@ calculateShippingFee: async ({ lat, lng, subTotal }) => {
   },
   getOrderStatusChanges: async (orderId, accessToken) => {
     try {
-      const response = await publicApi.get(`${endpoint}/${orderId}/status-history`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const response = await publicApi.get(
+        `${endpoint}/${orderId}/status-history`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
       return response.data; // Giả sử response.data là mảng các thay đổi trạng thái
     } catch (error) {
       console.error("OrderService.getOrderStatusChanges error:", {
@@ -274,7 +302,6 @@ calculateShippingFee: async ({ lat, lng, subTotal }) => {
     }
   },
 };
-
 
 const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;

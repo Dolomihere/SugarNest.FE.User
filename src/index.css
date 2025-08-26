@@ -962,3 +962,16 @@ h6 {
 
 /* Map */
 @import "leaflet/dist/leaflet.css";
+
+
+h1 {
+  font-size: 2.25rem !important; /* 36px */
+  font-weight: 700 !important;
+  margin: 0.75rem 0 !important;
+}
+
+h2 {
+  font-size: 1.875rem !important; /* 30px */
+  font-weight: 600 !important;
+  margin: 0.75rem 0 !important;
+}

@@ -2,16 +2,17 @@ import { Link } from "react-router-dom";
 import { useMemo } from "react";
 import useFetchList from "../core/hooks/useFetchList";
 
-function SuggestedProducts({ categoryId, categoryName }) {
+function SuggestedProducts({ categoryId, categoryName, exceptId }) {
   // Memoize productQuery để tránh thay đổi không cần thiết
   const productQuery = useMemo(
     () => ({
       SearchTerm: "",
       SortBy: "CreatedAt",
       SortDescending: true,
-      Filter: { CategoryId: categoryId },
-      PageSize: 1000, // Đặt PageSize lớn để lấy tất cả sản phẩm (hoặc bỏ PageSize nếu API hỗ trợ)
+      Filter: { CategoryId: categoryId , ExceptIds: [exceptId]},
+      PageSize: 4,
       PageIndex: 1,
+      
     }),
     [categoryId]
   );
@@ -78,7 +79,7 @@ function SuggestedProducts({ categoryId, categoryName }) {
       )}
       <div className="text-center">
         <Link
-          to={`/categories/${categoryId || ""}`}
+          to={`/products?categoryId=${categoryId || ""}`}
           className="inline-block px-6 py-3 text-white transition rounded-lg bg-amber-600 hover:bg-amber-700"
         >
           Xem toàn bộ danh mục {categoryName || ""}
