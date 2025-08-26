@@ -31,6 +31,9 @@ const CheckoutPage = () => {
     note: "",
     isBuyNow: "0",
     isBuyInShop: "1",
+    recipientName: undefined,
+    recipientPhone: undefined,
+    RecipientEmail: undefined,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -443,9 +446,9 @@ const CheckoutPage = () => {
             : form.deliveryTime
             ? new Date(form.deliveryTime).toISOString()
             : null,
-        RecipientName: form.name || null,
-        RecipientEmail: form.email || null,
-        RecipientPhone: form.phoneNumber || null,
+        RecipientName: form.recipientName || null,
+        RecipientEmail: form.recipientEmail || null,
+        RecipientPhone: form.recipientPhone || null,
         Note: form.note || null,
         UserVoucher: selectedOrderVoucher?.voucherId || null,
         Latitude: form.isBuyInShop == "0" ? coordinates.lat || null : null,

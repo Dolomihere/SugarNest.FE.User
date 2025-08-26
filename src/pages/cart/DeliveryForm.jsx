@@ -142,7 +142,7 @@ const DeliveryForm = ({
             name="phoneNumber"
             value={form.phoneNumber}
             onChange={handleInputChange}
-            disabled={!isEditing}
+            disabled={true}
             required
             className={`w-full p-3 border rounded-lg ${
               !isEditing
@@ -167,6 +167,65 @@ const DeliveryForm = ({
             name="email"
             value={form.email}
             onChange={handleInputChange}
+            disabled={true}
+            className={`w-full p-3 border rounded-lg ${
+              !isEditing ? "bg-gray-100 cursor-not-allowed" : "border-gray-300"
+            }`}
+            placeholder="Nhập email của bạn"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1 text-sm font-medium text-sub">
+            Tên người nhận (Không bắt buộc)
+          </label>
+          <input
+            type="text"
+            name="recipientName"
+            value={form.recipientName}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+            className={`w-full p-3 border rounded-lg ${
+              !isEditing ? "bg-gray-100 cursor-not-allowed" : "border-gray-300"
+            }`}
+            placeholder="Nhập tên của bạn"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1 text-sm font-medium text-sub">
+            Điện thoại người nhận (Không bắt buộc)
+          </label>
+          <input
+            type="tel"
+            name="recipientPhone"
+            value={form.recipientPhone}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+            required
+            className={`w-full p-3 border rounded-lg ${
+              !isEditing
+                ? "bg-gray-100 cursor-not-allowed"
+                : errors.phoneNumber
+                ? "border-red-600"
+                : "border-gray-300"
+            }`}
+            placeholder="Nhập số điện thoại"
+          />
+          {errors.phoneNumber && (
+            <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block mb-1 text-sm font-medium text-sub">
+            Email người nhận (Không bắt buộc)
+          </label>
+          <input
+            type="email"
+            name="recipientEmail"
+            value={form.recipientEmail}
+            onChange={handleInputChange}
             disabled={!isEditing}
             className={`w-full p-3 border rounded-lg ${
               !isEditing ? "bg-gray-100 cursor-not-allowed" : "border-gray-300"
@@ -176,7 +235,7 @@ const DeliveryForm = ({
         </div>
         
         <label className="block mb-1 text-sm font-medium text-sub">
-            Hình thực nhận hàng
+            Hình thức nhận hàng
           </label>
         <select
           name="isBuyInShop"

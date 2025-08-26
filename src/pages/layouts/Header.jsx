@@ -253,7 +253,7 @@ export function Header() {
     setIsLoggedIn(false);
     setAvatar("/images/12.jpg");
     setDropdownOpen(false);
-    alert('Đăng xuất thành công')
+    alert("Đăng xuất thành công");
     navigate("/");
   };
 
@@ -310,24 +310,28 @@ export function Header() {
 
             {dropdownOpen && (
               <div className="absolute right-0 w-64 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700">
-                <button
-                  onClick={() => {
-                    navigate("/account");
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-gray-600 transition-colors duration-200 rounded-t-lg hover:text-gray-700 hover:bg-gray-100"
-                >
-                  Tài khoản
-                </button>
-                <button
-                  onClick={() => {
-                    navigate("/order-history");
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-gray-600 transition-colors duration-200 hover:text-gray-700 hover:bg-gray-100"
-                >
-                  Đơn hàng
-                </button>
+                {isLoggedIn && (
+                  <>
+                    <button
+                      onClick={() => {
+                        navigate("/account");
+                        setDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-600 transition-colors duration-200 rounded-t-lg hover:text-gray-700 hover:bg-gray-100"
+                    >
+                      Tài khoản
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/order-history");
+                        setDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-600 transition-colors duration-200 hover:text-gray-700 hover:bg-gray-100"
+                    >
+                      Đơn hàng
+                    </button>
+                  </>
+                )}
 
                 {isLoggedIn ? (
                   <button

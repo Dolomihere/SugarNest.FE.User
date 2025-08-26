@@ -62,22 +62,26 @@ export default function SignUpForm() {
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         password: formData.password,
-        role: formData.role,
       });
 
-      if (result.success) {
-        await AuthService.sendVerification(formData.email);
-        setSuccess("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...");
-        setTimeout(() => {
-          navigate("/signin"); // Redirect after 2 seconds
-        }, 2000);
+      alert(1);
+      console.log('data tu dang ki', result);
+      if (result.isSuccess == true) {
+        alert("Đăng kí tài khoản thành công. Bạn sẽ được chuyển hướng đến trang xác thực tài khoản");
+        navigate(`/verify?email=formData.email`)
+        // await AuthService.sendVerification(formData.email);
+        // setTimeout(() => {
+        //   navigate("/signin"); // Redirect after 2 seconds
+        // }, 2000);
       } else {
         setError(result.message || "Đăng ký thất bại");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Có lỗi xảy ra khi đăng ký");
+      alert(2);
     } finally {
       setLoading(false);
+      alert(3);
     }
   };
 
@@ -91,7 +95,9 @@ export default function SignUpForm() {
 
       if (result.success) {
         await AuthService.sendVerification(result.email || formData.email);
-        setSuccess("Đăng ký Google thành công! Đang chuyển hướng đến trang đăng nhập...");
+        setSuccess(
+          "Đăng ký Google thành công! Đang chuyển hướng đến trang đăng nhập..."
+        );
         setTimeout(() => {
           navigate("/signin"); // Redirect after 2 seconds
         }, 2000);
@@ -99,7 +105,9 @@ export default function SignUpForm() {
         setError(result.message || "Đăng ký Google thất bại");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Có lỗi xảy ra khi đăng ký Google");
+      setError(
+        err.response?.data?.message || "Có lỗi xảy ra khi đăng ký Google"
+      );
     } finally {
       setLoading(false);
     }
@@ -110,17 +118,25 @@ export default function SignUpForm() {
       <div className="absolute inset-0 bg-[url('/images/bg-milk-tea.jpg')] bg-cover bg-center opacity-10 dark:opacity-5 pointer-events-none z-0" />
 
       <div className="relative w-full max-w-md pt-10 mx-auto mb-8">
-        <Link to="/signin" className="inline-flex items-center text-sm text-gray-700 dark:text-gray-400">
+        <Link
+          to="/signin"
+          className="inline-flex items-center text-sm text-gray-700 dark:text-gray-400"
+        >
           ← Quay về trang đăng nhập
         </Link>
       </div>
 
       <div className="relative flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <h1 className="mb-2 text-2xl font-semibold">Đăng ký</h1>
-        <p className="mb-5 text-sm text-gray-600 dark:text-gray-400">Nhập thông tin để tạo tài khoản mới</p>
+        <p className="mb-5 text-sm text-gray-600 dark:text-gray-400">
+          Nhập thông tin để tạo tài khoản mới
+        </p>
 
         <div className="grid grid-cols-1 gap-3 mb-5 sm:grid-cols-2 sm:gap-5">
-          <GoogleSignUpButton onSuccess={handleGoogleSignUp} loading={loading} />
+          <GoogleSignUpButton
+            onSuccess={handleGoogleSignUp}
+            loading={loading}
+          />
           <button
             disabled={loading}
             className="inline-flex items-center justify-center gap-3 py-3 text-sm text-gray-700 bg-gray-100 rounded-lg px-7 hover:bg-gray-200 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10 disabled:opacity-50"
@@ -134,7 +150,9 @@ export default function SignUpForm() {
             <div className="w-full border-t border-gray-300 dark:border-gray-400" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-5 bg-white dark:bg-gray-900 dark:text-gray-400">hoặc</span>
+            <span className="px-5 bg-white dark:bg-gray-900 dark:text-gray-400">
+              hoặc
+            </span>
           </div>
         </div>
 
@@ -167,7 +185,7 @@ export default function SignUpForm() {
             </div>
             <div>
               <label className="block font-bold">
-                Tên <span className="text-red-600">*</span>
+                Tên<span className="text-red-600">*</span>
               </label>
               <input
                 name="firstName"
@@ -246,7 +264,9 @@ export default function SignUpForm() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute -translate-y-1/2 cursor-pointer right-4 top-1/2"
               >
-                <i className={`fa-regular fa-eye${showPassword ? "-slash" : ""}`}></i>
+                <i
+                  className={`fa-regular fa-eye${showPassword ? "-slash" : ""}`}
+                ></i>
               </span>
             </div>
           </div>
@@ -269,7 +289,11 @@ export default function SignUpForm() {
                 onClick={() => setShowRePassword(!showRePassword)}
                 className="absolute -translate-y-1/2 cursor-pointer right-4 top-1/2"
               >
-                <i className={`fa-regular fa-eye${showRePassword ? "-slash" : ""}`}></i>
+                <i
+                  className={`fa-regular fa-eye${
+                    showRePassword ? "-slash" : ""
+                  }`}
+                ></i>
               </span>
             </div>
           </div>
@@ -283,8 +307,14 @@ export default function SignUpForm() {
             />
             <span className="text-sm">
               Bằng việc đăng ký, bạn đồng ý với{" "}
-              <span className="text-blue-600 cursor-pointer hover:underline">Điều khoản</span> và{" "}
-              <span className="text-blue-600 cursor-pointer hover:underline">Chính sách bảo mật</span> của chúng tôi.
+              <span className="text-blue-600 cursor-pointer hover:underline">
+                Điều khoản
+              </span>{" "}
+              và{" "}
+              <span className="text-blue-600 cursor-pointer hover:underline">
+                Chính sách bảo mật
+              </span>{" "}
+              của chúng tôi.
             </span>
           </label>
 
@@ -299,7 +329,10 @@ export default function SignUpForm() {
 
         <div className="mt-5 mb-12 text-center sm:text-start">
           <p className="text-sm text-gray-700">
-            Đã có tài khoản? <Link to="/signin" className="text-blue-700 hover:underline">Đăng nhập</Link>
+            Đã có tài khoản?{" "}
+            <Link to="/signin" className="text-blue-700 hover:underline">
+              Đăng nhập
+            </Link>
           </p>
         </div>
       </div>

@@ -180,7 +180,7 @@ const OrderService = {
       const headers = accessToken
         ? { Authorization: `Bearer ${accessToken}` }
         : {};
-      const response = await publicApi.post(
+      const response = await publicApi.patch(
         `${endpoint}/${orderId}/cancel`,
         { reason },
         { headers }

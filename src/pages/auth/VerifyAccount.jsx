@@ -41,8 +41,8 @@ export default function VerifyAccount() {
       if (result.isSuccess || result.success) {
         setSuccess(true);
         setTimeout(() => {
-          console.log("🎉 Verification successful, redirecting to /");
-          navigate("/");
+          console.log("🎉 Xấc thực thành công. Chuyển hướng đến trang đăng nhập...");
+          navigate("/signin");
         }, 2000);
       } else {
         setError(result.message || "Xác minh thất bại");

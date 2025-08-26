@@ -424,19 +424,19 @@ const AccountPage = () => {
                 <div className="flex-1 p-4 min-w-28 bg-white border rounded-lg shadow-sm text-center flex flex-col justify-between">
                   <p className="text-sm text-gray-500">Khả dụng</p>
                   <p className="text-md font-semibold text-amber-600">
-                    {pointInfo.availablePoints}
+                    {pointInfo?.availablePoints || 0}
                   </p>
                 </div>
                 <div className="flex-1 p-4 min-w-28 bg-white border rounded-lg shadow-sm text-center flex flex-col justify-between">
                   <p className="text-sm text-gray-500">Điểm nợ</p>
                   <p className="text-md font-semibold text-red-500">
-                    {pointInfo.debtPoints}
+                    {pointInfo?.debtPoints || 0}
                   </p>
                 </div>
                 <div className="flex-1 p-4 min-w-28 bg-white border rounded-lg shadow-sm text-center flex flex-col justify-between">
                   <p className="text-sm text-gray-500">Tạm khóa</p>
                   <p className="text-md font-semibold text-gray-400">
-                    {pointInfo.lockedPoints}
+                    {pointInfo?.lockedPoints || 0}
                   </p>
                 </div>
               </div>

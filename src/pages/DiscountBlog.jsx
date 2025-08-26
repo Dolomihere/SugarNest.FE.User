@@ -64,7 +64,7 @@ export default function DiscountBlog() {
           images:
             voucher.imgs && voucher.imgs.length
               ? voucher.imgs
-              : ["../../public/images/banner.png"],
+              : ["https://res.cloudinary.com/dwlvd5lxt/image/upload/v1752601561/voucher_noz9w7.jpg"],
         }));
 
         setDeals(mappedDeals);
