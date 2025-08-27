@@ -21,12 +21,13 @@ export default function RequestResetPassword() {
       return;
     }
 
-    const resetPasswordUrl = "https://sugarnest-api.io.vn/auth/reset-password";
+    const resetPasswordUrl = "https://app.sugarnest.io.vn/reset-password";
 
     try {
       const result = await AuthService.sendResetPassword(email, resetPasswordUrl);
       if (result?.statusCode === 200 && result?.data === true) {
-        navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+        alert("Đã gửi mail để đổi mật khẩu. Hãy kiểm tra email của bạn");
+        // navigate(`/reset-password?email=${encodeURIComponent(email)}`);
       } else {
         setError(result?.message || "Gửi liên kết thất bại");
       }

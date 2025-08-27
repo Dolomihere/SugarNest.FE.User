@@ -215,19 +215,31 @@ const OrderDetailsPage = () => {
             <tbody className="divide-y divide-[#f5e9dc]">
               <tr>
                 <td className="py-2 font-medium !w-[20%]">Mã đơn hàng</td>
-                <td>{orderData?.orderId || "-"}</td>
+                <td>{orderData?.orderId || "---"}</td>
               </tr>
               <tr>
                 <td className="py-2 font-medium">Tên</td>
-                <td>{orderData?.recipientName || "-"}</td>
+                <td>{orderData?.customerName || "---"}</td>
               </tr>
               <tr>
                 <td className="py-2 font-medium">SĐT</td>
-                <td>{orderData?.recipientPhone || "-"}</td>
+                <td>{orderData?.phoneNumber || "---"}</td>
               </tr>
               <tr>
                 <td className="py-2 font-medium">Email</td>
-                <td>{orderData?.recipientEmail || "-"}</td>
+                <td>{orderData?.email || "---"}</td>
+              </tr>
+              <tr>
+                <td className="py-2 font-medium">Tên (Người nhận)</td>
+                <td>{orderData?.recipientName || "---"}</td>
+              </tr>
+              <tr>
+                <td className="py-2 font-medium">SĐT (Người nhận)</td>
+                <td>{orderData?.recipientPhone || "---"}</td>
+              </tr>
+              <tr>
+                <td className="py-2 font-medium">Email (Người nhận)</td>
+                <td>{orderData?.recipientEmail || "---"}</td>
               </tr>
             </tbody>
           </table>

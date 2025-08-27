@@ -45,9 +45,12 @@ const OrderDetailContent = ({ order, formatCurrency, formatDate }) => {
             </h3>
             <div className="grid grid-cols-1 gap-2 text-gray-700">
               <p><strong>Mã đơn hàng:</strong> {order.orderId}</p>
-              <p><strong>Tên:</strong> {order.recipientName || order.customerName || "-"}</p>
-              <p><strong>SĐT:</strong> {order.recipientPhone || order.phoneNumber || "-"}</p>
-              <p><strong>Email:</strong> {order.recipientEmail || order.email || "-"}</p>
+              <p><strong>Tên:</strong> {order.customerName || "-"}</p>
+              <p><strong>SĐT:</strong> {order.phoneNumber || "-"}</p>
+              <p><strong>Email:</strong> {order.email || "-"}</p>
+              <p><strong>Tên (người nhận):</strong> {order.recipientName|| "-"}</p>
+              <p><strong>SĐT (người nhận):</strong> {order.recipientPhone|| "-"}</p>
+              <p><strong>Email (người nhận):</strong> {order.recipientEmail|| "-"}</p>
               <p><strong>Địa chỉ:</strong> {order.address || "-"}</p>
             </div>
           </section>
